@@ -349,7 +349,8 @@ def refine(run_slug: str) -> dict:
 @app.get("/api/runs/{run_slug}/events")
 def run_events(run_slug: str) -> list[dict]:
     """A saved run, to reopen it on the page: the events of its latest footage and data stages, in order (only the
-    stages that finished)."""
+    stages that finished). Each event is tagged with its job ("job": "footage" | "data"); its own "stage" field
+    (a Runway call's "frame" / "video", a clip's "track" / "audit" / ...) is kept."""
     if not re.fullmatch(r"[a-z0-9-]+", run_slug):
         raise HTTPException(404, "no such run")
     jobs = RUNS / run_slug / "jobs"
@@ -365,10 +366,10 @@ def run_events(run_slug: str) -> list[dict]:
     if not foot:
         return [{"type": "run", "slug": run_slug, "task": ""}]
     for evs in foot:
-        out += [{**e, "stage": "footage"} for e in evs]
+        out += [{**e, "job": "footage"} for e in evs]
     data = [evs for evs in (finished(p) for p in sorted(jobs.glob("*-data-*.jsonl"))) if evs]
     if data:
-        out += [{**e, "stage": "data"} for e in data[-1] if e.get("type") != "log"]
+        out += [{**e, "job": "data"} for e in data[-1] if e.get("type") != "log"]
     task = (RUNS / run_slug / "task.txt").read_text().strip() if (RUNS / run_slug / "task.txt").exists() else ""
     return [{"type": "run", "slug": run_slug, "task": task}] + out
 

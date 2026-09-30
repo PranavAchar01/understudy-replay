@@ -10,6 +10,9 @@
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const FILM = new URLSearchParams(location.search).has("film");
+const REPLAY = new URLSearchParams(location.search).get("replay"); // see "replay a saved run" below
+const REPLAY_DATA_S = Number(new URLSearchParams(location.search).get("fit") || 30);
+const due = []; // replayed events, drained by frame() on the page clock
 let VT = 0;
 let INSTANT = false; // true while a reopened run's saved events are drawn: no motion
 const now = () => (FILM ? VT : performance.now() / 1000);
@@ -50,6 +53,7 @@ const visible = (e) => e.isConnected && e.offsetParent !== null;
 
 async function frame(t) {
   VT = t;
+  while (due.length && due[0].at <= now()) due.shift().fn();
   for (let i = tweens.length - 1; i >= 0; i--) {
     const w = tweens[i];
     if (t < w.t0) continue;
@@ -110,7 +114,7 @@ function setStep(step, state) {
   li.classList.toggle("is-done", state === "done");
 }
 function stat(k, v) { $(`.stat[data-k="${k}"] dd`).textContent = v; }
-function clock() { const s = Math.max(0, Date.now() / 1000 - S.stageStart); return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`; }
+function clock() { const s = S.replayT != null ? S.replayT : Math.max(0, Date.now() / 1000 - S.stageStart); return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`; }
 
 // ---------- compose ----------
 const taskEl = $("#task"), genBtn = $("#gen"), fitEl = $("#fit");
@@ -129,7 +133,7 @@ async function checkPlan() {
   const r = await api("/api/plan", { task: t }).catch((e) => ({ ok: false, reason: e.message }));
   if (seq !== planSeq) return;
   if (r.ok) {
-    const have = (r.existing || []).length;
+    const have = REPLAY ? 0 : (r.existing || []).length; // a replay plays the run as it first happened
     fitEl.textContent = have
       ? `The SO-101 can do this. ${have} scenarios already made for this sentence; this adds ${r.clips} new ${r.clips === 1 ? "one" : "ones"}.`
       : "The SO-101 can do this: one hand, a pinch grasp, a place.";
@@ -150,6 +154,7 @@ async function loadBudget() {
   const b = await api("/api/budget").catch(() => null);
   S.budget = b;
   const el2 = $("#budget");
+  if (REPLAY) { el2.textContent = "Replay of a saved run: its Runway clips came from the cache, 0 credits"; return; }
   if (!b || b.balance == null) { el2.textContent = "Runway balance unavailable (no API key in this process)"; return; }
   el2.textContent = `${b.clips} clips  ·  about ${b.cost_run} credits  ·  balance ${b.balance}`;
 }
@@ -159,6 +164,7 @@ genBtn.addEventListener("click", async () => {
   if (genBtn.disabled) return;
   genBtn.disabled = true;
   const task = taskText();
+  if (REPLAY) { replayFootage(task); return; }
   try { await startFootage(task); } catch (e) {
     fitEl.textContent = e.message; fitEl.className = "fit is-no"; genBtn.disabled = false;
   }
@@ -307,6 +313,7 @@ function sideData(balance, cached = 0) {
 }
 async function startData() {
   const b = $("#data-btn"); b.disabled = true;
+  if (REPLAY) { dataPanel(); replayStage("data", onData, REPLAY_DATA_S); return; }
   let r;
   try { r = await api("/api/data", { slug: S.slug }); } catch (e) { b.disabled = false; side.append(el("p", "", esc(e.message))); return; }
   dataPanel();
@@ -598,8 +605,8 @@ async function reopen(slug) {
   $("#bar-tag").textContent = `Saved run, reopened · last stage finished ${saved.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
   let stage = "";
   for (const ev of evs) {
-    if (ev.stage !== stage) {
-      stage = ev.stage;
+    if (ev.job !== stage) {
+      stage = ev.job;
       if (stage === "data") dataPanel();
     }
     if (stage === "footage") onFootage(ev);
@@ -613,6 +620,42 @@ async function reopen(slug) {
 {
   const want = new URLSearchParams(location.search).get("run");
   if (want) reopen(want);
+}
+
+// ---------- replay a saved run through the real page (/?replay=<slug>) ----------
+// The sentence is typed and checked live, and the buttons are clicked as usual, but "Generate Footage" and
+// "Generate Training Data" play that run's saved stage events (data/web-runs/<slug>/jobs/*.jsonl) through the same
+// handlers instead of starting a job. The real gaps between events are kept in order and compressed onto the page
+// clock so a stage fits a few seconds (&fit=<s> for the data stage); the progress clock shows the run's real
+// elapsed time. Nothing is invented: every event, verdict and number is the saved one.
+let replayEvs = null;
+async function replayEvents() {
+  if (!replayEvs) { replayEvs = await api(`/api/runs/${encodeURIComponent(REPLAY)}/events`); replayEvs.shift(); }
+  return replayEvs;
+}
+async function replayStage(stage, handler, fit, minGap = 0.05) {
+  const evs = (await replayEvents()).filter((e) => e.job === stage && e.type !== "log");
+  if (!evs.length) return;
+  const ts = evs.map((e) => e.ts ?? evs[0].ts), t0 = ts[0];
+  // each real gap, square-rooted so the long waits (44 AV1 encodes) do not eat the stage, then scaled to fit
+  const gaps = ts.map((t, i) => (i ? Math.sqrt(Math.max(0, t - ts[i - 1])) : 0));
+  const sum = gaps.reduce((a, b) => a + b, 0) || 1;
+  let at = now() + 0.3;
+  S.replayT = 0;
+  evs.forEach((ev, i) => {
+    at += Math.max(minGap, (gaps[i] * fit) / sum);
+    due.push({ at, fn: () => { S.replayT = ts[i] - t0; handler(ev); const c = $("#fp-clock") || $("#dp-clock"); if (c) c.textContent = clock(); } });
+  });
+  due.sort((a, b) => a.at - b.at);
+}
+async function replayFootage(task) {
+  const evs = await replayEvents();
+  const ids = [...new Set(evs.filter((e) => e.job === "footage" && e.clip).map((e) => e.clip))].sort();
+  S.slug = REPLAY; S.task = task; S.phase = "footage";
+  S.gen = ids; S.credits = 0; S.charged = new Set();
+  toRun(ids);
+  $("#bar-tag").textContent = "Replay of a saved run";
+  replayStage("footage", onFootage, 3.5, 0.18);
 }
 
 // ---------- film hooks (only used with ?film) ----------
