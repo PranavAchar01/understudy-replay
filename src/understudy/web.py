@@ -683,5 +683,14 @@ def index() -> FileResponse:
     return FileResponse(SITE / "index.html", headers={"Cache-Control": "no-store"})
 
 
-app.mount("/runs", StaticFiles(directory=RUNS), name="runs")
+@app.get("/runs/{path:path}")
+def run_file(path: str) -> FileResponse:
+    """Run outputs: this machine's runs first, then the ones the built site ships (library tiles trained elsewhere)."""
+    for root in (RUNS, SITE / "runs"):
+        f = (root / path).resolve()
+        if f.is_relative_to(root.resolve()) and f.is_file():
+            return FileResponse(f)
+    raise HTTPException(404, "not found")
+
+
 app.mount("/", StaticFiles(directory=SITE, html=True), name="site")

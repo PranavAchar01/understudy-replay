@@ -152,6 +152,7 @@
   function startRun(task, head, router) {
     RUN++; CUR = { title: task, router, slug: "" };
     $("#fleet").hidden = false; $("#run-task").textContent = task; $("#run-pill").innerHTML = pillHTML(router); status(head); timeStart();
+    $("#stats").hidden = false; $("#run-pill").hidden = false;
     requestAnimationFrame(() => window.scrollTo({ top: $("#fleet").getBoundingClientRect().top + scrollY - 12, behavior: "smooth" }));
   }
 
@@ -280,6 +281,8 @@
     const want = /\bpush|shove|slide\b/.test(typed) ? "push" : /\bstack|tower|on top\b/.test(typed) ? "stack" : null;
     const lib = want && !fast ? (await manifest()).find((e) => e && e.slug && e.slug.startsWith(want)) : null;
     startRun(lib ? lib.prompt : R.task, tag, lib ? lib.router : R.router);
+    // the page-load preload only fills the library: no run happened, so no run title, route or time
+    if (fast) { $("#run-task").textContent = "Library"; $("#run-pill").hidden = true; $("#stats").hidden = true; }
     const filmDir = lib ? `runs/${lib.slug}/${lib.tiles_dir || "media/vla"}` : `runs/${R.slug}/media/vla`;
     const hero = lib ? { id: lib.accepted[0], film: `${lib.accepted[0]}.mp4`, success: true }
       : R.clips.find((c) => c.accepted && c.film && c.success !== false) || R.clips.find((c) => c.film);

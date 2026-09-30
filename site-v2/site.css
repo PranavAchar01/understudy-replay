@@ -317,3 +317,5 @@ body.is-locked { overflow: hidden; }
 .key-row.need .key-input { border-color: var(--no); }
 .key-hint { font-size: 12px; color: var(--text-3); max-width: 46em; text-align: center; }
 .key-hint a { color: var(--accent-hi); }
+
+.stats[hidden], .route-pill[hidden] { display: none; }
