@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Understudy: benchmark film</title>
+<meta name="theme-color" content="#05070d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Film v8: 2:00 in three parts. 0:00-0:20 the problem, 0:20-1:40 the benchmark (Runway demonstrations vs a
+   scripted expert, docs/BENCHMARK.md), 1:40-2:00 the takeaway. The Player Two B-roll language of broll.html: real
+   Runway plates under a slow push, a tool chip top left, a caption pill, pop-up source cards and stat boxes that
+   rise in over a dimmed plate. Nothing runs on a wall clock: window.seek(t) lays out the frame for time t, so
+   film/tools/render-v4.mts can step it at 30 fps. Opened directly in a browser it plays live (space pauses,
+   arrows skip a shot, ?t=SECONDS starts there).
+   Serve the repo root (python3 -m http.server 4650) and open /film/deck/v8.html: the plates are the run's Runway
+   clips under data/runs/, the source cards are film/v5/sources/, the per-seed expert results data/probes/bench/. */
+:root{--ink:#f2f6ff;--blue:#7fb2ff;--violet:#b9a4ff;--gold:#e9c46a;--green:#7fe0b0;--red:#ff8a80;--dimtxt:#8fa0c4;--serif:"Hedvig Letters Serif",Georgia,serif;--sans:Inter,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans);overflow:hidden}
+.stage{width:1920px;height:1080px;position:absolute;left:50%;top:50%;margin:-540px 0 0 -960px;transform-origin:center;overflow:hidden;background:#05070d}
+.shot{position:absolute;inset:0;opacity:0;display:none}
+.plate{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:50% 50%;will-change:transform}
+.plate.blur{filter:blur(16px) brightness(.3) saturate(.9);inset:-40px;width:2000px;height:1160px}
+.shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,5,10,.45) 0%,rgba(3,5,10,0) 22%,rgba(3,5,10,0) 58%,rgba(3,5,10,.66) 100%)}
+.dim{position:absolute;inset:0;background:rgba(3,5,10,.6)}
+.chip{position:absolute;left:72px;top:64px;display:flex;align-items:center;gap:14px;padding:13px 20px;border-radius:8px;background:rgba(8,12,22,.72);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);font:500 21px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:#e7eeff;z-index:5}
+.chip.r{left:auto;right:72px;letter-spacing:.14em}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--blue));box-shadow:0 0 14px var(--c,var(--blue))}
+.chip b{font-weight:500;color:var(--c,var(--blue))}
+.cap{position:absolute;left:0;right:0;bottom:82px;margin:0 auto;width:fit-content;max-width:1480px;padding:20px 34px 22px;border-radius:16px;background:rgba(10,12,18,.84);backdrop-filter:blur(14px);font:500 42px/1.28 var(--sans);letter-spacing:-.005em;text-align:center;color:#fff;text-wrap:balance;z-index:5}
+.cap em{font-style:normal;color:var(--c,var(--blue))}
+/* title + end cards */
+.card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.kick{font:500 22px/1 var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--c,var(--blue));display:flex;align-items:center;gap:14px}
+.kick i{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 16px currentColor}
+.card h1{font:400 200px/1 var(--serif);letter-spacing:-.03em;margin-top:30px}
+.card h1 em{font-style:normal;color:#a9cbff}
+.card h2{font:400 86px/1.08 var(--serif);letter-spacing:-.02em;margin-top:30px;max-width:1500px;text-wrap:balance}
+.card h2 em{font-style:normal;color:var(--gold)}
+.card p{font:400 40px/1.35 var(--sans);color:#d3def6;margin-top:28px;max-width:1400px;text-wrap:balance}
+.card p em{font-style:normal;color:#a9cbff}
+.chips{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;max-width:1700px;margin-top:46px}
+.chips span{font:500 21px/1 var(--mono);padding:14px 20px;border-radius:999px;border:1px solid color-mix(in oklab,var(--c) 55%,transparent);background:rgba(8,13,26,.62);color:var(--c)}
+/* pop-up source cards (Player Two news pop-ups) */
+.art{position:absolute;width:800px;border-radius:12px;overflow:hidden;background:#0b1120;box-shadow:0 40px 110px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.2);z-index:4}
+.art img{display:block;width:100%}
+.art .src{display:flex;justify-content:space-between;gap:16px;padding:12px 18px;font:500 17px/1.3 var(--mono);color:#c9d6f2;letter-spacing:.02em}
+.art .src b{font-weight:500;color:#fff}
+.art .src i{font-style:normal;color:var(--dimtxt)}
+.quote{position:absolute;max-width:760px;padding:24px 30px;border-radius:14px;background:rgba(9,13,24,.94);border:1px solid rgba(140,170,230,.3);font:400 36px/1.28 var(--serif);color:#fff;box-shadow:0 30px 80px rgba(0,0,0,.6);z-index:4}
+.quote small{display:block;margin-top:14px;font:500 17px/1.3 var(--mono);color:var(--dimtxt);letter-spacing:.04em}
+/* glass panels */
+.glass{position:absolute;border-radius:18px;background:rgba(7,10,18,.9);border:1px solid rgba(140,170,230,.22);box-shadow:0 40px 120px rgba(0,0,0,.6);overflow:hidden;z-index:3}
+.gbar{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid rgba(140,170,230,.14);font:500 16px/1 var(--mono);color:var(--dimtxt);letter-spacing:.04em;white-space:nowrap}
+.gbar span{width:13px;height:13px;border-radius:50%;background:#2a344d;flex:none}
+.gbar b{margin-left:12px;font-weight:500}
+.who{font:500 18px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--c)}
+/* the two arms */
+.arm{position:absolute;top:140px;width:760px;padding:0 0 24px}
+.arm .media{position:relative;height:400px;background:#0a0f1c;overflow:hidden}
+.arm .media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.arm .body{padding:24px 30px 0}
+.arm h3{font:400 50px/1.1 var(--serif);margin-top:12px}
+.arm ul{list-style:none;padding:0;margin-top:16px;display:grid;gap:10px}
+.arm li{font:400 22px/1.35 var(--sans);color:#c9d6f2;padding-left:26px;position:relative}
+.arm li::before{content:"";position:absolute;left:4px;top:12px;width:8px;height:8px;border-radius:50%;background:var(--c)}
+.arm .n{margin-top:18px;font:500 20px/1.3 var(--mono);color:#fff}
+.arm .n span{color:var(--dimtxt)}
+.vs{position:absolute;left:0;right:0;top:300px;text-align:center;font:400 64px/1 var(--serif);color:#dfe8ff;z-index:4}
+/* the expert's schematic: a planner's straight segments to the known cube pose */
+.plan{position:absolute;inset:0;display:grid;place-items:center}
+.plan pre{font:400 22px/1.7 var(--mono);color:#cbd8f5;white-space:pre}
+.plan .t{color:#5b6a8a}.plan .k{color:var(--gold)}.plan .g{color:var(--green)}.plan .v{color:var(--violet)}
+/* held fixed */
+.fixed{position:absolute;left:260px;right:260px;top:150px;padding:10px 0 18px}
+.row{display:grid;grid-template-columns:54px 330px 1fr;align-items:center;gap:8px;padding:17px 34px;border-bottom:1px solid rgba(140,170,230,.1)}
+.row:last-child{border-bottom:0}
+.row .ck{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:color-mix(in oklab,var(--green) 22%,transparent);color:var(--green);font:600 20px/1 var(--sans)}
+.row .ck.x{background:color-mix(in oklab,var(--gold) 22%,transparent);color:var(--gold)}
+.row .k{font:500 19px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dimtxt)}
+.row .v{font:400 27px/1.3 var(--sans);color:#eef3ff}
+.row .v b{font-weight:500;color:var(--green)}
+.row .v i{font-style:normal;color:var(--gold)}
+/* scores */
+.score{position:absolute;top:196px;width:780px;padding:30px 36px 34px}
+.score .big{font:400 150px/1 var(--serif);margin-top:18px;letter-spacing:-.02em}
+.score .big small{font:400 54px/1 var(--serif);color:var(--dimtxt)}
+.score .sub{font:500 20px/1.3 var(--mono);color:var(--dimtxt);margin-top:10px}
+.dots{display:grid;grid-template-columns:repeat(10,1fr);gap:12px;margin-top:26px}
+.dots i{aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.09);transition:none}
+.dots i.ok{background:var(--c);box-shadow:0 0 12px color-mix(in oklab,var(--c) 60%,transparent)}
+.score.compact{padding:24px 32px 28px}
+.score.compact .big{font-size:112px;margin-top:10px}
+.score.compact .dots{grid-template-columns:repeat(25,1fr);gap:6px;margin-top:18px}
+.stamp{position:absolute;left:0;right:0;text-align:center;font:400 58px/1.1 var(--serif);z-index:4}
+.stamp em{font-style:normal;color:var(--gold)}
+/* the 95% intervals */
+.ci{position:absolute;left:150px;right:150px;top:540px;height:210px;padding:26px 40px}
+.ci .axis{position:absolute;left:300px;right:60px;top:30px;bottom:44px}
+.ci .tick{position:absolute;bottom:-34px;transform:translateX(-50%);font:400 16px/1 var(--mono);color:var(--dimtxt)}
+.ci .grid{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.08)}
+.ci .lane{position:absolute;left:0;right:0;height:40px}
+.ci .lab{position:absolute;left:-270px;width:250px;text-align:right;font:500 20px/40px var(--mono);color:var(--c)}
+.ci .bar{position:absolute;top:10px;height:20px;border-radius:99px;background:color-mix(in oklab,var(--c) 45%,transparent);border:1px solid var(--c)}
+.ci .pt{position:absolute;top:4px;width:6px;height:32px;margin-left:-3px;border-radius:3px;background:#fff}
+/* table */
+.tbl{position:absolute;left:230px;right:230px;top:170px}
+.tbl table{width:100%;border-collapse:collapse}
+.tbl th{font:500 18px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dimtxt);text-align:left;padding:22px 34px 16px;border-bottom:1px solid rgba(140,170,230,.18)}
+.tbl td{font:400 36px/1.2 var(--serif);padding:22px 34px;border-bottom:1px solid rgba(140,170,230,.1);color:#eef3ff}
+.tbl td small{font:400 17px/1 var(--mono);color:var(--dimtxt);margin-left:10px}
+.tbl td.m{font:500 24px/1.2 var(--sans);color:#c9d6f2}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .r{color:var(--gold)}.tbl .e{color:var(--violet)}
+.cav{position:absolute;left:230px;right:230px;top:600px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.stat{padding:22px 26px;border-radius:16px;background:rgba(7,10,18,.92);border:1px solid color-mix(in oklab,var(--c,#8fa0c4) 40%,transparent);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.stat .k{font:500 16px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--c,var(--dimtxt))}
+.stat .v{font:400 54px/1.05 var(--serif);margin-top:10px;color:#fff}
+.stat .v small{font:500 20px/1 var(--mono);color:var(--dimtxt);margin-left:8px}
+.stat .n{font:400 21px/1.38 var(--sans);color:#c9d6f2;margin-top:10px}
+/* grid of clips */
+.grid4{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6px;background:#05070d}
+.grid4 video{width:100%;height:100%;object-fit:cover;display:block}
+.qbig{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:4}
+.qbig h2{font:400 104px/1.06 var(--serif);letter-spacing:-.02em;max-width:1500px;text-wrap:balance}
+.qbig h2 em{font-style:normal;color:var(--gold)}
+/* live-mode progress (never in the film) */
+#hud{position:fixed;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.08);z-index:50}
+#hud i{display:block;height:100%;width:0;background:var(--blue)}
+#hud.off{display:none}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <!-- ================= 1. THE PROBLEM (0:00-0:20) ================= -->
+
+  <section class="shot" data-a="0" data-b="4.6">
+    <video class="plate blur" data-src="c1" data-rate="0.9"></video>
+    <div class="card">
+      <div class="kick" data-in="0.1"><i></i>Runway API Hackathon</div>
+      <h1 data-in="0.3">Under<em>study</em></h1>
+      <p data-in="0.9">Robots learn by watching. <em>There is almost nothing to watch.</em></p>
+    </div>
+  </section>
+
+  <section class="shot" data-a="4.6" data-b="11" style="--c:var(--red)">
+    <video class="plate" data-src="c3" data-push="0.07"></video><div class="shade"></div>
+    <div class="dim" data-in="0.6"></div>
+    <div class="chip r" data-in="0.1"><i></i>1 / 3 <b>· The problem</b></div>
+    <div class="chip" data-in="0.15"><i></i>Robot data <b>· the bottleneck</b></div>
+    <div class="art" data-in="0.6" style="left:96px;top:170px;transform:rotate(-1.4deg)"><img data-img="s1" alt=""><div class="src"><b>IEEE Spectrum</b><i>28 May 2024</i></div></div>
+    <div class="quote" data-in="1.6" style="right:110px;top:250px">&ldquo;The Internet is chock-full of data for CV and NLP, but not at all for robotics.&rdquo;<small>IEEE Spectrum, &ldquo;Will Scaling Solve Robotics?&rdquo;</small></div>
+    <div class="cap" data-in="2.4">Language models learned from the internet. <em>Robots have no internet of demonstrations.</em></div>
+  </section>
+
+  <section class="shot" data-a="11" data-b="16.6" style="--c:var(--gold)">
+    <video class="plate" data-src="c6" data-push="0.07"></video><div class="shade"></div>
+    <div class="dim" data-in="0.4"></div>
+    <div class="chip r" data-in="0"><i></i>1 / 3 <b>· The problem</b></div>
+    <div class="chip" data-in="0.1"><i></i>Today <b>· one take at a time</b></div>
+    <div class="art" data-in="0.4" style="right:100px;top:150px;width:760px;transform:rotate(1.2deg)"><img data-img="s4" alt=""><div class="src"><b>Figure AI</b><i>25 Aug 2026</i></div></div>
+    <div class="art" data-in="1.2" style="left:110px;top:230px;width:720px;transform:rotate(-1.6deg)"><img data-img="s3" alt=""><div class="src"><b>Business Insider</b><i>2 Nov 2025</i></div></div>
+    <div class="cap" data-in="2.0">So labs pay people to perform every demonstration, <em>one take at a time</em>.</div>
+  </section>
+
+  <section class="shot" data-a="16.6" data-b="20.4">
+    <div class="grid4"><video data-src="c1"></video><video data-src="c3"></video><video data-src="c6"></video><video data-src="c7"></video></div>
+    <div class="dim" data-in="0.3" style="background:rgba(3,5,10,.66)"></div>
+    <div class="qbig"><div class="kick" data-in="0.4" style="--c:var(--gold)"><i></i>Understudy</div><h2 data-in="0.6" style="margin-top:28px">What if <em>Runway</em> made the demonstrations?</h2></div>
+  </section>
+
+  <!-- ================= 2. THE BENCHMARK (0:20-1:40) ================= -->
+
+  <section class="shot" data-a="20.4" data-b="26" style="--c:var(--gold)">
+    <video class="plate blur" data-src="c7" data-rate="0.9"></video>
+    <div class="chip r" data-in="0.1"><i></i>2 / 3 <b>· The benchmark</b></div>
+    <div class="card">
+      <div class="kick" data-in="0.2"><i></i>The benchmark</div>
+      <h2 data-in="0.45">Do demonstrations made by <em>Runway</em> teach a robot as well as robot demonstrations?</h2>
+      <p data-in="1.3">Same model. Same number of episodes. <em>One variable.</em></p>
+    </div>
+  </section>
+
+  <section class="shot" data-a="26" data-b="40" style="--c:var(--gold)">
+    <video class="plate blur" data-src="c6"></video>
+    <div class="chip r" data-in="0"><i></i>2 / 3 <b>· The benchmark</b></div>
+    <div class="chip" data-in="0.1"><i></i>Controlled variable <b>· where the demos came from</b></div>
+    <div class="glass arm" data-in="0.4" style="left:130px;--c:var(--gold)">
+      <div class="media"><video data-src="c7" data-loop="pingpong"></video></div>
+      <div class="body"><div class="who">Arm A · Runway</div><h3>Generated human video</h3>
+        <ul><li>Runway makes a person doing the task</li><li>Hand tracked, retargeted onto the SO-101</li><li>Every episode gated in a physics replay</li></ul>
+        <div class="n">74 episodes <span>· 25,190 frames · from 4 accepted clips</span></div></div>
+    </div>
+    <div class="vs" data-in="1.1">vs</div>
+    <div class="glass arm" data-in="1.4" style="right:130px;--c:var(--violet)">
+      <div class="media"><div class="plan"><pre><span class="t"># pick_expert.run_episode</span>
+<span class="v">cube</span> = sim.true_pose()       <span class="t"># privileged</span>
+<span class="k">approach</span>(cube, above=4 cm)
+<span class="k">descend</span>(); <span class="k">close</span>()
+<span class="k">lift</span>(); <span class="k">carry</span>(bowl); <span class="k">open</span>()
+<span class="g">assert</span> in_bowl(cube)       <span class="t"># kept only if so</span></pre></div></div>
+      <div class="body"><div class="who">Arm B · Scripted expert</div><h3>Robot demonstrations</h3>
+        <ul><li>A planner in the same simulator</li><li>Knows the exact cube pose, never hesitates</li><li>Stand-in for paid teleoperation</li></ul>
+        <div class="n">74 episodes <span>· 20,075 frames · 0 retries</span></div></div>
+    </div>
+    <div class="cap" data-in="3.0" style="--c:var(--gold)">The only thing that changes: <em>where the demonstrations came from</em>.</div>
+  </section>
+
+  <section class="shot" data-a="40" data-b="52" style="--c:var(--green)">
+    <video class="plate blur" data-src="c3"></video>
+    <div class="chip r" data-in="0"><i></i>2 / 3 <b>· The benchmark</b></div>
+    <div class="chip" data-in="0.1"><i></i>Held fixed <b>· everything else</b></div>
+    <div class="glass fixed" data-in="0.3">
+      <div class="gbar"><span></span><span></span><span></span><b>docs/BENCHMARK.md · held fixed</b></div>
+      <div class="row" data-in="0.8"><div class="ck">&#10003;</div><div class="k">Model</div><div class="v"><b>SmolVLA</b> (lerobot/smolvla_base), same recipe per row</div></div>
+      <div class="row" data-in="1.4"><div class="ck">&#10003;</div><div class="k">Episodes</div><div class="v">74 each, from the <b>same 74 cube starts</b></div></div>
+      <div class="row" data-in="2.0"><div class="ck">&#10003;</div><div class="k">Recording</div><div class="v">Same LeRobot writer, 30 fps, same cameras and keys</div></div>
+      <div class="row" data-in="2.6"><div class="ck">&#10003;</div><div class="k">The robot sees</div><div class="v">Camera, 6 joint angles and the sentence. <b>Never the cube position.</b></div></div>
+      <div class="row" data-in="3.2"><div class="ck">&#10003;</div><div class="k">Test</div><div class="v"><b>50 unseen cube positions</b>, disjoint from both training sets</div></div>
+      <div class="row" data-in="3.8"><div class="ck">&#10003;</div><div class="k">Success</div><div class="v">The cube is lifted, then comes to rest in the bowl</div></div>
+      <div class="row" data-in="4.4"><div class="ck x">&ne;</div><div class="k">Not held fixed</div><div class="v"><i>Motion style:</i> the expert is faster and smoother</div></div>
+    </div>
+  </section>
+
+  <section class="shot" data-a="52" data-b="59" style="--c:var(--red)">
+    <video class="plate blur" data-src="c1"></video>
+    <div class="chip r" data-in="0"><i></i>2 / 3 <b>· The benchmark</b></div>
+    <div class="chip" data-in="0.1"><i></i>Starting point <b>· no Understudy data</b></div>
+    <div class="glass score" data-in="0.4" style="left:570px;--c:var(--red)">
+      <div class="who">SmolVLA base · zero-shot</div>
+      <div class="big"><span data-count="0" data-cin="0.8">0</span><small> / 50</small></div>
+      <div class="sub">in the bowl · Wilson 95%: 0.00 to 0.07</div>
+      <div class="dots" data-k="0" data-din="0.8" data-dlen="1"></div>
+    </div>
+    <div class="cap" data-in="1.6" style="--c:var(--red)">Out of the box, the robot foundation model <em>never lands the cube</em>.</div>
+  </section>
+
+  <section class="shot" data-a="59" data-b="73" style="--c:var(--gold)">
+    <video class="plate blur" data-src="c7"></video>
+    <div class="chip r" data-in="0"><i></i>2 / 3 <b>· The benchmark</b></div>
+    <div class="chip" data-in="0.1"><i></i>Round 1 <b>· 3,000 training steps</b></div>
+    <div class="glass score" data-in="0.3" style="left:150px;--c:var(--gold)">
+      <div class="who">Arm A · Runway</div>
+      <div class="big"><span data-count="34" data-cin="1.0" data-clen="3.2">0</span><small> / 50</small></div>
+      <div class="sub">Wilson 95%: 0.55 to 0.79</div>
+      <div class="dots" data-k="34" data-din="1.0" data-dlen="3.2"></div>
+    </div>
+    <div class="glass score" data-in="0.6" style="right:150px;--c:var(--violet)">
+      <div class="who">Arm B · Scripted expert</div>
+      <div class="big"><span data-count="44" data-cin="1.0" data-clen="3.2">0</span><small> / 50</small></div>
+      <div class="sub">Wilson 95%: 0.76 to 0.94</div>
+      <div class="dots" data-k="44" data-din="1.0" data-dlen="3.2"></div>
+    </div>
+    <div class="cap" data-in="5.0" style="--c:var(--violet)">Short training: <em>the expert wins clearly</em>, 44 to 34.</div>
+  </section>
+
+  <section class="shot" data-a="73" data-b="89" style="--c:var(--green)">
+    <video class="plate blur" data-src="c6"></video>
+    <div class="chip r" data-in="0"><i></i>2 / 3 <b>· The benchmark</b></div>
+    <div class="chip" data-in="0.1"><i></i>Round 2 <b>· 20,000 training steps</b></div>
+    <div class="glass score compact" data-in="0.3" style="left:150px;top:140px;--c:var(--gold)">
+      <div class="who">Arm A · Runway</div>
+      <div class="big"><span data-count="43" data-cin="0.9" data-clen="3.0">0</span><small> / 50</small></div>
+      <div class="dots" data-k="43" data-din="0.9" data-dlen="3.0"></div>
+    </div>
+    <div class="glass score compact" data-in="0.5" style="right:150px;top:140px;--c:var(--violet)">
+      <div class="who">Arm B · Scripted expert</div>
+      <div class="big"><span data-count="44" data-cin="0.9" data-clen="3.0">0</span><small> / 50</small></div>
+      <div class="dots" data-k="44" data-din="0.9" data-dlen="3.0"></div>
+    </div>
+    <div class="glass ci" data-in="4.6">
+      <div class="axis">
+        <div class="grid" style="left:0"></div><div class="grid" style="left:25%"></div><div class="grid" style="left:50%"></div><div class="grid" style="left:75%"></div><div class="grid" style="left:100%"></div>
+        <div class="tick" style="left:0">50%</div><div class="tick" style="left:25%">62.5%</div><div class="tick" style="left:50%">75%</div><div class="tick" style="left:75%">87.5%</div><div class="tick" style="left:100%">100%</div>
+        <div class="lane" style="top:6px;--c:var(--gold)"><div class="lab">Runway 43/50</div><div class="bar" data-lo="0.74" data-hi="0.93" data-bin="5.1"></div><div class="pt" data-p="0.86" data-bin="5.1"></div></div>
+        <div class="lane" style="top:64px;--c:var(--violet)"><div class="lab">Expert 44/50</div><div class="bar" data-lo="0.76" data-hi="0.94" data-bin="5.5"></div><div class="pt" data-p="0.88" data-bin="5.5"></div></div>
+      </div>
+    </div>
+    <div class="cap" data-in="7.6" style="--c:var(--green)">Longer training: <em>43 vs 44</em>. The 95% intervals overlap almost completely.</div>
+  </section>
+
+  <section class="shot" data-a="89" data-b="100.4" style="--c:var(--blue)">
+    <video class="plate blur" data-src="c3"></video>
+    <div class="chip r" data-in="0"><i></i>2 / 3 <b>· The benchmark</b></div>
+    <div class="chip" data-in="0.1"><i></i>All results <b>· one RTX 5090</b></div>
+    <div class="glass tbl" data-in="0.3">
+      <table>
+        <tr><th>Training</th><th class="r">Runway</th><th class="e">Scripted expert</th></tr>
+        <tr data-in="0.8"><td class="m">3,000 steps · front camera</td><td>34/50<small>0.55-0.79</small></td><td>44/50<small>0.76-0.94</small></td></tr>
+        <tr data-in="1.3"><td class="m">20,000 steps · front camera</td><td>43/50<small>0.74-0.93</small></td><td>44/50<small>0.76-0.94</small></td></tr>
+        <tr data-in="1.8"><td class="m">6,000 steps · front + wrist</td><td>41/50<small>0.69-0.90</small></td><td><small style="margin:0">not run</small></td></tr>
+      </table>
+    </div>
+    <div class="cav">
+      <div class="stat" data-in="3.2" style="--c:var(--gold)"><div class="k">Simulation</div><div class="n">One task, one simulated SO-101, one MuJoCo scene. Not yet a real robot.</div></div>
+      <div class="stat" data-in="3.7" style="--c:var(--violet)"><div class="k">A strong baseline</div><div class="n">The expert knows the exact cube pose and never hesitates. Real teleoperation is noisier.</div></div>
+      <div class="stat" data-in="4.2" style="--c:var(--blue)"><div class="k">50 test positions</div><div class="n">Intervals are about &plusmn;10 to 14 points. Small gaps between cells are noise.</div></div>
+    </div>
+  </section>
+
+  <!-- ================= 3. THE TAKEAWAY (1:40-2:00) ================= -->
+
+  <section class="shot" data-a="100.4" data-b="113" style="--c:var(--gold)">
+    <div class="grid4"><video data-src="c1"></video><video data-src="c3"></video><video data-src="c6"></video><video data-src="c7"></video></div>
+    <div class="dim" data-in="1.2"></div>
+    <div class="chip r" data-in="0"><i></i>3 / 3 <b>· Takeaway</b></div>
+    <div class="chip" data-in="0.1"><i></i>Takeaway <b>· Runway as robot data</b></div>
+    <div class="stat" data-in="1.5" style="position:absolute;left:150px;top:230px;width:500px;z-index:4;--c:var(--gold)"><div class="k">Input</div><div class="v">1 sentence</div><div class="n">4 accepted Runway clips became 74 gated episodes</div></div>
+    <div class="stat" data-in="2.1" style="position:absolute;left:710px;top:230px;width:500px;z-index:4;--c:var(--red)"><div class="k">Same model, before</div><div class="v">0<small>/ 50</small></div><div class="n">SmolVLA with no Understudy data</div></div>
+    <div class="stat" data-in="2.7" style="position:absolute;left:1270px;top:230px;width:500px;z-index:4;--c:var(--green)"><div class="k">After, vs expert</div><div class="v">43<small>vs 44 / 50</small></div><div class="n">Within one success of scripted robot demonstrations</div></div>
+    <div class="cap" data-in="4.0" style="--c:var(--gold)">Generated video, gated by physics, trained a robot <em>about as well as robot demonstrations</em>.</div>
+  </section>
+
+  <section class="shot" data-a="113" data-b="120" style="--c:var(--blue)">
+    <video class="plate blur" data-src="c1" data-rate="0.9"></video>
+    <div class="card">
+      <h1 data-in="0.2">Under<em>study</em></h1>
+      <p data-in="0.7">Runway imagines the demonstration. <em>Physics decides if it counts.</em></p>
+      <div class="chips" data-in="1.3"><span style="--c:var(--gold)">Runway API</span><span style="--c:var(--green)">MediaPipe</span><span style="--c:var(--violet)">Claude</span><span style="--c:#f2f6ff">MuJoCo</span><span style="--c:#f2f6ff">LeRobot</span><span style="--c:var(--blue)">SmolVLA</span></div>
+    </div>
+  </section>
+
+</div>
+<div id="hud"><i></i></div>
+<script>
+(async () => {
+  const q = new URLSearchParams(location.search);
+  const FILM = q.has('film') || navigator.webdriver;
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const cl = (x) => Math.max(0, Math.min(1, x));
+  const OUT = (p) => 1 - Math.pow(1 - p, 3);
+  const XF = 0.4;                                     // crossfade between shots, seconds
+  const RUN = '../../data/runs/put-the-red-block-in-the-bowl/clips/';
+  const CLIPS = { c1: 'v01', c3: 'v03', c6: 'v06', c7: 'v07' };   // the 4 clips that passed the gates
+  const IMGS = { s1: '../v5/sources/s1.png', s3: '../v5/sources/s3.png', s4: '../v5/sources/s4.png' };
+
+  const stage = $('#stage');
+  const shots = $$('.shot').map((el) => ({ el, a: +el.dataset.a, b: +el.dataset.b }));
+  const DURATION = shots[shots.length - 1].b;
+  window.DURATION = DURATION;
+  window.PLAN = shots.map((s) => [s.a, s.b]);
+
+  // every clip once, as a blob: seeking a blob is exact (python's http.server serves no Range requests)
+  const blobs = {};
+  // a Chromium without H.264 (Linux builds) gets the VP9 copies scripts/film8.sh makes in film/deck/media/v8/
+  const h264 = document.createElement('video').canPlayType('video/mp4; codecs="avc1.64001F"') !== '';
+  const clipUrl = (v) => (h264 ? `${RUN}${v}.mp4` : `media/v8/${v}.webm`);
+  await Promise.all(Object.entries(CLIPS).map(async ([k, v]) => { blobs[k] = URL.createObjectURL(await (await fetch(clipUrl(v))).blob()); }));
+  for (const v of $$('video[data-src]')) { v.src = blobs[v.dataset.src]; v.muted = true; v.playsInline = true; v.preload = 'auto'; }
+  for (const i of $$('img[data-img]')) i.src = IMGS[i.dataset.img];
+  await Promise.all($$('video').map((v) => new Promise((r) => { if (v.readyState >= 2) r(); else { v.addEventListener('loadeddata', r, { once: true }); setTimeout(r, 8000); } })));
+  await Promise.all($$('img').map((i) => i.decode().catch(() => {})));
+  // dot grids
+  for (const d of $$('.dots')) d.innerHTML = '<i></i>'.repeat(50);
+
+  const fit = () => { stage.style.transform = FILM ? 'none' : `scale(${Math.min(innerWidth / 1920, innerHeight / 1080)})`; };
+  addEventListener('resize', fit); fit();
+
+  // where a video should be at shot time u: forward, slowed to fit, or ping-pong for long holds
+  const vidTime = (v, u, len) => {
+    const d = (v.duration || 5.04) - 0.05;
+    const rate = +(v.dataset.rate || 0) || Math.min(1, d / Math.max(0.1, len));
+    const x = u * rate;
+    if (v.dataset.loop === 'pingpong') { const p = x % (2 * d); return p < d ? p : 2 * d - p; }
+    return Math.min(d, x);
+  };
+  const seekVid = (v, x) => new Promise((r) => { if (Math.abs(v.currentTime - x) < 0.004) return r(); v.onseeked = () => r(); v.currentTime = x; });
+
+  window.seek = async (t) => {
+    const waits = [];
+    for (const s of shots) {
+      const on = t >= s.a - 0.001 && t < s.b + XF;
+      s.el.style.display = on ? 'block' : 'none';
+      if (!on) { if (!FILM) for (const v of $$('video', s.el)) if (!v.paused) v.pause(); continue; }
+      const len = s.b - s.a, u = t - s.a;
+      // fade in over XF (the outgoing shot stays underneath), fade out after b only for the last shot
+      const last = s === shots[shots.length - 1];
+      s.el.style.opacity = last ? Math.min(cl(u / XF), cl((DURATION - t) / 0.9)) : cl(u / XF);
+      s.el.style.zIndex = String(shots.indexOf(s));
+      // slow camera push on the whole shot, Player Two style: every frame moves, even on a still card
+      s.el.style.transform = `translate(${(4 * Math.sin(u * 2 * Math.PI / 9)).toFixed(2)}px, ${(3 * Math.sin(u * 2 * Math.PI / 7 + 1)).toFixed(2)}px) scale(${(1 + 0.006 * u).toFixed(5)})`;
+      for (const p of $$('.plate', s.el)) p.style.transform = `scale(${(1.02 + (+(p.dataset.push || 0.05)) * cl(u / len)).toFixed(5)})`;
+      // pop-ups: rise in at data-in, drop out just before the cut
+      for (const e of $$('[data-in]', s.el)) {
+        const a = +e.dataset.in;
+        const k = OUT(cl((u - a) / 0.55)) * (last ? 1 : cl((len + XF * 0.5 - u) / 0.3));
+        e.style.opacity = k.toFixed(4);
+        const base = (e.dataset.base ??= e.style.transform || '');
+        if (e.classList.contains('dim')) continue;
+        const rise = e.classList.contains('row') || e.tagName === 'TR' ? 14 : 30;
+        e.style.transform = `${base} translateY(${((1 - k) * rise).toFixed(2)}px) scale(${(0.955 + 0.045 * k + 0.012 * cl((u - a) / 8)).toFixed(5)})`.trim();
+      }
+      // numbers count up, dots fill in step with them
+      for (const e of $$('[data-count]', s.el)) {
+        const p = OUT(cl((u - +e.dataset.cin) / +(e.dataset.clen || 1)));
+        e.textContent = String(Math.round(+e.dataset.count * p));
+      }
+      for (const d of $$('.dots', s.el)) {
+        const p = OUT(cl((u - +d.dataset.din) / +(d.dataset.dlen || 1)));
+        const k = Math.round(+d.dataset.k * p);
+        [...d.children].forEach((c, i) => c.classList.toggle('ok', i < k));
+      }
+      // 95% interval bars grow out from their point estimate
+      for (const b of $$('.bar[data-lo]', s.el)) {
+        const p = OUT(cl((u - +b.dataset.bin) / 0.9));
+        const lo = +b.dataset.lo, hi = +b.dataset.hi, mid = (lo + hi) / 2, X = (v) => (v - 0.5) / 0.5 * 100;
+        b.style.left = `${X(mid - (mid - lo) * p)}%`; b.style.width = `${X(0.5 + (hi - lo) * p)}%`; b.style.opacity = p > 0 ? 1 : 0;
+      }
+      for (const m of $$('.pt[data-p]', s.el)) { m.style.left = `${(+m.dataset.p - 0.5) / 0.5 * 100}%`; m.style.opacity = cl((u - +m.dataset.bin) / 0.3); }
+      // videos: exact frames in the film, native playback live
+      for (const v of $$('video', s.el)) {
+        const x = vidTime(v, u, len + XF);
+        if (FILM) waits.push(seekVid(v, x));
+        else {
+          const rate = +(v.dataset.rate || 0) || Math.min(1, ((v.duration || 5.04) - 0.05) / (len + XF));
+          if (v.dataset.loop === 'pingpong' || Math.abs(v.currentTime - x) > 0.25) v.currentTime = x;
+          v.playbackRate = rate;
+          if (paused) { if (!v.paused) v.pause(); } else if (v.paused && v.dataset.loop !== 'pingpong') v.play().catch(() => {});
+        }
+      }
+    }
+    await Promise.all(waits);
+  };
+
+  let paused = false;
+  window.deckReady = true;
+  if (FILM) { $('#hud').classList.add('off'); await window.seek(+(q.get('t') || 0)); return; }
+
+  // live playback on the wall clock
+  let t0 = performance.now() / 1000 - +(q.get('t') || 0), tp = 0;
+  const now = () => (paused ? tp : performance.now() / 1000 - t0);
+  const jump = (t) => { t = Math.max(0, Math.min(DURATION - 0.01, t)); t0 = performance.now() / 1000 - t; tp = t; };
+  addEventListener('keydown', (e) => {
+    const t = now(), i = shots.findIndex((s) => t >= s.a && t < s.b);
+    if (e.key === ' ') { e.preventDefault(); if (paused) { paused = false; jump(tp); } else { tp = t; paused = true; } }
+    if (e.key === 'ArrowRight') jump(shots[Math.min(shots.length - 1, i + 1)].a);
+    if (e.key === 'ArrowLeft') jump(t - shots[i].a > 1 || i === 0 ? shots[i].a : shots[i - 1].a);
+    if (e.key === 'Home') jump(0);
+  });
+  const loop = () => { const t = now(); if (t >= DURATION) { paused = true; tp = DURATION - 0.01; } window.seek(Math.min(t, DURATION - 0.01)); $('#hud i').style.width = `${100 * t / DURATION}%`; requestAnimationFrame(loop); };
+  loop();
+})();
+</script>
+</body>
+</html>

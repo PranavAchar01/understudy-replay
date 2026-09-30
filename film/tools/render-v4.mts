@@ -13,13 +13,13 @@ const deck = process.argv[3] ?? "http://localhost:4650/deck/v4.html";
 const arg = (k: string) => { const i = process.argv.indexOf(`--${k}`); return i > 0 ? process.argv[i + 1] : undefined; };
 const FPS = Number(arg("fps") ?? 30);
 const stills = arg("stills")?.split(",").map(Number);
-const CHROME = `${process.env.HOME}/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`;
+const CHROME = process.env.CHROME ?? `${process.env.HOME}/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`;
 
 await mkdir(dirname(out), { recursive: true });
 const browser = await puppeteer.launch({
   executablePath: CHROME,
   headless: true,
-  args: ["--force-device-scale-factor=1", "--hide-scrollbars", "--autoplay-policy=no-user-gesture-required", "--mute-audio"],
+  args: ["--force-device-scale-factor=1", "--hide-scrollbars", "--autoplay-policy=no-user-gesture-required", "--mute-audio", ...(process.env.CHROME_ARGS?.split(" ").filter(Boolean) ?? [])],
   defaultViewport: { width: 1920, height: 1080, deviceScaleFactor: 1 },
   protocolTimeout: 600_000,
 });
