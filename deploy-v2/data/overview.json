@@ -54,9 +54,10 @@
   "training": {
    "base": "SmolVLA",
    "steps": 3000,
-   "gpu": "RunPod"
+   "gpu": "RTX 4090 (RunPod)",
+   "time": "17.5 min"
   },
-  "result": null,
+  "result": "3/5 on unseen starts in simulation",
   "download": null,
   "run_seconds": null
  },
