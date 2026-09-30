@@ -120,18 +120,14 @@ body.is-locked { overflow: hidden; }
 
 /* ---------- Run ---------- */
 .fleet { margin: var(--s4) var(--inset) 0; padding: var(--s7) clamp(var(--s4), 3vw, var(--s7)) var(--s8); border-radius: var(--r-panel); background: var(--ink-1); box-shadow: inset 0 0 0 1px var(--hair); }
-.fleet-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s4); max-width: 1280px; margin: 0 auto; flex-wrap: wrap; }
+.fleet-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); max-width: 1280px; margin: 0 auto; flex-wrap: wrap; }
 .fleet-head h2 { margin: 0; font: 400 26px/1.2 var(--serif); letter-spacing: -0.015em; }
-.fleet-head p { margin: 0; display: flex; align-items: center; gap: 8px; font: 400 13px/1.3 var(--mono); color: var(--text-2); }
-.fleet-head p i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
-.fleet-head p.done i { background: var(--ok); animation: none; }
 
-/* stat cards: Replay library */
-.stats { max-width: 1280px; margin: var(--s5) auto 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.stats div { background: var(--ink-2); border-radius: 14px; padding: 14px 16px; box-shadow: inset 0 0 0 1px var(--hair); min-width: 0; }
-.stats b { display: block; font: 400 30px/1 var(--serif); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.stats b small { font: 400 15px/1 var(--serif); color: var(--text-3); margin-left: 2px; }
-.stats span { display: block; margin-top: 6px; font: 500 12px/1.3 var(--sans); color: var(--text-3); }
+/* run time: the one stat card left, compact */
+.stats { display: flex; margin-left: var(--s2); }
+.stats div { display: flex; align-items: baseline; gap: 8px; background: var(--ink-2); border-radius: 12px; padding: 7px 12px; box-shadow: inset 0 0 0 1px var(--hair); }
+.stats b { font: 400 20px/1 var(--serif); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 3.2ch; }
+.stats span { font: 500 12px/1 var(--sans); color: var(--text-3); }
 
 /* scenario tiles */
 .grid { max-width: 1280px; margin: var(--s4) auto 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--s3); }
@@ -180,7 +176,6 @@ body.is-locked { overflow: hidden; }
 .foot { padding: var(--s6) var(--inset); text-align: center; font-size: 12px; color: var(--text-3); }
 .foot p { margin: 0; }
 
-@media (max-width: 860px) { .stats { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) {
   :root { --inset: 12px; }
   .hero { padding: var(--s4) var(--s4) var(--s7); }
@@ -188,7 +183,6 @@ body.is-locked { overflow: hidden; }
   .prompt { flex-basis: 100%; order: 3; }
   .cta { margin-left: auto; }
   .grid { grid-template-columns: repeat(2, 1fr); gap: var(--s2); }
-  .stats b { font-size: 24px; }
   .fleet { padding: var(--s5) var(--s3) var(--s6); }
   .fleet-head h2 { font-size: 22px; }
   .sheet { padding: var(--s3); }
@@ -208,7 +202,7 @@ body.is-locked { overflow: hidden; }
 .live[aria-pressed="true"]::before { background: var(--accent); box-shadow: 0 0 8px rgba(var(--amber), 0.9); }
 /* one row per prompt (data/three-prompts.json): prompt, its auto-route, cost, SmolVLA score, films */
 .run-title { display: flex; align-items: center; gap: var(--s3); min-width: 0; flex-wrap: wrap; }
-.route-pill.sm { min-height: 28px; min-width: 0; padding: 0 12px; font-size: 12.5px; gap: 7px; }
+.route-pill.sm { height: 22px; min-height: 0; min-width: 0; padding: 0 9px 0 7px; font: 500 11px/1 var(--sans); gap: 6px; }
 .route-pill.sm .robot-dot { width: 6px; height: 6px; }
 .prow { max-width: 1280px; margin: var(--s7) auto 0; padding-top: var(--s5); border-top: 1px solid var(--hair); }
 .prow-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s4); flex-wrap: wrap; }
@@ -225,7 +219,60 @@ body.is-locked { overflow: hidden; }
 #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 14px; }
 #grid .tile { aspect-ratio: 16 / 10; }
 .tile .tile-id { display: flex; align-items: center; gap: 8px; max-width: calc(100% - 20px); z-index: 2; }
-.tile .tile-title { font: 500 13px/1.25 Inter, system-ui, sans-serif; color: var(--text); text-shadow: 0 1px 8px rgba(0,0,0,.7);
+.tile .tile-title { font: 500 13px/20px Inter, system-ui, sans-serif; color: var(--text); text-shadow: 0 1px 8px rgba(0,0,0,.7);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: 0; text-transform: none; }
-.route-pill.xs { font-size: 11px; padding: 2px 8px 2px 6px; gap: 5px; flex: none; }
+.route-pill.xs { height: 20px; min-height: 0; min-width: 0; padding: 0 8px 0 6px; font: 500 11px/1 var(--sans); gap: 5px; flex: none; }
 .route-pill.xs .robot-dot { width: 6px; height: 6px; }
+
+/* GPU for SmolVLA training (replaces the run status line) */
+.gpu { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.gpu-label { font: 500 10.5px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+.gpu-seg { display: inline-flex; padding: 2px; border-radius: 999px; background: var(--ink-2); box-shadow: inset 0 0 0 1px var(--hair); }
+.gpu-seg button {
+  height: 24px; padding: 0 10px; border: 0; border-radius: 999px; cursor: pointer; white-space: nowrap;
+  font: 500 11.5px/1 var(--sans); color: var(--text-2); background: transparent; transition: background 150ms ease, color 150ms ease;
+}
+.gpu-seg button:hover { color: var(--text); }
+.gpu-seg button[aria-checked="true"] { color: var(--ink-0); background: linear-gradient(180deg, var(--accent-hi), var(--accent)); }
+.gpu-hint { font: 400 11.5px/1 var(--mono); color: var(--text-2); white-space: nowrap; }
+
+/* running-job label, only while a job runs */
+.tile-run {
+  position: absolute; right: 10px; bottom: 10px; z-index: 2; max-width: calc(100% - 20px); padding: 4px 8px; border-radius: 8px;
+  background: rgba(7, 9, 12, 0.72); font: 400 10.5px/1.2 var(--mono); color: var(--text-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* overview sheet: film left, the VLA's training timeline right */
+.sheet-panel.ov {
+  width: min(1320px, 100%); max-height: calc(100vh - 48px); display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+  border-radius: var(--r-panel); overflow: hidden; background: var(--ink-1); box-shadow: inset 0 0 0 1px var(--hair), 0 40px 120px -30px #000;
+}
+.ov-film { background: #000; display: grid; place-items: center; min-height: 0; }
+.sheet-panel.ov video { width: 100%; height: 100%; max-height: calc(100vh - 48px); border-radius: 0; box-shadow: none; object-fit: contain; }
+.ov-side { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; padding: var(--s6) var(--s5) var(--s5); }
+.ov-h { margin: 0 0 var(--s5); font: 400 20px/1.25 var(--serif); letter-spacing: -0.01em; padding-right: 40px; }
+.ov-steps { list-style: none; margin: 0; padding: 0; }
+.ov-steps li { position: relative; padding: 0 0 var(--s4) 22px; }
+.ov-steps li::before { content: ""; position: absolute; left: 0; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px rgba(var(--amber), 0.6); }
+.ov-steps li::after { content: ""; position: absolute; left: 3.5px; top: 16px; bottom: 2px; width: 1px; background: var(--hair); }
+.ov-steps li:last-child { padding-bottom: 0; }
+.ov-steps li:last-child::after { display: none; }
+.ov-k { display: block; font: 500 10.5px/16px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+.ov-v { margin: 2px 0 0; font: 400 14px/1.45 var(--sans); color: var(--text); }
+.ov-v b { font-weight: 600; color: var(--accent-hi); }
+.ov-v q { font: 400 16px/1.35 var(--serif); quotes: "\201C" "\201D"; }
+.ov-s { margin: 2px 0 0; font: 400 11.5px/1.45 var(--mono); color: var(--text-2); }
+.ov-score { font: 400 26px/1.1 var(--serif) !important; }
+.ov-pending { color: var(--text-2); }
+.ov-dl { margin-top: var(--s5); display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; align-self: stretch; }
+.ov-dl small { font: 500 11px/1 var(--mono); opacity: 0.7; }
+.ov-dl[aria-disabled="true"] { cursor: not-allowed; filter: saturate(0.3) brightness(0.6); box-shadow: none; }
+@media (max-width: 860px) {
+  .sheet { padding: var(--s3); align-items: start; overflow-y: auto; }
+  .sheet-panel.ov { grid-template-columns: 1fr; max-height: none; overflow: visible; }
+  .sheet-panel.ov video { max-height: 56vh; }
+  .ov-side { overflow: visible; padding: var(--s5) var(--s4); }
+  .ov-h { padding-right: 0; }
+  .sheet-backdrop { position: fixed; }
+}

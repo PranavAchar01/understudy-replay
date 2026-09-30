@@ -10,7 +10,7 @@ run="$repo/data/web-runs/$slug"
 mkdir -p "$out/runs/$slug/media/vla" "$out/data" "$out/media"
 cp "$here/index.html" "$here/site.css" "$here/site.js" "$here/route.js" "$out/"
 cp "$here/media/hero-cine.jpg" "$out/media/"
-cp "$here/data/recorded.json" "$out/data/"
+cp "$here/data/recorded.json" "$here/data/overview.json" "$out/data/"
 cp "$repo/data/router-dryruns.json" "$out/data/router-dryruns.json"
 for c in v01 v03 v06 v07; do cp "$run/media/vla/$c.mp4" "$run/media/vla/$c.json" "$out/runs/$slug/media/vla/"; done
 [ -f "$run/router_bench.json" ] && cp "$run/router_bench.json" "$out/runs/$slug/router_bench.json"

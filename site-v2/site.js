@@ -10,11 +10,10 @@
   const fmt = (n) => Math.round(n).toLocaleString("en-US");
   const clock = (s) => { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60); return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}:${String(s % 60).padStart(2, "0")}`; };
   const qs = new URLSearchParams(location.search);
-  const USD_PER_CREDIT = 0.01;
   const DRY_FALLBACK = {
     "demo-cheap": { model: "gen4_turbo", provider: "runway", credits: 25 },
     "demo-fast": { model: "seedance2_fast", provider: "bytedance", credits: 145 },
-    "demo-best": { model: "gemini_omni_flash_1.1", provider: "google", credits: 51 },
+    "demo-best": { model: "seedance2_5", provider: "bytedance", credits: 150 },
   };
 
   const input = $("#prompt");
@@ -76,20 +75,39 @@
   document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => { input.value = c.dataset.text; input.focus(); route(); }));
   route();
 
-  // ---------- meter ----------
-  const M = { credits: 0, accepted: 0, judged: 0, t0: 0, seconds: null, timer: 0 };
-  const setStat = (k, html) => { $(`.stats [data-m="${k}"] b`).innerHTML = html; };
-  function paintMeter() {
-    setStat("credits", fmt(M.credits));
-    setStat("time", clock(M.seconds != null ? M.seconds : M.t0 ? Date.now() / 1000 - M.t0 : 0));
-    setStat("accepted", M.judged ? `${M.accepted}<small>/${M.judged}</small>` : "0");
-    setStat("cpa", M.accepted && M.credits ? `${fmt(M.credits / M.accepted)}<small> cr · $${(M.credits * USD_PER_CREDIT / M.accepted).toFixed(2)}</small>` : "-");
+  // ---------- GPU for SmolVLA training (RunPod on-demand, prices seen 2026-09-30) ----------
+  const GPUS = [
+    { key: "4090", label: "4090", id: "NVIDIA GeForce RTX 4090", price: "$0.34/h" },
+    { key: "5090", label: "5090", id: "NVIDIA GeForce RTX 5090", price: "$0.69/h", speed: "3,000 steps in 9 min" },
+    { key: "l40s", label: "L40S", id: "NVIDIA L40S", price: "$0.79/h" },
+    { key: "a100", label: "A100 80GB", id: "NVIDIA A100 80GB PCIe", price: "$1.19/h" },
+    { key: "h100", label: "H100", id: "NVIDIA H100 80GB HBM3", price: "price varies" },
+  ];
+  state.gpu = GPUS[1];
+  state.runTimes = {};
+
+  // ---------- run time (the Time card) ----------
+  const M = { t0: 0, seconds: null, timer: 0 };
+  const paintTime = () => { $('.stats [data-m="time"] b').textContent = clock(M.seconds != null ? M.seconds : M.t0 ? Date.now() / 1000 - M.t0 : 0); };
+  function timeStart() { Object.assign(M, { t0: Date.now() / 1000, seconds: null }); clearInterval(M.timer); M.timer = setInterval(paintTime, 500); paintTime(); }
+  function timeStop() { if (M.seconds == null && M.t0) M.seconds = Date.now() / 1000 - M.t0; clearInterval(M.timer); paintTime(); if (CUR.slug) state.runTimes[CUR.slug] = M.seconds; }
+  const gpuSeg = $("#gpu-seg"), gpuHint = $("#gpu-hint");
+  function paintGpu() {
+    gpuSeg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.gpu === state.gpu.key)));
+    gpuHint.textContent = state.gpu.speed ? `${state.gpu.price} · ${state.gpu.speed}` : state.gpu.price;
   }
-  function meterReset() { Object.assign(M, { credits: 0, accepted: 0, judged: 0, t0: Date.now() / 1000, seconds: null }); clearInterval(M.timer); M.timer = setInterval(paintMeter, 500); paintMeter(); }
-  function meterStop() { if (M.seconds == null && M.t0) M.seconds = Date.now() / 1000 - M.t0; clearInterval(M.timer); paintMeter(); }
+  for (const g of GPUS) {
+    const b = el("button", null, esc(g.label)); b.type = "button"; b.dataset.gpu = g.key; b.setAttribute("role", "radio"); b.title = `${g.id} · ${g.price}`;
+    b.addEventListener("click", () => { state.gpu = g; paintGpu(); });
+    gpuSeg.append(b);
+  }
+  paintGpu();
 
   // ---------- run head + tiles ----------
-  const status = (t, done = false) => { const p = $("#run-status"); p.classList.toggle("done", done); $("span", p).textContent = t; };
+  // running-job text lives as a tiny label on this run's unfinished tiles; cleared when the run ends
+  const status = (t, done = false) => document.querySelectorAll(`#grid .tile[data-run="${RUN}"]`).forEach((n) => {
+    const s = $(".tile-run", n); s.textContent = done ? "" : t; s.hidden = done || !t;
+  });
   const tiles = new Map();
   let RUN = 0, CUR = { title: "", router: "", slug: "" };
   const STATE = {
@@ -104,7 +122,7 @@
     if (m.slug) root.dataset.slug = m.slug;
     root.innerHTML = `<span class="tile-id"><span class="route-pill xs">${pillHTML(m.router)}</span><span class="tile-title">${esc(m.title || id)}</span></span><video muted loop playsinline preload="metadata"></video>
       <div class="tile-state"><span class="status wait"><i></i><span>Queued</span></span><small></small></div>
-      <span class="tile-cap"></span>`;
+      <span class="tile-cap"></span><span class="tile-run" hidden></span>`;
     const older = meta ? null : [...grid.children].find((c) => c.dataset.run !== String(RUN));
     if (older) grid.insertBefore(root, older); else grid.append(root);
     const t = {
@@ -123,23 +141,59 @@
         root.classList.add("is-film"); return t;
       },
     };
-    root.addEventListener("click", () => { if (root.classList.contains("is-film")) openFilm(t.src); });
+    root.addEventListener("click", () => { if (root.classList.contains("is-film")) openOverview(root.dataset.slug, t.src, m); });
     tiles.set(key, t);
     return t;
   }
   const pillHTML = (router) => `<span class="robot-dot"></span><span>${esc(Route.NAME[router] || router || "")}</span>`;
   function startRun(task, head, router) {
     RUN++; CUR = { title: task, router, slug: "" };
-    $("#fleet").hidden = false; $("#run-task").textContent = task; $("#run-pill").innerHTML = pillHTML(router); status(head); meterReset();
+    $("#fleet").hidden = false; $("#run-task").textContent = task; $("#run-pill").innerHTML = pillHTML(router); status(head); timeStart();
     requestAnimationFrame(() => window.scrollTo({ top: $("#fleet").getBoundingClientRect().top + scrollY - 12, behavior: "smooth" }));
   }
 
-  // ---------- one animation, full size ----------
-  const sheet = $("#sheet"), sv = $("#sheet-video");
-  function openFilm(src) { sv.src = src; sheet.hidden = false; document.body.classList.add("is-locked"); sv.play().catch(() => {}); }
-  function closeFilm() { sheet.hidden = true; sv.pause(); sv.removeAttribute("src"); sv.load(); document.body.classList.remove("is-locked"); }
+  // ---------- overview: the film plus how its VLA was trained (data/overview.json, keyed by slug) ----------
+  //   the film's own JSON (<clip>.json) overrides eval {successes, seeds} and download when present
+  const sheet = $("#sheet"), sv = $("#sheet-video"), steps = $("#ov-steps"), dl = $("#ov-dl");
+  let overview = null, ovSeq = 0;
+  const loadOverview = () => (overview ||= getJSON(`data/overview.json?t=${Date.now()}`).then((r) => (r.ok ? r.body : {})));
+  const num = (n) => (n == null || n === "" ? "" : typeof n === "number" ? fmt(n) : esc(n));
+  const join = (...xs) => xs.filter((x) => x != null && x !== "").join(" · ");
+  function renderOverview(o, meta, film) {
+    const r = o.route || {}, d = o.demonstrations || {}, ds = o.dataset || {}, t = o.training || {};
+    const ev = (film && film.eval && film.eval.seeds ? film.eval : null) || (o.result && o.result.seeds ? o.result : null);
+    const secs = state.runTimes[meta.slug] ?? o.run_seconds ?? null;
+    const url = (film && film.download) || (o.download && o.download.url) || "";
+    const row = (k, main, sub = "") => `<li><span class="ov-k">${k}</span><p class="ov-v">${main}</p>${sub ? `<p class="ov-s">${sub}</p>` : ""}</li>`;
+    steps.innerHTML = [
+      row("Prompt", `<q>${esc(o.prompt || meta.title || "")}</q>`),
+      row("Route", join(`<b>${esc(r.router || Route.NAME[meta.router] || "")}</b> router`, esc(r.model), r.credits_per_clip != null ? `${num(r.credits_per_clip)} credits a clip` : ""), esc(r.note || "")),
+      row("Demonstrations", d.generated != null ? `${num(d.generated)} clips generated, <b>${num(d.accepted)}</b> physics-accepted` : `<b>${num(d.episodes)}</b> episodes`,
+        join(esc(d.rejected || ""), esc(d.source || ""))),
+      row("Dataset", join(ds.episodes != null ? `<b>${num(ds.episodes)}</b> episodes` : "", ds.frames != null ? `${num(ds.frames)} frames` : ""), ds.cameras ? `cameras ${esc(ds.cameras)}` : ""),
+      row("Training", join(`${esc(t.base || "SmolVLA")} base`, t.steps != null ? `<b>${num(t.steps)}</b> steps` : ""), join(esc(t.gpu || ""), esc(t.time || ""), esc(t.cost || ""))),
+      row("Time", join(secs != null ? `<b>${clock(secs)}</b> demo pipeline` : "", t.time ? `${esc(t.time)} training` : "") || `<span class="ov-pending">not recorded yet</span>`,
+        secs != null ? "sentence to physics-accepted dataset, then SmolVLA training" : ""),
+      row("Result", ev ? `<b class="ov-score">${num(ev.successes)}/${num(ev.seeds)}</b>` : `<span class="ov-pending">Evaluating</span>`,
+        ev ? esc((o.result && o.result.note) || "in simulation") : "score in simulation"),
+    ].join("");
+    if (url) { dl.href = url; dl.removeAttribute("aria-disabled"); dl.innerHTML = `Download VLA${o.download && o.download.size && !(film && film.download) ? ` <small>${esc(o.download.size)}</small>` : ""}`; }
+    else { dl.removeAttribute("href"); dl.setAttribute("aria-disabled", "true"); dl.innerHTML = "Download VLA <small>uploading</small>"; }
+  }
+  async function openOverview(slug, src, meta) {
+    const seq = ++ovSeq;
+    sv.src = src; sheet.hidden = false; document.body.classList.add("is-locked"); sv.play().catch(() => {});
+    const all = await loadOverview();
+    if (seq !== ovSeq) return;
+    const o = all[slug] || {};
+    renderOverview(o, meta, null);
+    const j = await getJSON(String(src).replace(/\.mp4(\?.*)?$/, ".json"));
+    if (seq === ovSeq && j.ok && (j.body.eval || j.body.download)) renderOverview(o, meta, j.body);
+  }
+  function closeFilm() { ovSeq++; sheet.hidden = true; sv.pause(); sv.removeAttribute("src"); sv.load(); document.body.classList.remove("is-locked"); }
   $("#sheet-close").addEventListener("click", closeFilm);
   $("#sheet-backdrop").addEventListener("click", closeFilm);
+  dl.addEventListener("click", (e) => { if (dl.getAttribute("aria-disabled") === "true") e.preventDefault(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !sheet.hidden) closeFilm(); });
 
   // ---------- one row per prompt: data/three-prompts.json
@@ -190,17 +244,16 @@
     const t = tile(hero ? hero.id : "demo");
     const T = fast ? 0 : 9000, t0 = performance.now();
     M.t0 = 0; M.seconds = 0; clearInterval(M.timer);
-    const tick = () => { const f = T ? Math.min(1, (performance.now() - t0) / T) : 1; M.seconds = R.seconds * f; paintMeter(); if (f < 1 && state.running) requestAnimationFrame(tick); };
+    const tick = () => { const f = T ? Math.min(1, (performance.now() - t0) / T) : 1; M.seconds = R.seconds * f; paintTime(); if (f < 1 && state.running) requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
     status("Runway generating · recorded run"); t.set("gen"); await wait_(1600);
-    for (const c of R.clips) { M.credits += c.credits; M.judged++; if (c.accepted) M.accepted++; }
-    status("Physics check · 21 gates in MuJoCo"); t.set("physics"); paintMeter(); await wait_(1800);
+    status("Physics check · 21 gates in MuJoCo"); t.set("physics"); await wait_(1800);
     t.set("ok"); await wait_(700);
     status(`SmolVLA training on ${R.episodes} episodes`); t.set("train");
     await wait_(Math.max(0, T - (performance.now() - t0) - 600));
     if (hero) t.film(`${filmDir}/${hero.film}`, hero.success !== false);
-    M.seconds = R.seconds; paintMeter();
-    status(`Done · ${tag}`, true);
+    M.seconds = R.seconds; paintTime(); state.runTimes[R.slug] = R.seconds;
+    status("", true);
     prompts(R.slug, "runs");
   }
 
@@ -220,7 +273,7 @@
     if (!f.ok) { paintRoute(rt, rt.dry || DRY_FALLBACK[rt.router], why(f, f.status === 409 ? "A stage is still running." : "The server refused this task.")); return; }
     const { slug, clip_ids: ids = [], existing = [] } = f.body;
     const name = Route.NAME[rt.router] || rt.router;
-    startRun(text, `Live · ${(rt.dry || {}).model || name}`, rt.router);
+    startRun(text, `Live · ${(rt.dry || {}).model || name}`, rt.router); CUR.slug = slug;
     const base = "/runs";
     // scenarios this sentence already had keep their films
     if (existing.length) {
@@ -231,48 +284,41 @@
       }
     }
     ids.forEach((c) => tile(c));
-    const paid = new Set();
     status(`Runway generating · ${name}`);
     const okFoot = await job(f.body.job, (ev) => {
       if (ev.type === "runway" && ev.clip) {
         tile(ev.clip).set("gen", ev.stage === "frame" ? "first frame" : (ev.model || ""));
-        const key = `${ev.clip}:${ev.stage}`;
-        if (ev.status === "SUCCEEDED" && !paid.has(key)) {
-          paid.add(key);
-          const c = ev.routing && ev.routing.realized_credits != null ? ev.routing.realized_credits : ev.cost;
-          M.credits += Number(c) || 0; paintMeter();
-        }
       } else if (ev.type === "clip_ready") tile(ev.clip).set("physics", "queued");
       else if (ev.type === "error") status(short(ev.message, 80));
     });
-    if (!okFoot) { meterStop(); status("Runway stage failed", true); return; }
+    if (!okFoot) { timeStop(); status("", true); paintRoute(rt, rt.dry || DRY_FALLBACK[rt.router], "Runway stage failed"); return; }
 
     const d = await post("/api/data", { slug });
-    if (!d.ok) { meterStop(); status(why(d, "Physics stage refused"), true); return; }
+    if (!d.ok) { timeStop(); status("", true); paintRoute(rt, rt.dry || DRY_FALLBACK[rt.router], why(d, "Physics stage refused")); return; }
     status("Physics check · 21 gates in MuJoCo");
     const accepted = [];
     await job(d.body.job, (ev) => {
       if (ev.type === "clip_stage" && tiles.has(ev.clip)) tile(ev.clip).set("physics", ev.stage || "");
       else if (ev.type === "verdict" && ev.clip) {
-        M.judged++; if (ev.accepted) { M.accepted++; accepted.push(ev.clip); }
-        tile(ev.clip).set(ev.accepted ? "ok" : "no", ev.accepted ? `${ev.gates_passed || 21} of ${ev.gates_total || 21} gates` : short(ev.reason || "rejected")); paintMeter();
+        if (ev.accepted) accepted.push(ev.clip);
+        tile(ev.clip).set(ev.accepted ? "ok" : "no", ev.accepted ? `${ev.gates_passed || 21} of ${ev.gates_total || 21} gates` : short(ev.reason || "rejected"));
       } else if (ev.type === "episodes") status(`${ev.total} episodes for SmolVLA`);
     });
-    if (!accepted.length) { meterStop(); status("No clip passed the physics gates", true); return; }
+    if (!accepted.length) { timeStop(); status("", true); paintRoute(rt, rt.dry || DRY_FALLBACK[rt.router], "No clip passed the physics gates"); return; }
 
     // SmolVLA on a rented GPU, when the trainer is connected
     const tr = await getJSON("/api/trainer");
     accepted.forEach((c) => tile(c).set("train"));
     if (tr.ok && tr.body.connected) {
-      const t = await post("/api/train", { slug });
+      const t = await post("/api/train", { slug, gpu: state.gpu.id });
       if (t.ok) {
-        status("SmolVLA training on a rented GPU");
+        status(`SmolVLA training on ${state.gpu.label}`);
         await job(t.body.job, (ev) => {
-          if (ev.type === "train_line") status(`SmolVLA training on a rented GPU · ${clock(ev.seconds || 0)}${ev.usd != null ? ` · $${Number(ev.usd).toFixed(2)}` : ""}${ev.step && ev.steps ? ` · step ${ev.step}/${ev.steps}` : ""}`);
+          if (ev.type === "train_line") status(`${state.gpu.label} · ${clock(ev.seconds || 0)}${ev.usd != null ? ` · $${Number(ev.usd).toFixed(2)}` : ""}${ev.step && ev.steps ? ` · step ${ev.step}/${ev.steps}` : ""}`);
         });
       }
     }
-    meterStop();
+    timeStop();
     const v = await post("/api/vla", { slug, clips: accepted });
     status(v.ok ? "SmolVLA filming in MuJoCo" : "Waiting for SmolVLA films");
     accepted.forEach((c) => tile(c).set("film"));
@@ -288,7 +334,7 @@
     const mine = [...document.querySelectorAll(`#grid .tile[data-run="${RUN}"]`)];
     const first = mine.find((n) => n.classList.contains("is-film"));
     if (first) mine.forEach((n) => { if (n !== first) n.remove(); });
-    status(shown.size ? "Done" : "Films still rendering", !!shown.size);
+    status(shown.size ? "" : "Films still rendering", !!shown.size);
     prompts(slug, base);
   }
 

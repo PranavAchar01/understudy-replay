@@ -11,9 +11,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="site.css?v=1">
-  <script src="route.js?v=1" defer></script>
-  <script src="site.js?v=1" defer></script>
+  <link rel="stylesheet" href="site.css?v=3">
+  <script src="route.js?v=2" defer></script>
+  <script src="site.js?v=3" defer></script>
 </head>
 <body>
   <main class="page">
@@ -52,24 +52,29 @@
 
     <section class="fleet" id="fleet" hidden aria-label="Training run">
       <header class="fleet-head">
-        <div class="run-title"><span class="route-pill sm" id="run-pill"><span class="robot-dot"></span><span></span></span><h2 id="run-task"></h2></div>
-        <p id="run-status"><i></i><span></span></p>
+        <div class="run-title"><span class="route-pill sm" id="run-pill"><span class="robot-dot"></span><span></span></span><h2 id="run-task"></h2>
+          <div class="stats" id="stats"><div data-m="time"><b>0:00</b><span>Time</span></div></div>
+        </div>
+        <div class="gpu" title="GPU for SmolVLA training, RunPod on-demand">
+          <span class="gpu-label" id="gpu-label">GPU</span>
+          <div class="gpu-seg" id="gpu-seg" role="radiogroup" aria-labelledby="gpu-label"></div>
+          <span class="gpu-hint" id="gpu-hint" aria-live="polite"></span>
+        </div>
       </header>
-      <div class="stats" id="stats">
-        <div data-m="credits"><b>0</b><span>Credits spent</span></div>
-        <div data-m="time"><b>0:00</b><span>Time</span></div>
-        <div data-m="accepted"><b>0</b><span>Physics-accepted demos</span></div>
-        <div data-m="cpa"><b>-</b><span>Cost per usable demo</span></div>
-      </div>
       <div class="grid" id="grid"></div>
       <div id="prompts"></div>
     </section>
   </main>
 
-  <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="SmolVLA film">
+  <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="Prompt overview">
     <div class="sheet-backdrop" id="sheet-backdrop"></div>
-    <div class="sheet-panel">
-      <video id="sheet-video" muted loop playsinline autoplay></video>
+    <div class="sheet-panel ov">
+      <div class="ov-film"><video id="sheet-video" muted loop playsinline autoplay></video></div>
+      <aside class="ov-side">
+        <h3 class="ov-h">How this VLA was trained</h3>
+        <ol class="ov-steps" id="ov-steps"></ol>
+        <a class="cta ov-dl" id="ov-dl" aria-disabled="true" rel="noopener">Download VLA</a>
+      </aside>
       <button type="button" class="close" id="sheet-close" aria-label="Close">
         <svg viewBox="0 0 14 14" aria-hidden="true"><path d="m2 2 10 10M12 2 2 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       </button>

@@ -34,8 +34,8 @@
   }
  },
  "demo-best": {
-  "model": "gemini_omni_flash_1.1",
-  "provider": "google",
+  "model": "seedance2_5",
+  "provider": "bytedance",
   "configId": "demo-best",
   "resolvedSettings": {
    "optimizeFor": "quality",
@@ -47,7 +47,7 @@
    "resolution": "720p"
   },
   "estimatedCost": {
-   "credits": 51
+   "credits": 150
   }
  },
  "robot": {
