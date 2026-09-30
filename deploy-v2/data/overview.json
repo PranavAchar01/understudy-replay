@@ -2,7 +2,7 @@
   "put-the-red-block-in-the-bowl": {
     "prompt": "put the red block in the bowl",
     "route": {
-      "router": "Cheap",
+      "router": "$2 budget",
       "model": "gen4_turbo",
       "credits_per_clip": 25
     },
@@ -38,7 +38,7 @@
   "push-the-red-block-onto-the-blue-square": {
     "prompt": "push the red block onto the blue square",
     "route": {
-      "router": "Cheap",
+      "router": "$2 budget",
       "model": "gen4_turbo",
       "credits_per_clip": 25,
       "note": "one Runway reference clip"
@@ -68,10 +68,10 @@
   "stack-the-red-block-on-the-blue-block": {
     "prompt": "stack the red block on the blue block",
     "route": {
-      "router": "Best",
+      "router": "$10 budget",
       "model": "seedance2_5",
       "credits_per_clip": 150,
-      "note": "one real Runway reference clip, routed to Best for several steps (313 s)"
+      "note": "one real Runway reference clip, on the $10 budget router (313 s)"
     },
     "demonstrations": {
       "episodes": 30,
@@ -97,10 +97,10 @@
   "stack-three-blocks-into-a-tower": {
     "prompt": "stack three blocks into a tower",
     "route": {
-      "router": "Best",
+      "router": "$10 budget",
       "model": "gemini_omni_flash_1.1",
       "credits_per_clip": 51,
-      "note": "one real Runway reference clip, routed to Best for several placements"
+      "note": "one real Runway reference clip, on the $10 budget router"
     },
     "demonstrations": {
       "episodes": 25,
