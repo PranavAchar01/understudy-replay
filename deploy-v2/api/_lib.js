@@ -1,20 +1,28 @@
-// Shared helpers for the live Runway path (Vercel functions). The key lives in the RUNWAY_API_KEY env var only.
+// Shared helpers for the live Runway path (Vercel functions). Bring your own key: every call uses the visitor's
+// Runway API key from the X-Runway-Key header. It is forwarded to Runway only, never stored or logged.
 const BASE = "https://api.dev.runwayml.com/v1";
 const VERSION = "2024-11-06";
-const FLOOR = Number(process.env.UNDERSTUDY_CREDIT_FLOOR || 35000); // public visitors never take the balance below this
-const PER_IP = 8; // start + video calls per visitor per 10 minutes (per warm instance; the floor is the hard cap)
+const PER_IP = 12; // calls per visitor per 10 minutes (per warm instance)
 const hits = new Map();
 
-async function runway(method, path, body) {
-  const key = process.env.RUNWAY_API_KEY;
-  if (!key) throw Object.assign(new Error("live generation is not configured"), { code: 503 });
+const fail = (msg, code) => Object.assign(new Error(msg), { code });
+
+function keyOf(req) {
+  const k = String(req.headers["x-runway-key"] || "").trim();
+  if (!k) throw fail("Add your Runway API key to generate new prompts.", 401);
+  if (!/^key_[A-Za-z0-9_-]{16,300}$/.test(k)) throw fail("That doesn't look like a Runway API key (it starts with key_).", 401);
+  return k;
+}
+
+async function runway(key, method, path, body) {
   const r = await fetch(BASE + path, {
     method,
     headers: { Authorization: `Bearer ${key}`, "X-Runway-Version": VERSION, "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw Object.assign(new Error(j.error || j.message || `Runway HTTP ${r.status}`), { code: r.status === 400 ? 400 : 502 });
+  if (r.status === 401 || r.status === 403) throw fail("Runway rejected this API key.", 401);
+  if (!r.ok) throw fail(j.error || j.message || `Runway HTTP ${r.status}`, r.status === 400 || r.status === 404 ? r.status : 502);
   return j;
 }
 
@@ -32,10 +40,28 @@ function decide(text) {
   return reasons.length ? { router: "demo-best", reasons } : { router: "demo-cheap", reasons: ["one rigid object, one hand"] };
 }
 
+// the visitor's account gets the same two Model Routers the first time it is used (Cheap = cost, Best = quality)
+const ROUTERS = {
+  "demo-cheap": { slug: "understudy-cheap", optimizeFor: "cost" },
+  "demo-best": { slug: "understudy-best", optimizeFor: "quality" },
+};
+async function ensureRouter(key, router) {
+  const want = ROUTERS[router];
+  const have = await runway(key, "GET", "/routers");
+  if ((have.data || []).some((r) => r.slug === want.slug || r.name === want.slug)) return want.slug;
+  const made = await runway(key, "POST", "/routers", {
+    slug: want.slug,
+    name: want.slug,
+    description: `Understudy robot demonstrations, optimize for ${want.optimizeFor}`,
+    settings: { schemaVersion: 1, models: { mode: "allow_new_except", ids: [] }, optimizeFor: want.optimizeFor, fallback: { onCapacity: true } },
+  });
+  return made.slug || made.name || want.slug;
+}
+
 function clean(prompt) {
   const p = String(prompt || "").replace(/\s+/g, " ").trim().replace(/[.!]+$/, "");
   if (p.length < 6 || p.length > 140 || !/^[a-zA-Z0-9 ,'-]+$/.test(p)) {
-    throw Object.assign(new Error("Use a short plain sentence (6 to 140 letters), like \"put the green cup on the plate\"."), { code: 400 });
+    throw fail("Use a short plain sentence (6 to 140 letters), like \"put the green cup on the plate\".", 400);
   }
   return p;
 }
@@ -53,19 +79,15 @@ const videoPrompt = (task) =>
 function limit(req) {
   const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "?";
   const now = Date.now(), recent = (hits.get(ip) || []).filter((t) => now - t < 600000);
-  if (recent.length >= PER_IP) throw Object.assign(new Error("That's a few runs in a row. Try again in a few minutes."), { code: 429 });
+  if (recent.length >= PER_IP) throw fail("That's a lot of runs in a row. Try again in a few minutes.", 429);
   recent.push(now); hits.set(ip, recent);
-}
-
-async function guard(cost) {
-  const org = await runway("GET", "/organization");
-  if ((org.creditBalance ?? 0) - cost < FLOOR) throw Object.assign(new Error("Today's live-generation budget is used up. The library below still plays."), { code: 402 });
 }
 
 const isId = (s) => /^[0-9a-f-]{36}$/i.test(String(s || ""));
 
 function send(res, fn) {
+  res.setHeader("Cache-Control", "no-store");
   return fn().then((b) => res.status(200).json(b)).catch((e) => res.status(e.code || 500).json({ error: e.message }));
 }
 
-module.exports = { runway, decide, clean, imagePrompt, videoPrompt, limit, guard, isId, send };
+module.exports = { keyOf, runway, decide, ensureRouter, clean, imagePrompt, videoPrompt, limit, isId, send };

@@ -48,6 +48,11 @@
 
           <button type="button" class="live" id="live" aria-pressed="false" title="On stage: route for lowest latency">Live</button>
         </div>
+        <div class="key-row" id="key-row" hidden>
+          <label class="gpu-label" for="rw-key">Runway API key</label>
+          <input class="key-input" id="rw-key" type="password" placeholder="key_..." autocomplete="off" spellcheck="false">
+          <span class="key-hint">New prompts run on your own Runway credits. The key goes straight to Runway and is kept only in this browser. <a href="https://dev.runwayml.com" target="_blank" rel="noopener">Get a key</a></span>
+        </div>
         <div class="chips" id="chips">
           <button type="button" class="chip" data-text="put the red block in the bowl">put the red block in the bowl</button>
           <button type="button" class="chip" data-text="push the red block onto the blue square">push the red block onto the blue square</button>

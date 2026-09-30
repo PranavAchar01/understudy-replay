@@ -4,5 +4,7 @@ set -e
 ROOT="${0:A:h:h}"
 export RUNWAY_API_KEY="$(security find-generic-password -s RUNWAY_API_KEY -w)"
 export PYTHONPATH="$ROOT/src"
+# the trained pick SmolVLA films the tiles unless you point this at another checkpoint
+export UNDERSTUDY_VLA_CKPT="${UNDERSTUDY_VLA_CKPT:-$HOME/helloworld/understudy/data/probes/smolvla-aug-20000-5090/pretrained_model}"
 cd "$ROOT"
 exec "$ROOT/.venv/bin/python" -m understudy.cli "$@"

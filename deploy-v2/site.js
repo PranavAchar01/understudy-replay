@@ -303,11 +303,19 @@
 
   // ---------- cloud: a new sentence is generated live by Runway (Vercel functions in api/cloud) ----------
   //   a sentence that matches a finished task replays it; anything else: route -> gen4_image first frame -> Model Router video
+  // bring your own key: on the hosted site new prompts run on the visitor's Runway credits; the key stays in this browser
+  const KEY = "understudy.runwayKey", keyRow = $("#key-row"), keyIn = $("#rw-key");
+  try { keyIn.value = localStorage.getItem(KEY) || ""; } catch {}
+  keyIn.addEventListener("input", () => { keyRow.classList.remove("need"); try { localStorage.setItem(KEY, keyIn.value.trim()); } catch {} });
+  ready.then(() => { keyRow.hidden = state.backend; });
+  const withKey = (opt = {}) => ({ ...opt, headers: { ...(opt.headers || {}), "X-Runway-Key": keyIn.value.trim() } });
+  const cpost = (url, data) => getJSON(url, withKey({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }));
   const libraryMatch = (text) => /\b(bowl|push|shove|slide|stack|tower|on top)\b/i.test(String(text || ""));
   async function poll(id, onTick) {
     for (let i = 0; i < 200; i++) {
       await wait(i < 3 ? 2500 : 4000);
-      const r = await getJSON(`/api/cloud/task?id=${encodeURIComponent(id)}`);
+      const r = await getJSON(`/api/cloud/task?id=${encodeURIComponent(id)}`, withKey());
+      if (r.status === 401) throw new Error((r.body && r.body.error) || "Runway rejected this API key.");
       if (!r.ok) continue;
       if (r.body.status === "SUCCEEDED") return r.body.output && r.body.output[0];
       if (r.body.status === "FAILED" || r.body.status === "CANCELLED") throw new Error(r.body.failure || "Runway could not make this clip.");
@@ -316,8 +324,13 @@
     throw new Error("Runway is taking too long; try again.");
   }
   async function cloud(text) {
-    const s = await post("/api/cloud/start", { prompt: text });
-    if (!s.ok) { line.classList.add("is-no"); line.textContent = (s.body && s.body.error) || "Live generation is unavailable right now."; return; }
+    if (!keyIn.value.trim()) {
+      keyRow.classList.add("need"); keyIn.focus();
+      line.classList.add("is-no"); line.textContent = "New prompts run on your own Runway credits: paste your Runway API key below. The four examples play without one.";
+      return;
+    }
+    const s = await cpost("/api/cloud/start", { prompt: text });
+    if (!s.ok) { if (s.status === 401) keyRow.classList.add("need"); line.classList.add("is-no"); line.textContent = (s.body && s.body.error) || "Live generation is unavailable right now."; return; }
     const { task, router, reasons, image_task } = s.body;
     const dry = state.dry[router] || DRY_FALLBACK[router];
     startRun(task, `Live · ${Route.NAME[router]} · ${dry.model}`, router);
@@ -332,7 +345,7 @@
       t.set("gen", "first frame · gen4_image");
       const frame = await poll(image_task, (b) => t.set("gen", `first frame${pct(b)}`));
       $("video", t.root).poster = frame;
-      const v = await post("/api/cloud/video", { prompt: task, image_task });
+      const v = await cpost("/api/cloud/video", { prompt: task, image_task });
       if (!v.ok) throw new Error((v.body && v.body.error) || "The router refused this clip.");
       const model = v.body.model || dry.model;
       status(`Runway generating · ${model} · ${v.body.credits ?? dry.credits} credits`);
