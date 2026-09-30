@@ -1,157 +1,183 @@
-# Understudy (replay build)
-
-This copy of Understudy shows the policy, not the footage: each scenario tile on the site is the fine-tuned SmolVLA
-itself running that scenario in MuJoCo. The run `put-the-red-block-in-the-bowl` keeps only its 4 accepted clips
-(v01 v03 v06 v07). Typing the same sentence, or "More scenarios" on the site, adds NEW clips after the highest id
-(v08, v09, ...); nothing already made is regenerated.
-
-- Tile films: `data/web-runs/<run>/media/vla/<clip>.mp4` + `<clip>.json` ({clip, success, frames, cube_xy, model}).
-  A tile without one says "VLA film rendering" and the page picks the film up within 5 s of it landing.
-- Make them with the model (Linux GPU box: `MUJOCO_GL=egl` is the default there):
-  `PYTHONPATH=src python scripts/vla_tiles.py data/web-runs/put-the-red-block-in-the-bowl --ckpt <checkpoints/last> --device cuda`
-- Or film the evaluated episodes (no model): `... --from-eval <eval.json> <eval_traj.npz>` (add `--dry-run` to see the picks).
-- Live: start the server with `UNDERSTUDY_VLA_CKPT=<checkpoints/last>` and the site runs SmolVLA on each newly accepted
-  scenario after its dataset (POST /api/vla). Without it, new tiles say "VLA film rendering" and the side panel shows
-  the command. `UNDERSTUDY_HEAVY_LOCK=0` skips waiting for ~/helloworld/.heavy-lock.
-
 # Understudy
 
-An understudy learns the role by watching the lead. Here the lead is a person that Runway made up, and the
-understudy is a LeRobot SO-101 arm. Type a task; Runway generates people doing it; the pipeline measures the hand,
-throws out every clip a robot should not learn from, retargets the rest onto the SO-101, writes a LeRobot v3.0
-dataset, trains a small policy and runs it in MuJoCo.
+**Type one sentence. Runway films people doing the task, physics throws out every clip a robot shouldn't learn
+from, and a vision-language-action model (SmolVLA) learns the skill on a rented GPU for under $10.**
 
-AI video now models gravity, contact and grasping well enough to look real at a glance. The natural next step is
-to use it as data, not only as media, and robotics is the first field that needs it: robots learn skills from
-demonstrations, and today people record those one take at a time, by teleoperating a robot or filming
-themselves. Understudy makes the demonstrations from one sentence, for a low-cost arm anyone can buy.
+An understudy learns the role by watching the lead. Here the lead is a person Runway made up, and the understudy is
+a LeRobot SO-101 arm.
 
-Generated video is not always physical, so the gates are the core of the tool, and the rejections are shown as
-proudly as the acceptances. **Runway imagines the demonstration. Physics decides if it counts.**
+- **Live site:** https://understudy-replay.vercel.app
+- **Benchmark slide:** https://understudy-benchmark.vercel.app
+- **Trained model:** [vla-pick-20k release](https://github.com/PranavAchar01/understudy-replay/releases/tag/vla-pick-20k) (SmolVLA, 907 MB)
+- Built at the Runway API hackathon, 2026-09-30.
 
-Built for the Runway API hackathon (theme: build the tool you wish existed). Local only.
+**Runway imagines the demonstration. Physics decides whether it counts.**
 
-## Run it
+## Why
 
+Robots learn new skills from demonstrations, and today a person records every one of them, one take at a time,
+with a teleoperation rig. That is why robot learning lives in well-funded labs. Understudy makes the
+demonstrations from a sentence instead, so a student with a laptop and a $200 arm can train a policy.
+
+![What one robot skill costs](docs/img/cost.jpg)
+
+| | A robotics lab | Understudy |
+|---|---|---|
+| Demonstrations | DROID (2024): 76,000 demos by 50 people over 12 months, pooled across 13 institutions | 0 recorded by a person |
+| Hardware | Mobile ALOHA (2024): under $32,000 for one two-arm rig | a laptop, plus an optional ~$200 SO-101 |
+| Footage | people in front of cameras | $2 to $10 of Runway video a run ($1.60 to $7.85 actual) |
+| Training | a lab's own GPUs | about $0.55 on a rented RTX 5090 (20,000 steps, 48 min) |
+
+## Results (all in MuJoCo simulation)
+
+![Benchmark](docs/img/benchmark.jpg)
+
+The controlled test: same model (SmolVLA, `lerobot/smolvla_base`), same task ("put the red block in the bowl"),
+same 74 training start positions, same 50 unseen test positions, same training. The only thing that changes is
+where the demonstrations came from.
+
+| Demonstrations | 3,000 steps | 20,000 steps |
+|---|---|---|
+| Runway-generated video of people, physics-filtered | 34/50 | **43/50 (86%)** |
+| A perfect scripted operator (reads the exact cube pose) | 44/50 | **44/50 (88%)** |
+| Same model, untrained | 0/50 | 0/50 |
+
+The 95% intervals overlap, so at 20,000 steps the two are statistically tied. Generated data needs more training
+to catch up, not more people. The scripted operator is stronger than a human teleoperator, because it knows
+exactly where the block is. Details: [docs/BENCHMARK.md](docs/BENCHMARK.md).
+
+The other library tasks show the rest of the pipeline (routing, training, filming) on harder scenes. Their
+demonstrations come from the scripted operator, not from Runway footage:
+
+| Task | Episodes | Steps | GPU and time | Result on unseen starts |
+|---|---|---|---|---|
+| put the red block in the bowl (Runway demos) | 74 | 20,000 | RTX 5090, 48 min | 43/50 |
+| push the red block onto the blue square | 30 | 3,000 | RTX 4090, 17.5 min | 3/5 |
+| stack the red block on the blue block | 30 | 10,000 | L40S ($0.54) | 0/5 (not learned yet; its tile shows the scripted demo) |
+| stack three blocks into a tower | 25 | 14,000 | L40S, 33.7 min ($0.73) | 1/5 |
+
+## Budget routing (Runway Model Router)
+
+![Budget routing](docs/img/budget.jpg)
+
+You don't pick a model; you pick what a run may cost. A run is 5 demonstration clips, and every budget is its own
+**quality-optimized** Model Router with a price ceiling of `budget x 100 / 5` credits a clip
+(`settings.maxCreditsPerGeneration.video`). The router picks the best model that fits. A free dry run shows the
+pick and the price before any credit is spent.
+
+| Budget per run | Router | Ceiling a clip | Model it picks | Credits a clip | Real run cost |
+|---|---|---|---|---|---|
+| $2 | `understudy-q40` | 40 | gen4_turbo (Runway) | 25 | about $1.60 |
+| $4 | `understudy-q80` | 80 | gemini_omni_flash (Google) | 51 | about $2.90 |
+| $6 | `understudy-q120` | 120 | gemini_omni_flash (Google) | 51 | about $2.90 |
+| $8 | `understudy-q160` | 160 | gemini_omni_flash_1.1 (Google) | 51 | about $2.90 |
+| $10 | `understudy-q200` | 200 | seedance2_5 (ByteDance) | 150 | about $7.85 |
+
+Dry runs from 2026-09-30. Run cost includes the gen4_image first frames. 1 credit = $0.01.
+
+## Prompting: PhyT2V
+
+Prompts follow the PhyT2V loop (Xue et al., CVPR 2025) with Runway's Gen-4 guidance to phrase everything
+positively. Each clip is judged by physics; when a clip fails (for example, the block duplicates itself halfway
+through), the matching corrective rule in `src/understudy/plan.py` (`MISMATCH_RULES`) is added to the prompt and
+the clip is regenerated. The overview on the site shows every Runway clip behind a robot, with its route and its
+physics verdict, rejected ones included.
+
+![Every Runway clip behind a robot](docs/img/gallery.jpg)
+
+## Two ways to run it
+
+### Hosted: bring your own Runway key
+
+On https://understudy-replay.vercel.app the four finished tasks play for free. A new sentence runs on **your own
+Runway credits**: paste a Runway API key under the prompt. The key stays in your browser (localStorage) and is sent
+only to Runway, through three Vercel functions in `site-v2/api/cloud/` (`start`, `task`, `video`). They draw the
+first frame with gen4_image, create the five `understudy-q*` routers on your account the first time you use them,
+and animate the frame through the router for your budget. The hosted site generates the Runway clip live; the
+physics gates, retargeting and SmolVLA training need the local pipeline below.
+
+### Local: the whole pipeline
+
+Requirements: macOS (the keys live in the Keychain), Python 3.12 with [uv](https://docs.astral.sh/uv/), a Runway API key, and a RunPod
+API key for GPU training.
+
+```bash
+uv sync
+security add-generic-password -s RUNWAY_API_KEY -a "$USER" -w     # macOS Keychain (prompts for the key)
+security add-generic-password -s RUNPOD_API_KEY -a "$USER" -w
+bin/understudy serve                                              # http://127.0.0.1:8765
 ```
-bin/understudy serve                                            # the web app: http://127.0.0.1:8765
-bin/understudy run "put the red block in the bowl" --clips 7   # everything, cached stage by stage
-bin/understudy budget                                           # live Runway balance vs the floor (25)
-bin/understudy train put-the-red-block-in-the-bowl              # the small MLP baseline on a run's dataset + MuJoCo eval
-scripts/train_smolvla.sh                                        # fine-tune SmolVLA (lerobot/smolvla_base) on it
-scripts/eval_smolvla.sh                                         # SmolVLA on the MLP's 50 unseen positions in MuJoCo
-scripts/crosscheck.sh                                           # replay every episode in MuJoCo and PyBullet
-.venv/bin/python -m pytest                                      # 22 tests
-.venv/bin/python scripts/build_site.py                          # the static report of one CLI run (site/report/)
-.venv/bin/python scripts/film.py                                # media/understudy-demo.mp4
+
+`bin/understudy` reads the keys from the Keychain into the process environment only; they are never written to a
+file. The local server serves the same site, with no key box, and runs every stage for real, streaming progress to
+the page (Server-Sent Events):
+
+1. **Runway:** first frames (gen4_image, then gen4_image_turbo restyles), then 5 s of motion through the budget's router.
+2. **Physics:** hand tracking, a Claude scene audit, 21 gates, retargeting onto the SO-101 in MuJoCo, and a LeRobot v3.0 dataset.
+3. **Training:** SmolVLA on the GPU you pick (4090, 5090, L40S, A100, H100) through RunPod (`gpu/train_vla.py`); the pod is always terminated at the end, even on failure.
+4. **Filming:** the trained policy runs each accepted scenario in MuJoCo, and the film becomes the tile.
+
+Every tile keeps its own run time; click one for how its model was trained, a download link, and the Runway clips
+behind it.
+
+Command line:
+
+```bash
+bin/understudy run "put the red block in the bowl" --clips 7     # every stage, cached stage by stage
+bin/understudy budget                                             # live Runway balance
+scripts/train_vla_task.py data/probes/stack30 10000 --task stack --cameras front,wrist --eval-seeds 5
+.venv/bin/python -m pytest                                        # tests
 ```
 
-`bin/understudy` reads the Runway key from the macOS Keychain (`RUNWAY_API_KEY`) into the process environment
-only. It is never written anywhere. Re-running the same prompt spends nothing: Runway outputs are cached by
-request hash, landmarks and the Claude audit by clip hash.
+Re-running the same prompt spends nothing: Runway outputs are cached by request hash, and every paid call is a line
+in `data/runway-ledger.jsonl` with the balance before and after.
 
 ## Pipeline and tools
 
-| stage | what | tool |
+| Stage | What | Tool |
 |---|---|---|
-| 1 prompt | parse the task, refuse what a 5-DOF two-finger arm cannot do, before any credit is spent | `plan.py` |
-| 2 lead | first frame with **gen4_image**, restyles (table, bowl, light) with **gen4_image_turbo**, 5 s of motion with **gen4_turbo** | Runway API |
-| 3 skeleton | 21 hand landmarks + arm pose per frame; red block by colour | **MediaPipe** Hand Landmarker + Pose heavy, OpenCV |
-| 4 audit | counts blocks, bowls and hands in the first frame, finds the bowl, checks the last frame | **Claude** (sonnet, headless Claude Code) |
-| 5 gates | 21 gates, clip side and robot side, each with a reason | `gates.py`, docs/DATA-SPEC.md |
-| 6 retarget | grasp point to grasp point, 1:1 in metres, physics replay | **MuJoCo** 3, SO-101 MJCF |
-| 7 dataset | accepted episodes, `so101_follower` keys and units | **LeRobot** 0.6.1, `LeRobotDataset.create`, format v3.0 |
-| 7b check | every episode replayed in an independent second engine; flagged where the engines disagree | **PyBullet** 3.2.7 |
-| 8a policy | robot foundation model, fine-tuned with the stock `lerobot-train` on the dataset (camera + joints + sentence) | **SmolVLA** `lerobot/smolvla_base`, PyTorch (MPS) |
-| 8b baseline | MLP with action chunks and ACT-style temporal ensembling, CPU (joints + cube position) | PyTorch |
-| 9 rollout | trained policies on the same 50 unseen cube positions | MuJoCo |
+| 1 prompt | parse the task and refuse what a 5-DOF two-finger arm can't do, before any credit is spent | `plan.py` |
+| 2 lead | first frame, restyles, 5 s of motion through a budget router | Runway API: gen4_image, gen4_image_turbo, Model Router |
+| 3 skeleton | 21 hand landmarks + arm pose per frame; the block by colour | MediaPipe Hand Landmarker + Pose, OpenCV |
+| 4 audit | counts blocks, bowls and hands in the first frame, checks the last frame | Claude |
+| 5 gates | 21 gates, clip side and robot side, each with a reason | `gates.py`, [docs/DATA-SPEC.md](docs/DATA-SPEC.md) |
+| 6 retarget | grasp point to grasp point, 1:1 in metres, physics replay | MuJoCo 3, SO-101 MJCF |
+| 7 dataset | accepted episodes with `so101_follower` keys and units | LeRobot 0.6.1, dataset format v3.0 |
+| 7b check | every episode replayed in a second engine; flagged where they disagree | PyBullet |
+| 8 policy | SmolVLA fine-tuned on camera + joints + sentence | `lerobot/smolvla_base`, RunPod GPUs |
+| 9 rollout | the trained policy on unseen start positions, filmed for the tiles | MuJoCo |
 
-## The task, and why it maps 1:1
+### How a clip becomes robot data
 
-"Put the red block in the bowl": one hand, pinch grasp of a 3 cm cube, lift, carry about 10 cm, release into a
-bowl on a table, well inside the SO-101's roughly 30 cm reach.
-
-- A thumb-index pinch is a two-finger parallel grasp, which is exactly what the SO-101's gripper is. The pinch
-  point (midpoint of thumb tip and index tip) maps to the point between the gripper pads, and "fingers closed on
-  the block" maps to "gripper closed".
-- The human's wrist can orient freely; the SO-101 has 5 joints. The task only needs "jaws down, closing across
-  two faces of the cube", which the SO-101 can always reach in its workspace, so the arm's own IK chooses the
-  joints and the human's elbow and shoulder angles are not copied (their kinematics differ).
-- The block is the ruler: a 3 cm cube gives metres per pixel, so the lift height and carry distance are the
-  human's, in metres, on the robot.
-
-Refused before spending credits: two hands, liquids and pouring, cloth and rope, tool use, finger dexterity
-(buttons, typing, threading), articulated objects (jars, drawers), and any colour but red in this build (the
-colour tracker and the audit are red-only). See `tests/test_pipeline.py`.
-
-## How a clip becomes robot data
-
-- **Events come from the object.** The grasp is when the fingers reach the block just before it starts moving;
-  the release is when the block is back at rest. Finger aperture was measured and is useless for this on
-  generated hands (docs/POSE-COMPARE.md).
-- **Object-anchored.** While the block is held, the grasp point is the block's own measured centre (fingertips
-  slide and hide; the block does not). Before the grasp and after the release it is the hand's path, shifted so
-  it meets the block exactly at the grasp.
-- **Depth is not measured.** One camera cannot see depth; each demonstration is assumed to stay in the plane of
-  the block and the bowl. The sim bowl stays at a fixed spot and the cube starts at the bowl plus the offset
-  measured in the clip.
-- **Declared additions** (the robot is not a hand): a reach from the home pose to where the hand is first seen;
-  0.3 s to settle and 0.4 s to close the gripper at the grasp, 0.4 s to open at the release; the still hold
-  between grasp and lift is dropped (nothing moves, and in the sim a gripper squeezing a resting cube walks up
-  it); a 60 ms smoothing across the joins; the whole demo plays 2x slower than the human; a return home.
-- **Re-anchored copies.** Each accepted clip's path is replayed with the cube moved up to 3 cm / 2 cm, shifted
-  onto the cube before the grasp and fading back to the human's release point. Every copy goes through the same
-  robot gates; failures are dropped and counted. They are labelled in `understudy_episodes.json`.
-
-## Measured (run of 2026-09-23)
-
-RESULTS_PLACEHOLDER
-
-## The site
-
-`bin/understudy serve` runs a small FastAPI server (src/understudy/web.py) around the real pipeline, and the page in
-`site/` (index.html, app.css, app.js) in the Player Two look. Type the task after "I want to train an SO-101 to";
-the planner checks it live and the page shows what the next run will really cost (cached requests are free).
-
-1. **Generate Footage**: Runway, live task status per clip (after the base frame the clips run in parallel).
-2. **Generate Training Data**: MediaPipe + OpenCV tracking, the Claude scene audit, 21 gates, MuJoCo retarget and
-   re-anchoring, the LeRobot v3.0 dataset; every verdict with its reason; click "gates" on a clip for all of them.
-3. **Dataset**: the LeRobot v3.0 dataset of the clips that passed (counts from its own meta/info.json), a Download
-   button (GET /api/runs/<slug>/dataset.zip; it loads back with `LeRobotDataset`) and the commands to train on it.
-   Training happens in a terminal, not on the site (see "Train on the dataset").
-
-Each stage runs as a child process that streams its real progress events (Server-Sent Events); nothing on the page
-is simulated. Runs land in data/web-runs/<slug>/ with every stage's events in jobs/*.jsonl, and `/?run=<slug>`
-reopens a saved run. Heavy stages run at nice 19 with background QoS. The old static page is in site/report/.
-
-## Demo video
-
-`media/understudy-demo.mp4`, built by `scripts/film.py` in the Player Two pop-up language: real plates from the
-run with tool chips (top left), captions (bottom) and pop-up stat boxes, all HTML rendered to transparent PNGs by
-headless Chrome and composited with ffmpeg alpha fades. No zoompan. No voice-over.
-
-## Runway budget
-
-Rule since 2026-09-24: spend down to a balance of 25 credits, no lower (it replaced a 350-credit cap). Every call is
-in `data/runway-ledger.jsonl` with the balance before and after; `runway.py` checks the live balance (GET
-/v1/organization) and submits under one lock, so parallel calls can never take the balance below the floor.
-Seeds come from the sentence, so a new sentence gets new footage and a repeated one comes from the cache for free.
+- **Events come from the object.** The grasp is when the fingers reach the block just before it starts moving; the
+  release is when the block is back at rest. Finger aperture is unreliable on generated hands
+  ([docs/POSE-COMPARE.md](docs/POSE-COMPARE.md)).
+- **Object-anchored.** While the block is held, the grasp point is the block's own measured centre. Before the grasp
+  and after the release it is the hand's path, shifted so it meets the block exactly at the grasp.
+- **The block is the ruler.** A 3 cm cube gives metres per pixel, so lift height and carry distance are the human's,
+  in metres, on the robot. A thumb-index pinch maps to the SO-101's two-finger gripper.
+- **Declared additions.** A reach from home, short settle and gripper times, 60 ms smoothing across joins, playback
+  at half speed, and a return home. Each accepted clip is also replayed with the cube shifted by up to 3 cm, and
+  every copy goes through the same robot gates.
 
 ## Honest limits
 
-- The MLP baseline reads joint angles and the cube position from the simulator, not pixels. SmolVLA reads the sim
-  camera (320x240), the joints and the sentence; it is fine-tuned for under an hour on a laptop, so its score is far
-  from converged.
-- The PyBullet cross-check converts the MuJoCo scene; Bullet has no joint armature (added to link inertia) and its
-  own contact model. Where the engines disagree the episode is flagged, not silently dropped.
-- Depth is not measured (see above); cube x is the same in every clip.
-- Grasp success in MuJoCo depends on contact settings copied from the scripted expert; it is a sim result.
-- Nothing has run on a physical SO-101 yet.
+- Every result is in simulation. Nothing here has run on a physical SO-101 yet.
+- Only the pick task is trained on Runway-derived demonstrations. Push, stack and tower use scripted-operator demos.
+- Depth isn't measured: one camera can't see it, so each demonstration is assumed to stay in the plane of the block
+  and the bowl.
 - The Claude audit is a model's judgement on two stills; the pixel gates run independently of it.
+- Stack and tower scores come from 5 unseen starts, so they're rough.
 
 ## Layout
 
-`src/understudy/` plan, runway, generate, audit, track, retarget, gates, dataset, policy, pipeline, media, cli,
-plus the SO-101 scene, IK and scripted expert copied from `player-two/sim/so101` (unchanged apart from package
-imports). `src/pose/extract.py` runs in `.venv-pose` (Python 3.11, mediapipe 0.10.14, rtmlib).
-`vendor/so101/` is the SO-ARM100 MJCF (Apache-2.0).
+```
+src/understudy/   the pipeline: plan, runway, generate, track, audit, gates, retarget, dataset, vla, web
+site-v2/          the site (index.html, site.css, site.js, route.js) and api/cloud/ (Vercel functions)
+deploy-v2/        the built site that Vercel serves (site-v2/build-deploy.sh)
+gpu/              RunPod client and the SmolVLA trainer
+scripts/          training, evaluation, benchmark, gallery and dataset tools
+slide-benchmark/  the benchmark slide
+film-demo/        the demo video build
+vendor/so101/     SO-ARM100 MJCF (Apache-2.0)
+```
