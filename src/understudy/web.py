@@ -435,7 +435,7 @@ async def events(job_id: str) -> StreamingResponse:
 ROUTER_DRYRUNS = REPO / "data" / "router-dryruns.json"
 DEMO_ROUTERS = ("demo-cheap", "demo-fast", "demo-best")
 USD_PER_CREDIT = 0.01
-TRAINER = Path(os.environ.get("UNDERSTUDY_TRAINER", str(Path.home() / "helloworld" / "so101" / "train_vla.sh")))
+TRAINER = Path(os.environ.get("UNDERSTUDY_TRAINER", str(REPO / "gpu" / "train_vla.sh")))
 
 
 class DryIn(BaseModel):
