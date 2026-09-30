@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Understudy: B-roll</title>
+<meta name="theme-color" content="#05070d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Copied from player-two-brain-deck/broll.html (the Personal Brains cut) with the terminal shot from its outro.html.
+   Only the shots changed: real plates from the Understudy run, a small label, the message in a caption pill.
+   Hard cuts. The push is a composited CSS transform, so it never shimmers.
+   ?set=intro|stack picks the shots, ?dwell=ms,ms,... times them. */
+:root{--ink:#f2f6ff;--blue:#7fb2ff;--violet:#b9a4ff;--gold:#e9c46a;--green:#7fe0b0;--red:#ff8a80;--serif:"Hedvig Letters Serif",Georgia,serif;--sans:Inter,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans);overflow:hidden}
+.stage{width:1920px;height:1080px;position:absolute;left:50%;top:50%;margin:-540px 0 0 -960px;transform-origin:center;overflow:hidden;background:#05070d}
+.shot{position:absolute;inset:0;visibility:hidden}
+.shot.on{visibility:visible}
+.plate{position:absolute;inset:0;background-size:cover;background-position:center;will-change:transform;transform:scale(var(--from,1)) translate(var(--fx,0),var(--fy,0))}
+.shot.on .plate{animation:push var(--dur,5s) linear forwards}
+@keyframes push{to{transform:scale(var(--to,1.07)) translate(var(--tx,0),var(--ty,0))}}
+video.plate{width:100%;height:100%;object-fit:cover}
+.shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,5,10,.42) 0%,rgba(3,5,10,0) 22%,rgba(3,5,10,0) 58%,rgba(3,5,10,.62) 100%)}
+.chip{position:absolute;left:72px;top:64px;display:flex;align-items:center;gap:14px;padding:13px 20px;border-radius:8px;background:rgba(8,12,22,.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);font:500 21px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:#e7eeff;opacity:0;z-index:3}
+.chip.r{left:auto;right:72px}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--blue));box-shadow:0 0 14px var(--c,var(--blue))}
+.chip b{font-weight:500;color:var(--c,var(--blue))}
+.cap{position:absolute;left:0;right:0;bottom:96px;margin:0 auto;width:fit-content;max-width:1400px;padding:20px 34px 22px;border-radius:16px;background:rgba(10,12,18,.8);backdrop-filter:blur(14px);font:500 44px/1.28 var(--sans);letter-spacing:-.005em;text-align:center;color:#fff;text-wrap:balance;opacity:0;z-index:3}
+.cap em{font-style:normal;color:var(--c,var(--blue))}
+.shot.on .chip{animation:rise .5s .15s cubic-bezier(.2,.7,.2,1) forwards}
+.shot.on .cap{animation:rise .5s .35s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes rise{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
+/* the terminal shot (player-two-brain-deck/outro.html) */
+.term-wrap{position:absolute;inset:0;display:grid;place-items:center;padding-bottom:150px;z-index:2}
+.term{width:1560px;border-radius:18px;background:rgba(7,10,18,.9);border:1px solid rgba(140,170,230,.22);box-shadow:0 40px 120px rgba(0,0,0,.6);overflow:hidden}
+.term-bar{display:flex;align-items:center;gap:10px;padding:16px 22px;border-bottom:1px solid rgba(140,170,230,.14);font:500 17px/1 var(--mono);color:#8fa0c4;letter-spacing:.06em}
+.term-bar span{width:13px;height:13px;border-radius:50%;background:#2a344d}
+.term-bar b{margin-left:14px;font-weight:500}
+.term pre{padding:30px 36px 36px;font:400 29px/1.7 var(--mono);color:#cbd8f5;white-space:pre-wrap}
+.term .l{display:block;opacity:0}
+.shot.on .term .l{animation:rise .35s forwards;animation-delay:var(--d)}
+.term .t{color:#5b6a8a}.term .k{color:var(--gold)}.term .g{color:var(--green)}.term .v{color:var(--violet)}.term .b{color:var(--blue)}
+/* the model shot: the terminal sits beside the arm instead of over it */
+.term-side{position:absolute;left:72px;top:170px;width:1010px;z-index:2}
+.term-side pre{font-size:25px;line-height:1.62;padding:24px 30px 28px}
+/* the pass / fail shot: one label per half */
+.pane{position:absolute;top:64px;display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:8px;background:rgba(8,12,22,.74);border:1px solid rgba(255,255,255,.12);font:500 21px/1.25 var(--mono);letter-spacing:.08em;color:#e7eeff;opacity:0;z-index:3;max-width:820px}
+.pane i{flex:none;width:9px;height:9px;border-radius:50%;background:var(--p);box-shadow:0 0 14px var(--p)}
+.pane b{font-weight:500;color:var(--p)}
+.shot.on .pane{animation:rise .5s .6s cubic-bezier(.2,.7,.2,1) forwards}
+/* the title card */
+.title video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(6px) brightness(.42) saturate(.9);transform:scale(1.08)}
+.title.on video{animation:tpush 6s linear forwards}
+@keyframes tpush{to{transform:scale(1.14)}}
+.title .veil{position:absolute;inset:0;background:radial-gradient(1100px 620px at 50% 50%,rgba(5,7,13,.25),rgba(5,7,13,.8))}
+.title .copy{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.title .kick{font:500 22px/1 var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--blue);display:flex;align-items:center;gap:14px}
+.title .kick i{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 16px currentColor}
+.title h1{font:400 210px/1 var(--serif);letter-spacing:-.03em;margin-top:34px}
+.title h1 em{font-style:normal;color:#a9cbff}
+.title p{font:400 40px/1.35 var(--sans);color:#d3def6;margin-top:28px}
+.title .chips{display:flex;gap:16px;margin-top:52px}
+.title .chips span{font:500 22px/1 var(--mono);padding:15px 22px;border-radius:999px;border:1px solid color-mix(in oklab,var(--c) 55%,transparent);background:rgba(8,13,26,.62);color:var(--c)}
+.title .in{opacity:0;filter:blur(10px);transform:translateY(18px)}
+.title.on .in{animation:tin .9s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:var(--d,0ms)}
+@keyframes tin{to{opacity:1;filter:none;transform:none}}
+/* the end shot */
+.end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:rgba(3,5,10,.74);backdrop-filter:blur(3px);opacity:0;padding-bottom:120px;z-index:2}
+.shot.on .end{animation:rise .9s 1.7s cubic-bezier(.2,.7,.2,1) forwards}
+.end h1{font:400 168px/1 var(--serif);letter-spacing:-.025em}
+.end h1 em{font-style:normal;color:#a9cbff}
+.end p{font:500 26px/1 var(--mono);letter-spacing:.12em;color:#c9d6f2}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <!-- ===== intro ===== -->
+  <section class="shot title" data-set="intro">
+    <video src="media/tile-bg.mp4" muted playsinline preload="auto"></video>
+    <div class="veil"></div>
+    <div class="copy">
+      <div class="kick in" style="--d:100ms"><i></i>Runway API Hackathon</div>
+      <h1 class="in" style="--d:250ms">Under<em>study</em></h1>
+      <p class="in" style="--d:650ms">Robot demonstrations from one sentence, made with Runway video.</p>
+      <div class="chips in" style="--d:1000ms"><span style="--c:var(--gold)">Runway API</span><span style="--c:var(--green)">MediaPipe</span><span style="--c:var(--blue)">OpenCV</span><span style="--c:var(--violet)">Claude</span><span style="--c:#f2f6ff">MuJoCo</span><span style="--c:#f2f6ff">LeRobot</span></div>
+    </div>
+  </section>
+
+  <section class="shot" data-set="intro" style="--c:var(--gold)">
+    <video class="plate" src="media/lead-raw.mp4" muted playsinline preload="auto" style="--from:1;--to:1.05"></video><div class="shade"></div>
+    <div class="chip"><i></i>The lead <b>· Runway</b></div>
+    <div class="cap">AI video now models gravity, contact and grasping. <em>The natural next step</em> is to use it as robot data.</div>
+  </section>
+
+  <!-- ===== stack: after the app ===== -->
+  <section class="shot" data-set="stack" style="--c:var(--gold)">
+    <video class="plate" src="media/runway-grid.mp4" muted playsinline preload="auto" style="--from:1;--to:1.04"></video><div class="shade"></div>
+    <div class="chip"><i></i>Runway API <b>· gen4_image, gen4_image_turbo, gen4_turbo</b></div>
+    <div class="cap">One sentence, <em>8 Runway clips</em>, each with a new table, bowl and light.</div>
+  </section>
+
+  <section class="shot" data-set="stack" style="--c:var(--green)">
+    <video class="plate" src="media/lead-overlay.mp4" muted playsinline preload="auto" style="--from:1;--to:1.04"></video><div class="shade"></div>
+    <div class="chip"><i></i>Perception <b>· MediaPipe + OpenCV</b></div>
+    <div class="cap"><em>MediaPipe</em> tracks 21 hand points on every frame. <em>OpenCV</em> follows the red block.</div>
+  </section>
+
+  <section class="shot" data-set="stack" style="--c:var(--violet)">
+    <video class="plate" src="media/reject-v00.mp4" muted playsinline preload="auto" style="--from:1;--to:1.04"></video><div class="shade"></div>
+    <div class="chip"><i></i>Scene audit <b>· Claude</b></div>
+    <div class="cap"><em>Claude</em> counts two red blocks in the first frame, so this clip is rejected.</div>
+  </section>
+
+  <section class="shot" data-set="stack" data-cues="400" style="--c:#f2f6ff">
+    <video class="plate" src="media/model-orbit.mp4" muted playsinline preload="auto" style="transform-origin:54% 40%;--from:1.45;--to:1.5;--fx:13%;--tx:13%"></video>
+    <div class="shade"></div>
+    <div class="chip"><i></i>The SO-101 <b>· MuJoCo</b></div>
+    <div class="term term-side"><div class="term-bar"><span></span><span></span><span></span><b>vendor/so101/so101_new_calib.xml + scene.py</b></div><pre>
+<span class="l" style="--d:400ms"><span class="t">meshes  </span> 13 CAD meshes of the real arm</span><span class="l" style="--d:750ms"><span class="t">masses  </span> base 147 g, shoulder 100, upper arm 103,
+          lower arm 104, wrist 79, gripper 87, jaw 12</span><span class="l" style="--d:1100ms"><span class="t">joints  </span> <span class="b">5 revolute + gripper</span>, with limits: pan ±110°,
+          lift ±100°, elbow ±97°, wrist ±95°, roll -157..163°</span><span class="l" style="--d:1450ms"><span class="t">servos  </span> position actuators, kp 17.8, ±3.35 N·m</span><span class="l" style="--d:1800ms"><span class="t">gravity </span> compensation on every arm body</span><span class="l" style="--d:2150ms"><span class="t">grasp   </span> <span class="g">two jaw pads, friction 1.0, stiff contact</span>
+          on a 3 cm, 30 g cube</span></pre></div>
+    <div class="cap">The real SO-101 in <em>MuJoCo</em>, built from the arm's CAD meshes.</div>
+  </section>
+
+  <section class="shot" data-set="stack" style="--c:var(--blue)">
+    <video class="plate" src="media/ik-path.mp4" muted playsinline preload="auto" style="--from:1;--to:1.04"></video><div class="shade"></div>
+    <div class="chip"><i></i>Retarget <b>· grasp point to joint angles</b></div>
+    <div class="cap">The hand's grasp point, <em>1:1 in metres</em>, goes through IK. A pose past a joint limit fails.</div>
+  </section>
+
+  <section class="shot" data-set="stack" style="--c:var(--green)">
+    <video class="plate" src="media/pass-fail.mp4" muted playsinline preload="auto" style="--from:1;--to:1.02"></video><div class="shade"></div>
+    <div class="chip"><i></i>Physics <b>· MuJoCo replay</b></div>
+    <div class="pane" style="left:72px;top:150px;--p:var(--green)"><i></i><b>Pass</b> cube ends in the bowl</div>
+    <div class="pane" id="fail-pane" style="left:1032px;top:150px;--p:var(--red)"><i></i><b>Fail</b> <span id="fail-why"></span></div>
+    <div class="cap">Every episode is replayed with contact and gravity. <em>Only a cube in the bowl counts.</em></div>
+  </section>
+
+  <section class="shot" data-set="stack" style="--c:#f2f6ff">
+    <video class="plate" src="media/tile-bg.mp4" muted playsinline preload="auto" style="--from:1.1;--to:1.14;filter:blur(18px) brightness(.3)"></video>
+    <div class="chip"><i></i>Dataset <b>· LeRobot v3.0</b></div>
+    <div class="term-wrap"><div class="term"><div class="term-bar"><span></span><span></span><span></span><b>bin/understudy run "put the red block in the bowl"</b></div><pre>
+<span class="l" style="--d:300ms"><span class="t">[run]</span> 8 clips</span><span class="l" style="--d:650ms"><span class="t">[gates]</span> <span class="g">4 accepted</span>, <span class="k">4 rejected</span>, 21 gates each</span><span class="l" style="--d:1000ms"><span class="t">[episodes]</span> <span class="b">44 episodes</span> (40/60 re-anchored copies passed)</span><span class="l" style="--d:1350ms"><span class="t">[dataset]</span> LeRobot v3.0, 14,985 frames at 30 fps, so101_follower keys</span><span class="l" style="--d:1700ms"><span class="t">[dataset]</span> loaded back: 44 episodes, 14,985 frames</span></pre></div></div>
+    <div class="cap"><em>44 episodes</em>: 4 accepted clips and re&#8209;anchored copies, each gated again.</div>
+  </section>
+
+  <section class="shot" data-set="stack" style="--c:var(--blue)">
+    <video class="plate" src="media/policy.mp4" muted playsinline preload="auto" style="--from:1;--to:1.04"></video><div class="shade"></div>
+    <div class="chip"><i></i>The understudy <b>· trained policy</b></div>
+    <div class="cap">A policy trained on them lands the cube in the bowl from <em>46 of 50</em> unseen positions. Sim only.</div>
+  </section>
+
+  <section class="shot" data-set="stack" style="--c:var(--blue)">
+    <video class="plate" src="media/tile-bg.mp4" muted playsinline preload="auto" style="--from:1;--to:1.04"></video><div class="shade"></div>
+    <div class="end"><h1>Under<em>study</em></h1><p>Runway API Hackathon</p></div>
+    <div class="cap">Runway imagines the demonstration. <em>Physics decides if it counts.</em></div>
+  </section>
+
+</div>
+<script>
+(async () => {
+  const q = new URLSearchParams(location.search);
+  const set = q.get('set') || 'intro';
+  const stage = document.getElementById('stage');
+  // the failed copy's reason comes from the run (media/facts.json, written by scripts/film2_assets.py)
+  try {
+    const facts = await (await fetch('media/facts.json')).json();
+    const why = document.getElementById('fail-why');
+    if (why) why.textContent = facts.fail.why.split(':')[0];
+  } catch (_) { /* no facts: the label stays short */ }
+  const all = [...document.querySelectorAll('.shot')];
+  all.filter((s) => s.dataset.set !== set).forEach((s) => s.remove());
+  const shots = all.filter((s) => s.dataset.set === set);
+  const dwell = (q.get('dwell') || '').split(',').map(Number).filter((n) => n > 0);
+  shots.forEach((s, i) => { s.dataset.dwell = String(dwell[i] || 5000); s.style.setProperty('--dur', `${(Number(s.dataset.dwell) + 400) / 1000}s`); });
+  const fit = () => { stage.style.transform = `scale(${Math.min(innerWidth / 1920, innerHeight / 1080)})`; };
+  addEventListener('resize', fit); fit();
+  const show = (n) => {
+    shots.forEach((s, i) => s.classList.toggle('on', i === n));
+    const v = shots[n].querySelector('video'); if (v) { v.currentTime = 0; v.play().catch(() => {}); }
+    for (const ms of (shots[n].dataset.cues || '').split(',').filter(Boolean)) setTimeout(() => window.dispatchEvent(new CustomEvent('deck:cue', { detail: { type: 'card' } })), Number(ms));
+    window.dispatchEvent(new CustomEvent('deck:slide', { detail: { index: n } }));
+  };
+  window.playDeck = async () => {
+    for (let i = 0; i < shots.length; i++) { show(i); await new Promise((r) => setTimeout(r, Number(shots[i].dataset.dwell))); }
+    window.dispatchEvent(new CustomEvent('deck:done'));
+  };
+  // preload every image and video so a cut never lands on something half-decoded
+  const vids = [...document.querySelectorAll('video')].map((v) => new Promise((res) => { if (v.readyState >= 3) res(); else { v.addEventListener('canplaythrough', res, { once: true }); setTimeout(res, 6000); } }));
+  await Promise.all(vids);
+  if (!q.has('film')) { let n = 0; show(0); addEventListener('click', () => show(n = (n + 1) % shots.length)); addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === ' ') show(n = (n + 1) % shots.length); if (e.key === 'ArrowLeft') show(n = (n - 1 + shots.length) % shots.length); }); }
+  window.deckReady = true;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,769 @@
+{
+ "ckpt": "/work/out/expert-20000/checkpoints/020000/pretrained_model",
+ "weights": "/work/out/expert-20000/checkpoints/020000/pretrained_model",
+ "processors": "/work/out/expert-20000/checkpoints/020000/pretrained_model",
+ "n_action_steps": 50,
+ "cameras": "front",
+ "noise_offset": 0,
+ "task": "put the red block in the bowl",
+ "successes": 44,
+ "seeds": 50,
+ "wilson95": [
+  0.762,
+  0.944
+ ],
+ "seconds": 2917.0,
+ "device": "cuda",
+ "episodes": [
+  {
+   "seed": 10000,
+   "cube_xy": [
+    0.251,
+    -0.0881
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2551,
+    0.0027,
+    0.019
+   ],
+   "frames": 217
+  },
+  {
+   "seed": 10001,
+   "cube_xy": [
+    0.2629,
+    -0.0657
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2545,
+    -0.01,
+    0.019
+   ],
+   "frames": 213
+  },
+  {
+   "seed": 10002,
+   "cube_xy": [
+    0.2581,
+    -0.0923
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2538,
+    0.0078,
+    0.019
+   ],
+   "frames": 220
+  },
+  {
+   "seed": 10003,
+   "cube_xy": [
+    0.2613,
+    -0.0729
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2558,
+    -0.0012,
+    0.019
+   ],
+   "frames": 213
+  },
+  {
+   "seed": 10004,
+   "cube_xy": [
+    0.2704,
+    -0.093
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2558,
+    0.0043,
+    0.019
+   ],
+   "frames": 219
+  },
+  {
+   "seed": 10005,
+   "cube_xy": [
+    0.2327,
+    -0.0778
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2558,
+    -0.0,
+    0.019
+   ],
+   "frames": 214
+  },
+  {
+   "seed": 10006,
+   "cube_xy": [
+    0.2284,
+    -0.0737
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2545,
+    0.0023,
+    0.019
+   ],
+   "frames": 214
+  },
+  {
+   "seed": 10007,
+   "cube_xy": [
+    0.2694,
+    -0.1004
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2544,
+    -0.0011,
+    0.019
+   ],
+   "frames": 221
+  },
+  {
+   "seed": 10008,
+   "cube_xy": [
+    0.2546,
+    -0.087
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2553,
+    0.0005,
+    0.019
+   ],
+   "frames": 216
+  },
+  {
+   "seed": 10009,
+   "cube_xy": [
+    0.2513,
+    -0.0685
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2563,
+    0.001,
+    0.019
+   ],
+   "frames": 214
+  },
+  {
+   "seed": 10010,
+   "cube_xy": [
+    0.2276,
+    -0.1007
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2527,
+    -0.0038,
+    0.019
+   ],
+   "frames": 222
+  },
+  {
+   "seed": 10011,
+   "cube_xy": [
+    0.25,
+    -0.0678
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2529,
+    -0.0012,
+    0.019
+   ],
+   "frames": 211
+  },
+  {
+   "seed": 10012,
+   "cube_xy": [
+    0.2255,
+    -0.0971
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2551,
+    -0.0017,
+    0.019
+   ],
+   "frames": 218
+  },
+  {
+   "seed": 10013,
+   "cube_xy": [
+    0.2466,
+    -0.0682
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2649,
+    0.0122,
+    0.019
+   ],
+   "frames": 218
+  },
+  {
+   "seed": 10014,
+   "cube_xy": [
+    0.2275,
+    -0.0676
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2548,
+    0.0021,
+    0.019
+   ],
+   "frames": 213
+  },
+  {
+   "seed": 10015,
+   "cube_xy": [
+    0.249,
+    -0.0901
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2551,
+    0.0006,
+    0.019
+   ],
+   "frames": 219
+  },
+  {
+   "seed": 10016,
+   "cube_xy": [
+    0.2267,
+    -0.0893
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2553,
+    0.0043,
+    0.019
+   ],
+   "frames": 219
+  },
+  {
+   "seed": 10017,
+   "cube_xy": [
+    0.256,
+    -0.0798
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2549,
+    0.0059,
+    0.019
+   ],
+   "frames": 215
+  },
+  {
+   "seed": 10018,
+   "cube_xy": [
+    0.2465,
+    -0.0897
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2534,
+    0.0079,
+    0.019
+   ],
+   "frames": 215
+  },
+  {
+   "seed": 10019,
+   "cube_xy": [
+    0.2602,
+    -0.0814
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2553,
+    0.0014,
+    0.019
+   ],
+   "frames": 215
+  },
+  {
+   "seed": 10020,
+   "cube_xy": [
+    0.2263,
+    -0.0661
+   ],
+   "success": false,
+   "lifted": false,
+   "cube_end": [
+    0.2163,
+    -0.0901,
+    0.015
+   ],
+   "frames": 750
+  },
+  {
+   "seed": 10021,
+   "cube_xy": [
+    0.2299,
+    -0.0797
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2552,
+    -0.0018,
+    0.019
+   ],
+   "frames": 217
+  },
+  {
+   "seed": 10022,
+   "cube_xy": [
+    0.263,
+    -0.0728
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.253,
+    0.0002,
+    0.019
+   ],
+   "frames": 215
+  },
+  {
+   "seed": 10023,
+   "cube_xy": [
+    0.2596,
+    -0.073
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2553,
+    0.0019,
+    0.019
+   ],
+   "frames": 213
+  },
+  {
+   "seed": 10024,
+   "cube_xy": [
+    0.2215,
+    -0.0821
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2542,
+    -0.0015,
+    0.019
+   ],
+   "frames": 215
+  },
+  {
+   "seed": 10025,
+   "cube_xy": [
+    0.2572,
+    -0.0515
+   ],
+   "success": false,
+   "lifted": false,
+   "cube_end": [
+    0.2654,
+    -0.0206,
+    0.019
+   ],
+   "frames": 750
+  },
+  {
+   "seed": 10026,
+   "cube_xy": [
+    0.2753,
+    -0.0999
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2545,
+    -0.0017,
+    0.019
+   ],
+   "frames": 218
+  },
+  {
+   "seed": 10027,
+   "cube_xy": [
+    0.2362,
+    -0.1007
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2542,
+    0.0048,
+    0.019
+   ],
+   "frames": 221
+  },
+  {
+   "seed": 10028,
+   "cube_xy": [
+    0.2349,
+    -0.0726
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.254,
+    0.003,
+    0.019
+   ],
+   "frames": 213
+  },
+  {
+   "seed": 10029,
+   "cube_xy": [
+    0.2231,
+    -0.0518
+   ],
+   "success": false,
+   "lifted": false,
+   "cube_end": [
+    0.2135,
+    -0.0901,
+    0.015
+   ],
+   "frames": 750
+  },
+  {
+   "seed": 10030,
+   "cube_xy": [
+    0.2359,
+    -0.0902
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2554,
+    0.0035,
+    0.019
+   ],
+   "frames": 217
+  },
+  {
+   "seed": 10031,
+   "cube_xy": [
+    0.2204,
+    -0.0848
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.255,
+    -0.0017,
+    0.019
+   ],
+   "frames": 216
+  },
+  {
+   "seed": 10032,
+   "cube_xy": [
+    0.2785,
+    -0.1037
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2541,
+    -0.0044,
+    0.019
+   ],
+   "frames": 217
+  },
+  {
+   "seed": 10033,
+   "cube_xy": [
+    0.227,
+    -0.0626
+   ],
+   "success": false,
+   "lifted": false,
+   "cube_end": [
+    0.1777,
+    -0.1116,
+    0.015
+   ],
+   "frames": 750
+  },
+  {
+   "seed": 10034,
+   "cube_xy": [
+    0.2543,
+    -0.082
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2539,
+    0.0001,
+    0.019
+   ],
+   "frames": 216
+  },
+  {
+   "seed": 10035,
+   "cube_xy": [
+    0.2218,
+    -0.0835
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2552,
+    -0.0022,
+    0.019
+   ],
+   "frames": 215
+  },
+  {
+   "seed": 10036,
+   "cube_xy": [
+    0.225,
+    -0.0855
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2553,
+    0.0006,
+    0.019
+   ],
+   "frames": 215
+  },
+  {
+   "seed": 10037,
+   "cube_xy": [
+    0.2503,
+    -0.0863
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2552,
+    0.0029,
+    0.019
+   ],
+   "frames": 215
+  },
+  {
+   "seed": 10038,
+   "cube_xy": [
+    0.2721,
+    -0.0722
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2557,
+    0.0011,
+    0.019
+   ],
+   "frames": 215
+  },
+  {
+   "seed": 10039,
+   "cube_xy": [
+    0.2218,
+    -0.097
+   ],
+   "success": false,
+   "lifted": true,
+   "cube_end": [
+    0.3334,
+    -0.0263,
+    0.015
+   ],
+   "frames": 750
+  },
+  {
+   "seed": 10040,
+   "cube_xy": [
+    0.2414,
+    -0.0668
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2534,
+    -0.0091,
+    0.019
+   ],
+   "frames": 216
+  },
+  {
+   "seed": 10041,
+   "cube_xy": [
+    0.2559,
+    -0.0871
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2547,
+    -0.0018,
+    0.019
+   ],
+   "frames": 216
+  },
+  {
+   "seed": 10042,
+   "cube_xy": [
+    0.2599,
+    -0.0831
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2558,
+    0.0018,
+    0.019
+   ],
+   "frames": 216
+  },
+  {
+   "seed": 10043,
+   "cube_xy": [
+    0.2668,
+    -0.08
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2556,
+    0.0022,
+    0.019
+   ],
+   "frames": 215
+  },
+  {
+   "seed": 10044,
+   "cube_xy": [
+    0.2565,
+    -0.0778
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2554,
+    -0.0047,
+    0.019
+   ],
+   "frames": 215
+  },
+  {
+   "seed": 10045,
+   "cube_xy": [
+    0.2615,
+    -0.0534
+   ],
+   "success": false,
+   "lifted": false,
+   "cube_end": [
+    0.2717,
+    -0.1118,
+    0.015
+   ],
+   "frames": 750
+  },
+  {
+   "seed": 10046,
+   "cube_xy": [
+    0.2503,
+    -0.1
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2554,
+    0.005,
+    0.019
+   ],
+   "frames": 220
+  },
+  {
+   "seed": 10047,
+   "cube_xy": [
+    0.256,
+    -0.0999
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2545,
+    0.0037,
+    0.019
+   ],
+   "frames": 219
+  },
+  {
+   "seed": 10048,
+   "cube_xy": [
+    0.254,
+    -0.1044
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2551,
+    0.0006,
+    0.019
+   ],
+   "frames": 221
+  },
+  {
+   "seed": 10049,
+   "cube_xy": [
+    0.2524,
+    -0.0664
+   ],
+   "success": true,
+   "lifted": true,
+   "cube_end": [
+    0.2538,
+    -0.0128,
+    0.019
+   ],
+   "frames": 213
+  }
+ ]
+}

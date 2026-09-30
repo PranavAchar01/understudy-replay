@@ -1,0 +1,818 @@
+{
+ "clip_id": "v04",
+ "accepted": false,
+ "reason": "no second red object appears: a second red block appears on 15 frames (first at 3.5 s): the video duplicated the object",
+ "gates": [
+  {
+   "id": "fps",
+   "name": "frame rate",
+   "passed": true,
+   "value": 24.0,
+   "limit": "23-31",
+   "why": ""
+  },
+  {
+   "id": "length",
+   "name": "clip length",
+   "passed": true,
+   "value": 5.04,
+   "limit": "3-12 s",
+   "why": ""
+  },
+  {
+   "id": "scene",
+   "name": "scene audit (Claude)",
+   "passed": true,
+   "value": "1 red block, 1 bowl, 1 hand",
+   "limit": "exactly 1 / 1 / 1",
+   "why": ""
+  },
+  {
+   "id": "one_object",
+   "name": "one red object (pixels)",
+   "passed": true,
+   "value": 0.03,
+   "limit": "<= 0.3",
+   "why": ""
+  },
+  {
+   "id": "no_duplicate",
+   "name": "no second red object appears",
+   "passed": false,
+   "value": 15,
+   "limit": "<= 3 frames",
+   "why": "a second red block appears on 15 frames (first at 3.5 s): the video duplicated the object"
+  },
+  {
+   "id": "hand_visible",
+   "name": "hand + wrist visible",
+   "passed": true,
+   "value": 0.965,
+   "limit": ">= 0.95 of frames at score >= 0.5",
+   "why": ""
+  },
+  {
+   "id": "block_visible",
+   "name": "block tracked",
+   "passed": true,
+   "value": 1.0,
+   "limit": ">= 0.95 of frames",
+   "why": ""
+  },
+  {
+   "id": "events",
+   "name": "grasp, lift, release found",
+   "passed": true,
+   "value": "ok",
+   "limit": "all three, in order",
+   "why": ""
+  },
+  {
+   "id": "coupled",
+   "name": "block moves with the hand",
+   "passed": true,
+   "value": 0.41,
+   "limit": "<= 1.0 block widths",
+   "why": ""
+  },
+  {
+   "id": "lift",
+   "name": "lift height",
+   "passed": true,
+   "value": 0.099,
+   "limit": ">= 0.03 m",
+   "why": ""
+  },
+  {
+   "id": "carry",
+   "name": "carry distance",
+   "passed": true,
+   "value": 0.144,
+   "limit": ">= 0.05 m",
+   "why": ""
+  },
+  {
+   "id": "video_in_bowl",
+   "name": "video ends with block in bowl (Claude)",
+   "passed": false,
+   "value": true,
+   "limit": "true",
+   "why": "2 red blocks in the last frame"
+  },
+  {
+   "id": "ik",
+   "name": "IK inside SO-101 joint limits",
+   "passed": false,
+   "value": "83 ticks at a limit, max error 54.6 mm",
+   "limit": "0 ticks, <= 5 mm",
+   "why": "IK hits a joint limit on 83 control ticks (max error 55 mm): the SO-101 cannot reach that pose"
+  },
+  {
+   "id": "vel",
+   "name": "joint velocity",
+   "passed": false,
+   "value": 3.3,
+   "limit": "<= 3 rad/s",
+   "why": "peak joint velocity 3.3 rad/s exceeds 3"
+  },
+  {
+   "id": "acc",
+   "name": "joint acceleration",
+   "passed": false,
+   "value": 70.8,
+   "limit": "<= 60 rad/s^2",
+   "why": "peak joint acceleration 70.8 rad/s^2 exceeds 60"
+  },
+  {
+   "id": "jerk",
+   "name": "joint jerk",
+   "passed": false,
+   "value": 3983.1,
+   "limit": "<= 2500 rad/s^3",
+   "why": "peak joint jerk 3983.1 rad/s^3 exceeds 2500"
+  },
+  {
+   "id": "close_before_lift",
+   "name": "gripper closes before lift",
+   "passed": true,
+   "value": "close @117, lift @142",
+   "limit": "close < lift",
+   "why": ""
+  },
+  {
+   "id": "open_over_bowl",
+   "name": "gripper opens over the bowl",
+   "passed": false,
+   "value": 0.075,
+   "limit": "< 0.05 m from bowl centre",
+   "why": "the gripper opens with the cube 7.5 cm from the bowl centre"
+  },
+  {
+   "id": "sim_success",
+   "name": "cube ends in bowl (MuJoCo replay)",
+   "passed": false,
+   "value": "cube at [0.246, -0.075, 0.015]",
+   "limit": "in bowl, after a lift",
+   "why": "in the physics replay the cube does not end in the bowl"
+  },
+  {
+   "id": "self_collision",
+   "name": "no self-collision",
+   "passed": true,
+   "value": 0,
+   "limit": "0 contacts",
+   "why": ""
+  },
+  {
+   "id": "episode_len",
+   "name": "episode length",
+   "passed": true,
+   "value": 14.57,
+   "limit": "2-30 s",
+   "why": ""
+  }
+ ],
+ "events": {
+  "ok": true,
+  "why": "",
+  "block_px": 112.45665831777147,
+  "b0": [
+   556.1687097277872,
+   441.7064784543413
+  ],
+  "b1": [
+   17.811362428163704,
+   415.60196844445363
+  ],
+  "t_grasp": 4,
+  "t_lift": 23,
+  "t_release": 102,
+  "hand_first": 2,
+  "hand_last": 113,
+  "max_couple_px": 46.1880345893685
+ },
+ "audit": {
+  "red_blocks_first": 1,
+  "bowls_first": 1,
+  "hands_first": 1,
+  "bowl_bbox_first": [
+   715,
+   336,
+   1042,
+   510
+  ],
+  "block_in_bowl_last": true,
+  "red_blocks_last": 2,
+  "note": "Block in bowl; second red block visible at left edge with hand",
+  "available": true,
+  "model": "claude sonnet via Claude Code CLI"
+ },
+ "bowl_u": 878.5,
+ "bowl_source": "Claude bowl box",
+ "prompt": {
+  "lighting": "a warm desk lamp at night, dark background",
+  "table": "a pale birch plywood workbench",
+  "bowl": "light grey ceramic",
+  "angle": "a low front view from table height, about 25 degrees down",
+  "image_prompt": "Photorealistic photo, a low front view from table height, about 25 degrees down, of a pale birch plywood workbench with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow light grey ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. a warm desk lamp at night, dark background. Sharp focus, no text.",
+  "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+  "image_model": "gen4_image_turbo",
+  "video_model": "gen4_turbo",
+  "note": null
+ },
+ "fps": 24.0,
+ "frames": 121,
+ "demo": {
+  "cube_start": [
+   0.25,
+   -0.086,
+   0.015
+  ],
+  "m_per_px": 0.0002667694421012252,
+  "lift_m": 0.0987,
+  "carry_m": 0.1436,
+  "xyz": [
+   [
+    0.25,
+    -0.0849,
+    0.0161
+   ],
+   [
+    0.25,
+    -0.0852,
+    0.0156
+   ],
+   [
+    0.25,
+    -0.0859,
+    0.0151
+   ],
+   [
+    0.25,
+    -0.0851,
+    0.0212
+   ],
+   [
+    0.25,
+    -0.085,
+    0.0231
+   ],
+   [
+    0.25,
+    -0.085,
+    0.0248
+   ],
+   [
+    0.25,
+    -0.085,
+    0.0263
+   ],
+   [
+    0.25,
+    -0.0848,
+    0.0278
+   ],
+   [
+    0.25,
+    -0.0841,
+    0.0297
+   ],
+   [
+    0.25,
+    -0.0828,
+    0.0324
+   ],
+   [
+    0.25,
+    -0.0807,
+    0.0358
+   ],
+   [
+    0.25,
+    -0.0777,
+    0.0399
+   ],
+   [
+    0.25,
+    -0.074,
+    0.0443
+   ],
+   [
+    0.25,
+    -0.0698,
+    0.0485
+   ],
+   [
+    0.25,
+    -0.0653,
+    0.0518
+   ],
+   [
+    0.25,
+    -0.0605,
+    0.0541
+   ],
+   [
+    0.25,
+    -0.0553,
+    0.0555
+   ],
+   [
+    0.25,
+    -0.0495,
+    0.0562
+   ],
+   [
+    0.25,
+    -0.0432,
+    0.0564
+   ],
+   [
+    0.25,
+    -0.0372,
+    0.0557
+   ],
+   [
+    0.25,
+    -0.0319,
+    0.0543
+   ],
+   [
+    0.25,
+    -0.0275,
+    0.0521
+   ],
+   [
+    0.25,
+    -0.0238,
+    0.0498
+   ],
+   [
+    0.25,
+    -0.0207,
+    0.0475
+   ],
+   [
+    0.25,
+    -0.0181,
+    0.0456
+   ],
+   [
+    0.25,
+    -0.0159,
+    0.0439
+   ],
+   [
+    0.25,
+    -0.0142,
+    0.0426
+   ],
+   [
+    0.25,
+    -0.013,
+    0.0414
+   ],
+   [
+    0.25,
+    -0.012,
+    0.0405
+   ],
+   [
+    0.25,
+    -0.0113,
+    0.0396
+   ],
+   [
+    0.25,
+    -0.0108,
+    0.0387
+   ],
+   [
+    0.25,
+    -0.0103,
+    0.0377
+   ],
+   [
+    0.25,
+    -0.0099,
+    0.0366
+   ],
+   [
+    0.25,
+    -0.0094,
+    0.0354
+   ],
+   [
+    0.25,
+    -0.009,
+    0.0343
+   ],
+   [
+    0.25,
+    -0.0086,
+    0.0333
+   ],
+   [
+    0.25,
+    -0.0081,
+    0.0325
+   ],
+   [
+    0.25,
+    -0.0077,
+    0.0318
+   ],
+   [
+    0.25,
+    -0.0072,
+    0.0312
+   ],
+   [
+    0.25,
+    -0.0068,
+    0.0307
+   ],
+   [
+    0.25,
+    -0.0064,
+    0.03
+   ],
+   [
+    0.25,
+    -0.0061,
+    0.0293
+   ],
+   [
+    0.25,
+    -0.006,
+    0.0285
+   ],
+   [
+    0.25,
+    -0.0059,
+    0.0277
+   ],
+   [
+    0.25,
+    -0.0059,
+    0.027
+   ],
+   [
+    0.25,
+    -0.0058,
+    0.0264
+   ],
+   [
+    0.25,
+    -0.0057,
+    0.0259
+   ],
+   [
+    0.25,
+    -0.0056,
+    0.0255
+   ],
+   [
+    0.25,
+    -0.0054,
+    0.0252
+   ],
+   [
+    0.25,
+    -0.0053,
+    0.0251
+   ],
+   [
+    0.25,
+    -0.005,
+    0.0252
+   ],
+   [
+    0.25,
+    -0.0048,
+    0.0257
+   ],
+   [
+    0.25,
+    -0.0045,
+    0.0269
+   ],
+   [
+    0.25,
+    -0.0044,
+    0.0289
+   ],
+   [
+    0.25,
+    -0.0048,
+    0.0319
+   ],
+   [
+    0.25,
+    -0.0058,
+    0.0362
+   ],
+   [
+    0.25,
+    -0.0076,
+    0.0417
+   ],
+   [
+    0.25,
+    -0.0102,
+    0.0481
+   ],
+   [
+    0.25,
+    -0.0139,
+    0.0553
+   ],
+   [
+    0.25,
+    -0.0186,
+    0.063
+   ],
+   [
+    0.25,
+    -0.0245,
+    0.0708
+   ],
+   [
+    0.25,
+    -0.0315,
+    0.0784
+   ],
+   [
+    0.25,
+    -0.0395,
+    0.0855
+   ],
+   [
+    0.25,
+    -0.0484,
+    0.0918
+   ],
+   [
+    0.25,
+    -0.0582,
+    0.0974
+   ],
+   [
+    0.25,
+    -0.0688,
+    0.1021
+   ],
+   [
+    0.25,
+    -0.0805,
+    0.1061
+   ],
+   [
+    0.25,
+    -0.0936,
+    0.1095
+   ],
+   [
+    0.25,
+    -0.1074,
+    0.1122
+   ],
+   [
+    0.25,
+    -0.121,
+    0.1137
+   ],
+   [
+    0.25,
+    -0.1336,
+    0.1134
+   ],
+   [
+    0.25,
+    -0.145,
+    0.1109
+   ],
+   [
+    0.25,
+    -0.1559,
+    0.1067
+   ],
+   [
+    0.25,
+    -0.1668,
+    0.1011
+   ],
+   [
+    0.25,
+    -0.1779,
+    0.0948
+   ],
+   [
+    0.25,
+    -0.1888,
+    0.0875
+   ],
+   [
+    0.25,
+    -0.1991,
+    0.0792
+   ],
+   [
+    0.25,
+    -0.2084,
+    0.0703
+   ],
+   [
+    0.25,
+    -0.2163,
+    0.0613
+   ],
+   [
+    0.25,
+    -0.2226,
+    0.0529
+   ],
+   [
+    0.25,
+    -0.2272,
+    0.0459
+   ],
+   [
+    0.25,
+    -0.2302,
+    0.0408
+   ],
+   [
+    0.25,
+    -0.2321,
+    0.0374
+   ],
+   [
+    0.25,
+    -0.2321,
+    0.0374
+   ],
+   [
+    0.25,
+    -0.2336,
+    0.0346
+   ],
+   [
+    0.25,
+    -0.2352,
+    0.0339
+   ],
+   [
+    0.25,
+    -0.2362,
+    0.0348
+   ],
+   [
+    0.25,
+    -0.236,
+    0.0358
+   ],
+   [
+    0.25,
+    -0.2346,
+    0.0353
+   ],
+   [
+    0.25,
+    -0.2324,
+    0.0331
+   ],
+   [
+    0.25,
+    -0.2302,
+    0.0304
+   ],
+   [
+    0.25,
+    -0.2289,
+    0.0284
+   ],
+   [
+    0.25,
+    -0.2283,
+    0.0275
+   ],
+   [
+    0.25,
+    -0.2281,
+    0.0272
+   ],
+   [
+    0.25,
+    -0.2281,
+    0.0273
+   ]
+  ],
+  "closed": [
+   0,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "replay": {
+  "success": false,
+  "cube_end": [
+   0.2462,
+   -0.075,
+   0.015
+  ],
+  "frames": 437
+ }
+}

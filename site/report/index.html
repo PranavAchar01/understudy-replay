@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Understudy</title>
+  <meta name="description" content="Runway imagines the demonstration. Physics decides if it counts. Understudy turns one sentence into gated SO-101 training data.">
+  <meta name="color-scheme" content="dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+  <link rel="stylesheet" href="site.css">
+  <script src="data/run.js"></script>
+  <script src="site.js" defer></script>
+</head>
+<body>
+  <canvas id="dither" aria-hidden="true"></canvas>
+  <header class="top">
+    <h1>UNDERSTUDY</h1>
+    <p class="lede">AI video now models gravity, contact and grasping well enough to look real at a glance. The natural
+      next step is to stop treating it only as media and use it as data. Robotics first.</p>
+    <p class="why">Robots learn skills by watching demonstrations, and they need a lot of them. Today people collect those
+      by teleoperating robots or filming themselves, one take at a time: slow and expensive. Understudy makes the
+      demonstrations from one sentence, so anyone can teach a low-cost arm (the LeRobot SO-101) a specific task.
+      An understudy learns the role by watching the lead; here the lead is a person Runway made up.</p>
+    <p class="claim">Runway imagines the demonstration. Physics decides if it counts.</p>
+    <ol class="steps" id="steps">
+      <li><a href="#s1">prompt</a></li><li><a href="#s2">clips</a></li><li><a href="#s3">skeletons</a></li>
+      <li><a href="#s4">gates</a></li><li><a href="#s5">dataset</a></li><li><a href="#s6">robot</a></li>
+    </ol>
+  </header>
+
+  <main>
+    <section id="s1" class="panel">
+      <h2><span class="n">1</span>PROMPT</h2>
+      <div class="prompt"><span class="caret">&gt;</span> <span id="task"></span></div>
+      <p class="note">One sentence in. The planner checks the SO-101 can do it at all (one 5-DOF arm, two fingers)
+        before any credit is spent. These get refused:</p>
+      <ul class="refuse">
+        <li><b>fold the towel</b> deformable, a 2-finger gripper cannot manage cloth</li>
+        <li><b>pour water into the cup</b> liquids need wrist twist and are not rigid</li>
+        <li><b>use both hands to ...</b> the SO-101 is one arm</li>
+      </ul>
+    </section>
+
+    <section id="s2" class="panel">
+      <h2><span class="n">2</span>RUNWAY MAKES THE LEAD</h2>
+      <p class="note"><b>gen4_image</b> draws the first frame, <b>gen4_image_turbo</b> restyles it (table, bowl,
+        light), <b>gen4_turbo</b> animates 5 s of a hand doing the task. <span id="credits"></span></p>
+      <div class="grid" id="clips"></div>
+    </section>
+
+    <section id="s3" class="panel">
+      <h2><span class="n">3</span>SKELETONS</h2>
+      <p class="note"><b>MediaPipe</b> Hand Landmarker (21 points) and Pose heavy find the hand and arm on every frame;
+        an OpenCV colour tracker finds the block. Grasp and release come from the block's own motion.</p>
+      <div class="pick" id="skelpick"></div>
+      <div class="pair">
+        <figure><video id="skel" muted loop playsinline autoplay></video><figcaption id="skelcap"></figcaption></figure>
+      </div>
+    </section>
+
+    <section id="s4" class="panel">
+      <h2><span class="n">4</span>STRICT GATES</h2>
+      <p class="note">Generated video is not always physical, which is why 21 gates stand between a clip and a
+        training episode. The rejections are part of the result. <a href="#" id="speclink">Full spec in docs/DATA-SPEC.md.</a></p>
+      <div id="verdicts" class="verdicts"></div>
+      <div id="gatetable"></div>
+    </section>
+
+    <section id="s5" class="panel">
+      <h2><span class="n">5</span>LEROBOT DATASET</h2>
+      <p class="note">The hand's grasp point becomes the SO-101's grasp point, 1:1 in metres (the 3 cm block is the
+        ruler). Each accepted clip is replayed in <b>MuJoCo</b> with real contact physics, then written with
+        <b>LeRobot</b> <code>LeRobotDataset.create</code>.</p>
+      <div class="stats" id="dsstats"></div>
+      <div class="pair" id="retarget"></div>
+    </section>
+
+    <section id="s6" class="panel">
+      <h2><span class="n">6</span>THE UNDERSTUDY PERFORMS</h2>
+      <p class="note">A small policy (MLP, action chunks, ACT-style ensembling) trained on that dataset on a laptop CPU,
+        then run in MuJoCo on cube positions it has not seen.</p>
+      <div class="stats" id="evalstats"></div>
+      <div class="pair" id="rollouts"></div>
+      <p class="fine" id="honest"></p>
+    </section>
+  </main>
+  <footer>Built for the Runway API hackathon. Runway, MediaPipe, MuJoCo, LeRobot, Claude.</footer>
+</body>
+</html>

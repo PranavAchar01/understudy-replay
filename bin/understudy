@@ -1,0 +1,8 @@
+#!/bin/zsh
+# Understudy entry point. Reads the Runway key from the macOS Keychain into the environment for this process only.
+set -e
+ROOT="${0:A:h:h}"
+export RUNWAY_API_KEY="$(security find-generic-password -s RUNWAY_API_KEY -w)"
+export PYTHONPATH="$ROOT/src"
+cd "$ROOT"
+exec "$ROOT/.venv/bin/python" -m understudy.cli "$@"

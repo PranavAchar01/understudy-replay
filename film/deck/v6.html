@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Understudy film v6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Film v6 = v5's frame on a new recording (the first run's sentence, footage replayed from the Runway cache, so no
+   credits), a PhyT2V pop-up, and a slow push on the plate, the title and the end card so still moments still move.
+   Film v5: the recording of a real session on the live site (film/tools/record-live.mts), with the v4 frame on top:
+   tool chip (top left), caption pill (bottom), B-roll pop-ups of real sources, and a speed label on every part
+   that is sped up. The plate is the recorded frames themselves, one JPEG per output frame, picked by
+   media/v6/edl.json (scripts/film5_edit.py). Nothing here runs on a wall clock: window.seek(t) lays out the frame for
+   time t, film/tools/render-v4.mts steps it 1/30 s at a time and screenshots. */
+:root{--ink:#f2f6ff;--blue:#7fb2ff;--violet:#b9a4ff;--gold:#e9c46a;--green:#7fe0b0;--red:#ff8a80;--serif:"Hedvig Letters Serif",Georgia,serif;--sans:Inter,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans);overflow:hidden}
+.stage{width:1920px;height:1080px;position:absolute;left:0;top:0;overflow:hidden;background:#05070d}
+#plate{position:absolute;inset:0;width:1920px;height:1080px;display:block;transform-origin:50% 50%;will-change:transform}
+.dim{position:absolute;inset:0;background:rgba(3,5,10,.62);opacity:0;z-index:3}
+.chip{position:absolute;left:50%;top:13px;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:11px 18px;border-radius:8px;background:rgba(8,12,22,.78);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);font:500 19px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:#e7eeff;opacity:0;z-index:8;white-space:nowrap}
+.chip.r{left:auto;right:28px;transform:none}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--blue));box-shadow:0 0 14px var(--c,var(--blue))}
+.chip b{font-weight:500;color:var(--c,var(--blue))}
+.cap{position:absolute;left:0;right:0;bottom:34px;margin:0 auto;width:fit-content;max-width:1500px;padding:18px 32px 20px;border-radius:16px;background:rgba(10,12,18,.86);backdrop-filter:blur(14px);font:500 38px/1.28 var(--sans);letter-spacing:-.005em;text-align:center;color:#fff;text-wrap:balance;opacity:0;z-index:9}
+.cap em{font-style:normal;color:var(--c,var(--blue))}
+/* title + end */
+.card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;opacity:0;z-index:12}
+.card .bgimg{position:absolute;inset:-40px;width:2000px;height:1160px;filter:blur(14px) brightness(.34);object-fit:cover}
+.card .copy{position:relative;display:flex;flex-direction:column;align-items:center}
+.kick{font:500 22px/1 var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--blue);display:flex;align-items:center;gap:14px}
+.kick i{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 16px currentColor}
+.card h1{font:400 200px/1 var(--serif);letter-spacing:-.03em;margin-top:30px}
+.card p{font:400 40px/1.35 var(--sans);color:#d3def6;margin-top:26px}
+.card p em{font-style:normal;color:#a9cbff}
+.chips{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:1700px;margin-top:48px}
+.chips span{font:500 22px/1 var(--mono);padding:15px 22px;border-radius:999px;border:1px solid color-mix(in oklab,var(--c) 55%,transparent);background:rgba(8,13,26,.62);color:var(--c)}
+/* pop-ups */
+.pop{position:absolute;inset:0;z-index:6;pointer-events:none}
+.art{position:absolute;width:820px;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 40px 110px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.2);opacity:0}
+.art img,.art video{display:block;width:100%}
+.art .src{display:flex;justify-content:space-between;gap:16px;padding:12px 18px;background:#0b1120;font:500 17px/1.3 var(--mono);color:#c9d6f2;letter-spacing:.02em}
+.art .src b{font-weight:500;color:#fff}
+.quote{position:absolute;max-width:900px;padding:22px 28px;border-radius:14px;background:rgba(9,13,24,.92);border:1px solid rgba(140,170,230,.3);font:400 34px/1.3 var(--serif);color:#fff;opacity:0;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.cap.top{top:74px;bottom:auto}
+.quote.q2{font-size:30px;max-width:790px}
+.art .src i{font-style:normal;color:#8fa0c4}
+.quote small{display:block;margin-top:12px;font:500 17px/1.3 var(--mono);color:#8fa0c4;letter-spacing:.04em}
+.glass{position:absolute;border-radius:18px;background:rgba(7,10,18,.9);border:1px solid rgba(140,170,230,.22);box-shadow:0 40px 120px rgba(0,0,0,.6);backdrop-filter:blur(18px);overflow:hidden;opacity:0}
+.gbar{display:flex;align-items:center;gap:10px;padding:16px 22px;border-bottom:1px solid rgba(140,170,230,.14);font:500 17px/1 var(--mono);color:#8fa0c4;letter-spacing:.06em}
+.gbar span{width:13px;height:13px;border-radius:50%;background:#2a344d}
+.gbar b{margin-left:14px;font-weight:500}
+.net{display:flex;justify-content:center;align-items:center;padding:34px 30px 10px}
+.lay{display:flex;flex-direction:column;align-items:center;gap:10px}
+.lay .bx{min-width:130px;padding:20px 18px;border-radius:12px;border:1px solid color-mix(in oklab,var(--c) 60%,transparent);background:rgba(12,18,34,.92);font:600 32px/1 var(--sans);text-align:center;color:var(--c)}
+.lay .s{font:500 16px/1.3 var(--mono);color:#8fa0c4;text-align:center;max-width:210px;height:44px}
+.arr{width:50px;height:2px;background:linear-gradient(90deg,rgba(127,178,255,.2),rgba(127,178,255,.8));margin:0 8px 54px;position:relative}
+.arr::after{content:"";position:absolute;right:-2px;top:-5px;border:6px solid transparent;border-left-color:rgba(127,178,255,.8)}
+.specs{display:grid;grid-template-columns:170px 1fr;row-gap:12px;column-gap:24px;padding:18px 36px 30px}
+.specs div{font:400 24px/1.3 var(--mono);color:#dfe8ff}
+.specs div.k{color:#6d7fa8}
+.specs b{font-weight:500;color:var(--green)}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <img id="plate" alt="">
+  <div class="dim" id="dim"></div>
+  <div class="pop" id="pops"></div>
+  <div class="chip" id="chip"><i></i><span id="chip-t"></span></div>
+  <div class="chip r" id="speed" style="--c:var(--gold)"><i></i><span id="speed-t"></span></div>
+  <div class="cap" id="cap"></div>
+  <div class="card" id="title"><img class="bgimg" id="title-bg" alt=""><div class="copy">
+    <div class="kick"><i></i>Runway API hackathon</div><h1>Understudy</h1>
+    <p>Robot training data from one sentence, <em>powered by Runway</em>.</p><div class="chips" id="title-chips"></div></div></div>
+  <div class="card" id="end"><img class="bgimg" id="end-bg" alt=""><div class="copy">
+    <h1>Understudy</h1><p>Runway imagines the demonstration. <em>Physics decides if it counts.</em></p>
+    <div class="chips" id="end-chips"></div></div></div>
+</div>
+<script>
+(async () => {
+  const $ = (id) => document.getElementById(id);
+  const cl = (x) => Math.max(0, Math.min(1, x));
+  const OUT = (p) => 1 - Math.pow(1 - p, 3);
+  const E = await (await fetch('media/v6/edl.json')).json();
+  const R = await (await fetch('media/v6/facts6.json')).json();   // numbers from the real run (film5_assets.py)
+  const S = await (await fetch('media/v6/sources/sources.json')).json();
+  const src = Object.fromEntries(S.map((s) => [s.id, s]));
+  const P = (await (await fetch('media/v6/sources6/sources.json')).json())[0];   // the PhyT2V paper
+  const M = E.marks;
+  const FPS = 30, TITLE = 3.6, XF = 0.5, END = 4.6;
+  const LIVE0 = TITLE;                           // output time where the recording starts
+  const LIVE = E.frames.length / FPS;
+  const DURATION = LIVE0 + LIVE + END - XF;
+  window.DURATION = DURATION;
+  window.PLAN = [{ id: 'title', start: 0 }, { id: 'live', start: LIVE0 }, { id: 'end', start: LIVE0 + LIVE - XF }];
+  const at = (mark, d = 0) => LIVE0 + M[mark] + d;   // film time of a recording mark
+
+  const TOOLS = `<span style="--c:var(--gold)">Runway API</span><span style="--c:var(--green)">MediaPipe</span><span style="--c:var(--blue)">OpenCV</span><span style="--c:var(--violet)">Claude</span><span style="--c:#f2f6ff">MuJoCo</span><span style="--c:#f2f6ff">LeRobot</span><span style="--c:#f2f6ff">PyTorch</span>`;
+  $('title-chips').innerHTML = TOOLS; $('end-chips').innerHTML = TOOLS;
+  const frameUrl = (f) => `media/v6/${f}`;
+  $('title-bg').src = frameUrl(E.frames[0]);
+  $('end-bg').src = frameUrl(E.frames[E.frames.length - 1]);
+
+  // ---------------------------------------------------------------- cues (film seconds)
+  // chips: what the live site is doing; captions: one line each; pops: B-roll over the running site
+  const why = (r) => { const i = r.indexOf(': '); const w = i >= 0 ? r.slice(i + 2) : r; return w.charAt(0).toUpperCase() + w.slice(1); };
+  const REJ = Object.fromEntries(R.rejected.map((r) => [r.clip, r.reason]));
+  const END0 = 'take0:end';
+  const r0 = R.rejected[0].clip;
+  const dupAt = (REJ[r0].match(/first at ([\d.]+) s/) || [])[1];
+  const chips = [
+    [at('compose'), at('generate'), 'Live site <b>localhost:8765</b>', 'var(--blue)'],
+    [at('generate'), at('data'), 'Step 1 <b>Runway API</b> footage from the cache, 0 credits', 'var(--gold)'],
+    [at('data'), at('inspect-accepted'), 'Step 2 <b>MediaPipe + OpenCV + Claude + MuJoCo</b>', 'var(--green)'],
+    [at('inspect-accepted'), at('inspect-rejected'), 'Gates <b>' + R.accepted.length + ' of ' + R.clips + ' accepted</b>', 'var(--green)'],
+    [at('inspect-rejected'), at('select'), 'Gates <b>' + R.rejected.length + ' of ' + R.clips + ' rejected</b>', 'var(--red)'],
+    [at('select'), at('drop', 1.0), 'Step 3 <b>drag and drop to train</b>', 'var(--blue)'],
+    [at('drop', 1.0), at('watch'), 'Training <b>PyTorch</b>, eval <b>MuJoCo</b>', 'var(--violet)'],
+    [at('watch'), at(END0), 'The SO-101 <b>trained policy in MuJoCo</b>', '#f2f6ff'],
+  ];
+  const caps = [
+    [at('type', -0.2), at('generate', 0.4), 'Type the task. Understudy checks the <em>SO-101 can do it</em> before any credit is spent.'],
+    [at('generate', 0.5), at('data', 0.4), R.clips + ' Runway clips of a hand doing it, made for this sentence on Sep 23. <em>Replayed from the cache: 0 credits today.</em>'],
+    [at('data:start', 0.4), at('data:start', 3.4), 'Every frame is tracked and <em>21 gates</em> judge every clip.'],
+    [at('data:end', -0.2), at('inspect-accepted', 0.6), '<em style="--c:var(--green)">' + R.accepted.length + ' of ' + R.clips + ' pass.</em> ' + R.rejected.length + ' fail a gate. <em style="--c:var(--red)">Understudy will not train on bad data.</em>'],
+    [at('inspect-accepted', 0.9), at('inspect-rejected', -0.2), 'MediaPipe tracks <em>21 hand points</em> on every frame; OpenCV follows the block.'],
+    [at('inspect-rejected', 0.9), at('inspect-rejected', 4.6), 'Rejected: <em style="--c:var(--red)">a second red block appears' + (dupAt ? ' at ' + dupAt + '&nbsp;s' : '') + '.</em> The gate names it; the prompt gets a fix.', 'top'],
+    [at('select', 0.9), at('drop', 1.2), 'Only the ' + R.accepted.length + ' clips that passed can train. <em>Drag them onto the trainer.</em>'],
+    [at('train:start', 0.3), at('train:start', 3.2), 'A small policy trains on <em>' + R.episodes + ' episodes</em> on this laptop\'s CPU.'],
+    [at('train:end', -1.8), at('watch', 0.2), '<em>' + R.eval_k + ' of ' + R.eval_n + '</em> unseen cube positions in the bowl. <em>Sim only.</em>'],
+    [at('watch', 1.0), at(END0, -0.2), 'The trained policy puts the block in the bowl from an unseen position. <em>Sim only.</em>'],
+  ];
+  // B-roll pop-ups (real sources, verbatim; see sources.json and sources6/sources.json)
+  const artHtml = (id, style) => { const s = src[id]; return `<div class="art" data-pop style="${style}"><img src="media/v6/sources/${s.screenshot}"><div class="src"><b>${s.outlet}</b><span>${s.date}</span></div></div>`; };
+  const D0 = at('data:start'), D1 = at('data:end'), DM = (D0 + D1) / 2;
+  const pops = [
+    { from: D0 + 3.6, to: DM + 0.6, chip: 'The problem <b>robot data</b>', c: 'var(--red)',
+      cap: 'Robots learn from demonstrations, and today people <em>record every one by hand</em>.',
+      html: artHtml('s3', 'left:70px;top:190px;width:700px;transform:rotate(-2.5deg)') + artHtml('s1', 'left:610px;top:250px;width:700px;transform:rotate(1deg)') +
+        artHtml('s4', 'left:1150px;top:170px;width:700px;transform:rotate(2.6deg)') },
+    { from: DM + 0.9, to: D1 - 0.5, chip: 'Why hands, <b>not robots</b>', c: 'var(--green)',
+      cap: 'Video models have seen far more hands than robot arms. <em>A hand plus a tracker gives real joint angles.</em>',
+      html: artHtml('s6', 'left:170px;top:170px;transform:rotate(-2.2deg)') +
+        `<div class="art" data-pop style="left:1000px;top:190px;width:760px;transform:rotate(2deg)"><video data-v="media/v6/robot-clip.mp4" muted></video><div class="src"><b>Runway, asked for the SO-101 itself</b><span>no base, no joints</span></div></div>` +
+        `<div class="quote" data-pop style="left:230px;top:700px">“${src.s6.quote}”<small>${src.s6.outlet}, ${src.s6.date}</small></div>` },
+    { from: at('inspect-rejected', 4.9), to: at('select', 0.6), chip: 'Research <b>physics in generated video</b>', c: 'var(--gold)',
+      cap: 'We borrowed <em>PhyT2V\'s refine loop</em>: every gate rejection rewrites the next Runway prompt. <em>Our effect is measured on demo day.</em>',
+      html: `<div class="art" data-pop style="left:60px;top:110px;width:980px;transform:rotate(-1.6deg)"><img src="media/v6/sources6/${P.screenshot}"><div class="src"><b>arXiv 2412.00596 · ${P.venue}</b><span>${P.authors}</span></div></div>` +
+        `<div class="quote q2" data-pop style="left:1070px;top:170px">“${P.quote}”<small>PhyT2V abstract, ${P.venue}. The authors' result on open models (CogVideoX, OpenSora, VideoCrafter), not on Runway.</small></div>` +
+        `<div class="art" data-pop style="left:780px;top:600px;width:1080px;transform:rotate(1.2deg)"><img src="media/v6/sources6/${P.figure}"><div class="src"><b>PhyT2V, Figure 1</b><span>one apple, not several: <i>the kind of error our gates catch</i></span></div></div>` },
+    { from: at('train:start', 3.4), to: at('train:end', -2.0), chip: 'What was <b>trained</b>', c: 'var(--violet)', cap: null,
+      html: `<div class="glass" data-pop style="left:300px;top:150px;width:1320px"><div class="gbar"><span></span><span></span><span></span><b>the model card, from this run</b></div>
+        <div class="net">${R.layers.map((n, i) => `<div class="lay" style="--c:${i === 0 || i === R.layers.length - 1 ? 'var(--gold)' : 'var(--blue)'}"><div class="bx">${n}</div><div class="s">${i === 0 ? '6 joints + cube xyz' : i === R.layers.length - 1 ? `next ${R.chunk} targets x 6 joints` : 'hidden, GELU'}</div></div>`).join('<div class="arr"></div>')}</div>
+        <div class="specs"><div class="k">type</div><div>MLP with action chunking, ACT-style ensembling</div><div class="k">params</div><div><b>${R.params.toLocaleString('en-US')}</b></div>
+        <div class="k">input</div><div>joint angles + cube position from the simulator, no camera</div>
+        <div class="k">training</div><div>${R.steps.toLocaleString('en-US')} steps on ${R.episodes} episodes, ${R.train_seconds} s on the ${R.device}</div></div></div>` },
+  ];
+  const popEls = pops.map((p) => { const d = document.createElement('div'); d.style.cssText = 'position:absolute;inset:0;opacity:0'; d.innerHTML = p.html; $('pops').append(d); return d; });
+
+  // videos inside pops, loaded as blobs so every frame is seekable
+  const vids = [...document.querySelectorAll('video[data-v]')];
+  await Promise.all(vids.map(async (v) => { const b = await (await fetch(v.dataset.v)).blob(); v.src = URL.createObjectURL(b); await new Promise((r) => { v.onloadeddata = r; }); }));
+  await document.fonts.ready;
+
+  // ---------------------------------------------------------------- seek
+  const win = (t, a, b, fi = 0.35, fo = 0.3) => (t < a || t > b ? 0 : Math.min(cl((t - a) / fi), cl((b - t) / fo)));
+  const seekVid = (v, x) => new Promise((r) => { x = Math.max(0, Math.min(v.duration - 0.02, x)); if (Math.abs(v.currentTime - x) < 0.004) return r(); v.onseeked = () => r(); v.currentTime = x; });
+  const plate = $('plate');
+  let shown = -1;
+  window.seek = async (t) => {
+    const waits = [];
+    // plate: recording frame
+    const k = Math.max(0, Math.min(E.frames.length - 1, Math.floor((t - LIVE0) * FPS + 1e-6)));
+    const fi = E.frames[k];
+    if (fi !== shown) { shown = fi; plate.src = frameUrl(fi); waits.push(plate.decode().catch(() => {})); }
+    // title and end cards
+    const tt = t < TITLE ? 1 : cl(1 - (t - TITLE) / XF);
+    $('title').style.opacity = tt;
+    $('title').querySelector('.copy').style.transform = `scale(${1 + 0.035 * t / TITLE})`;
+    $('title-bg').style.transform = `scale(${1.02 + 0.07 * t / TITLE}) translate(${-14 * t / TITLE}px, ${-6 * t / TITLE}px)`;
+    const te = Math.max(0, t - (LIVE0 + LIVE - XF));
+    $('end-bg').style.transform = `scale(${1.04 + 0.035 * te}) translate(${-9 * te}px, ${-4 * te}px)`;
+    $('end').querySelector('.copy').style.transform = `scale(${1 + 0.014 * te})`;
+    // slow push on the recording (Player Two style): a continuous drift, so frames where the site is still still move
+    const tl = t - LIVE0;
+    // beat pushes where the site itself is still: the compose screen (keys land every 2nd frame) and the rollout's end
+    const tw = t - at('watch'), tg = t - at('generate');
+    const pushC = t < at('generate') ? 0.0075 * Math.max(0, t - LIVE0) : 0.0075 * (at('generate') - LIVE0) * Math.max(0, 1 - tg / 0.7);
+    const pushH = tw > 0 ? 0.012 * tw : 0;
+    const k2 = 1 + pushC + pushH;
+    plate.style.transform = `translate(${(5 * Math.sin(tl * 2 * Math.PI / 19)).toFixed(3)}px, ${(3 * Math.sin(tl * 2 * Math.PI / 17 + 1)).toFixed(3)}px) scale(${(k2 * (1.019 + 0.008 * Math.sin(tl * 2 * Math.PI / 13))).toFixed(5)})`;
+    const et = cl((t - (LIVE0 + LIVE - XF)) / 0.8);
+    $('end').style.opacity = et;
+    // chip + speed label
+    const inLive = t >= LIVE0 && t < LIVE0 + LIVE;
+    const ch = chips.find(([a, b]) => t >= a && t < b);
+    const pop = pops.findIndex((p) => t >= p.from && t < p.to);
+    if (pop >= 0) {
+      $('chip-t').innerHTML = pops[pop].chip; $('chip').style.setProperty('--c', pops[pop].c);
+      $('chip').style.opacity = win(t, pops[pop].from, pops[pop].to, 0.3, 0.25);
+    } else if (ch && inLive) {
+      $('chip-t').innerHTML = ch[2]; $('chip').style.setProperty('--c', ch[3]);
+      $('chip').style.opacity = win(t, ch[0], ch[1], 0.3, 0.25);
+    } else $('chip').style.opacity = 0;
+    const sp = inLive ? E.speed[k] : 1;
+    if (sp > 1.5) {
+      const w = Object.entries(E.waits).find(([name]) => t >= at(`${name}:start`) && t < at(`${name}:end`));
+      const real = w ? w[1].real_s : 0;
+      $('speed-t').innerHTML = `Sped up <b>${Math.round(sp)}x</b> · ${Math.floor(real / 60)}:${String(Math.round(real % 60)).padStart(2, '0')} real`;
+      $('speed').style.opacity = w ? win(t, at(`${w[0]}:start`), at(`${w[0]}:end`), 0.2, 0.2) : 0;
+    } else $('speed').style.opacity = 0;
+    // caption (a pop's caption wins)
+    const cp = pop >= 0 && pops[pop].cap ? [pops[pop].from + 0.5, pops[pop].to, pops[pop].cap] : caps.find(([a, b]) => t >= a && t < b);
+    $('cap').classList.toggle('top', !!(cp && cp[3] === 'top'));
+    if (cp && inLive) { $('cap').innerHTML = cp[2]; $('cap').style.opacity = win(t, cp[0], cp[1], 0.3, 0.3); } else $('cap').style.opacity = 0;
+    // pops
+    let dim = 0;
+    pops.forEach((p, i) => {
+      const o = win(t, p.from, p.to, 0.4, 0.35);
+      popEls[i].style.opacity = o > 0 ? 1 : 0;
+      dim = Math.max(dim, o);
+      [...popEls[i].querySelectorAll('[data-pop]')].forEach((e, j) => {
+        const a = p.from + 0.15 + j * 0.45;
+        const q = OUT(cl((t - a) / 0.5)) * cl((p.to - t) / 0.35);
+        e.style.opacity = q;
+        const base = e.style.transform.replace(/ ?translateY\([^)]*\) scale\([^)]*\)/, '');
+        e.style.transform = `${base} translateY(${(1 - q) * 30 - 10 * cl((t - a) / 7)}px) scale(${0.94 + 0.06 * q + 0.035 * cl((t - a) / 7)})`.trim();
+        const v = e.querySelector('video');
+        if (v && o > 0) waits.push(seekVid(v, t - a));
+      });
+    });
+    for (const c of E.cuts) { const d = Math.abs(t - (LIVE0 + c)); if (d < 0.3) dim = Math.max(dim, 1 - d / 0.3); }
+    $('dim').style.opacity = dim;
+    await Promise.all(waits);
+  };
+  window.deckReady = true;
+})();
+</script>
+</body>
+</html>

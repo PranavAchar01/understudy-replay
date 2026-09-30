@@ -1,0 +1,144 @@
+{
+ "put the red block in the bowl": [
+  {
+   "clip_id": "v01",
+   "lighting": "soft natural daylight from a window on the left",
+   "table": "a light oak wooden table",
+   "bowl": "white ceramic",
+   "angle": "a low front view from table height, about 25 degrees down",
+   "image_prompt": "Photorealistic photo, a low front view from table height, about 25 degrees down, of a light oak wooden table with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow white ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. soft natural daylight from a window on the left. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move."
+  },
+  {
+   "clip_id": "v02",
+   "lighting": "warm late-afternoon sunlight with long soft shadows",
+   "table": "a light oak wooden table",
+   "bowl": "matte black stoneware",
+   "angle": "a front view from slightly to the left, about 35 degrees down",
+   "image_prompt": "Photorealistic photo, a front view from slightly to the left, about 35 degrees down, of a light oak wooden table with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow matte black stoneware bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. warm late-afternoon sunlight with long soft shadows. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+   "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a light oak wooden table, a matte black stoneware bowl, warm late-afternoon sunlight with long soft shadows, seen from a front view from slightly to the left, about 35 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text."
+  },
+  {
+   "clip_id": "v03",
+   "lighting": "cool overcast light, flat and even",
+   "table": "a black matte desk",
+   "bowl": "cream enamel",
+   "angle": "a front view, about 45 degrees down",
+   "image_prompt": "Photorealistic photo, a front view, about 45 degrees down, of a black matte desk with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow cream enamel bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. cool overcast light, flat and even. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+   "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a black matte desk, a cream enamel bowl, cool overcast light, flat and even, seen from a front view, about 45 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text."
+  },
+  {
+   "clip_id": "v04",
+   "lighting": "a warm desk lamp at night, dark background",
+   "table": "a pale birch plywood workbench",
+   "bowl": "light grey ceramic",
+   "angle": "a low front view from table height, about 25 degrees down",
+   "image_prompt": "Photorealistic photo, a low front view from table height, about 25 degrees down, of a pale birch plywood workbench with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow light grey ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. a warm desk lamp at night, dark background. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+   "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a pale birch plywood workbench, a light grey ceramic bowl, a warm desk lamp at night, dark background, seen from a low front view from table height, about 25 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text."
+  },
+  {
+   "clip_id": "v05",
+   "lighting": "bright even studio light",
+   "table": "a grey concrete worktop",
+   "bowl": "white ceramic",
+   "angle": "a front view from slightly to the left, about 35 degrees down",
+   "image_prompt": "Photorealistic photo, a front view from slightly to the left, about 35 degrees down, of a grey concrete worktop with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow white ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. bright even studio light. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+   "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a grey concrete worktop, a white ceramic bowl, bright even studio light, seen from a front view from slightly to the left, about 35 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text."
+  },
+  {
+   "clip_id": "v06",
+   "lighting": "mixed daylight with a slight blue tint",
+   "table": "a dark walnut table",
+   "bowl": "pale blue ceramic",
+   "angle": "a front view, about 45 degrees down",
+   "image_prompt": "Photorealistic photo, a front view, about 45 degrees down, of a dark walnut table with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow pale blue ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. mixed daylight with a slight blue tint. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+   "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a dark walnut table, a pale blue ceramic bowl, mixed daylight with a slight blue tint, seen from a front view, about 45 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text."
+  },
+  {
+   "clip_id": "v07",
+   "lighting": "soft natural daylight from a window on the left",
+   "table": "a matte white laminate desk",
+   "bowl": "sage green ceramic",
+   "angle": "a low front view from table height, about 25 degrees down",
+   "image_prompt": "Photorealistic photo, a low front view from table height, about 25 degrees down, of a matte white laminate desk with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow sage green ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. soft natural daylight from a window on the left. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+   "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a matte white laminate desk, a sage green ceramic bowl, soft natural daylight from a window on the left, seen from a low front view from table height, about 25 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text."
+  }
+ ],
+ "put a red block into a bowl": [
+  {
+   "clip_id": "v01",
+   "lighting": "soft natural daylight from a window on the left",
+   "table": "a light oak wooden table",
+   "bowl": "white ceramic",
+   "angle": "a low front view from table height, about 25 degrees down",
+   "image_prompt": "Photorealistic photo, a low front view from table height, about 25 degrees down, of a light oak wooden table with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow white ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. soft natural daylight from a window on the left. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move."
+  },
+  {
+   "clip_id": "v02",
+   "lighting": "warm late-afternoon sunlight with long soft shadows",
+   "table": "a light oak wooden table",
+   "bowl": "matte black stoneware",
+   "angle": "a front view from slightly to the left, about 35 degrees down",
+   "image_prompt": "Photorealistic photo, a front view from slightly to the left, about 35 degrees down, of a light oak wooden table with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow matte black stoneware bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. warm late-afternoon sunlight with long soft shadows. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+   "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a light oak wooden table, a matte black stoneware bowl, warm late-afternoon sunlight with long soft shadows, seen from a front view from slightly to the left, about 35 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text."
+  },
+  {
+   "clip_id": "v03",
+   "lighting": "cool overcast light, flat and even",
+   "table": "a black matte desk",
+   "bowl": "cream enamel",
+   "angle": "a front view, about 45 degrees down",
+   "image_prompt": "Photorealistic photo, a front view, about 45 degrees down, of a black matte desk with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow cream enamel bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. cool overcast light, flat and even. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+   "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a black matte desk, a cream enamel bowl, cool overcast light, flat and even, seen from a front view, about 45 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text."
+  },
+  {
+   "clip_id": "v04",
+   "lighting": "a warm desk lamp at night, dark background",
+   "table": "a pale birch plywood workbench",
+   "bowl": "light grey ceramic",
+   "angle": "a low front view from table height, about 25 degrees down",
+   "image_prompt": "Photorealistic photo, a low front view from table height, about 25 degrees down, of a pale birch plywood workbench with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow light grey ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. a warm desk lamp at night, dark background. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+   "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a pale birch plywood workbench, a light grey ceramic bowl, a warm desk lamp at night, dark background, seen from a low front view from table height, about 25 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text."
+  },
+  {
+   "clip_id": "v05",
+   "lighting": "bright even studio light",
+   "table": "a grey concrete worktop",
+   "bowl": "white ceramic",
+   "angle": "a front view from slightly to the left, about 35 degrees down",
+   "image_prompt": "Photorealistic photo, a front view from slightly to the left, about 35 degrees down, of a grey concrete worktop with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow white ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. bright even studio light. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+   "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a grey concrete worktop, a white ceramic bowl, bright even studio light, seen from a front view from slightly to the left, about 35 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text."
+  },
+  {
+   "clip_id": "v06",
+   "lighting": "mixed daylight with a slight blue tint",
+   "table": "a dark walnut table",
+   "bowl": "pale blue ceramic",
+   "angle": "a front view, about 45 degrees down",
+   "image_prompt": "Photorealistic photo, a front view, about 45 degrees down, of a dark walnut table with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow pale blue ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. mixed daylight with a slight blue tint. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+   "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a dark walnut table, a pale blue ceramic bowl, mixed daylight with a slight blue tint, seen from a front view, about 45 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text."
+  },
+  {
+   "clip_id": "v07",
+   "lighting": "soft natural daylight from a window on the left",
+   "table": "a matte white laminate desk",
+   "bowl": "sage green ceramic",
+   "angle": "a low front view from table height, about 25 degrees down",
+   "image_prompt": "Photorealistic photo, a low front view from table height, about 25 degrees down, of a matte white laminate desk with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow sage green ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. soft natural daylight from a window on the left. Sharp focus, no text.",
+   "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+   "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a matte white laminate desk, a sage green ceramic bowl, soft natural daylight from a window on the left, seen from a low front view from table height, about 25 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text."
+  }
+ ]
+}

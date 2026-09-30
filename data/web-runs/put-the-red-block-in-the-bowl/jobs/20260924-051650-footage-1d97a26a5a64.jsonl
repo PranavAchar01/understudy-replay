@@ -1,0 +1,23 @@
+{"ts": 1790252210.875, "type": "job_start", "stage": "footage"}
+{"ts": 1790252210.944, "type": "runway", "clip": "v01", "stage": "frame", "model": "gen4_image", "status": "CACHED", "progress": 1.0, "cost": 0}
+{"ts": 1790252210.946, "type": "frame_ready", "clip": "v01", "file": "clips/v01.png"}
+{"ts": 1790252210.954, "type": "runway", "clip": "v01", "stage": "video", "model": "gen4_turbo", "status": "CACHED", "progress": 1.0, "cost": 0}
+{"ts": 1790252210.959, "type": "clip_ready", "clip": "v01", "file": "clips/v01.mp4"}
+{"type": "log", "line": "[generate] v01 ready", "ts": 1790252210.961}
+{"ts": 1790252211.004, "type": "runway", "clip": "v03", "stage": "frame", "model": "gen4_image_turbo", "status": "CACHED", "progress": 1.0, "cost": 0}
+{"ts": 1790252211.009, "type": "runway", "clip": "v06", "stage": "frame", "model": "gen4_image_turbo", "status": "CACHED", "progress": 1.0, "cost": 0}
+{"ts": 1790252211.024, "type": "runway", "clip": "v07", "stage": "frame", "model": "gen4_image_turbo", "status": "CACHED", "progress": 1.0, "cost": 0}
+{"ts": 1790252211.025, "type": "frame_ready", "clip": "v03", "file": "clips/v03.png"}
+{"ts": 1790252211.035, "type": "frame_ready", "clip": "v07", "file": "clips/v07.png"}
+{"ts": 1790252211.066, "type": "frame_ready", "clip": "v06", "file": "clips/v06.png"}
+{"ts": 1790252211.076, "type": "runway", "clip": "v07", "stage": "video", "model": "gen4_turbo", "status": "CACHED", "progress": 1.0, "cost": 0}
+{"ts": 1790252211.076, "type": "runway", "clip": "v03", "stage": "video", "model": "gen4_turbo", "status": "CACHED", "progress": 1.0, "cost": 0}
+{"ts": 1790252211.077, "type": "runway", "clip": "v06", "stage": "video", "model": "gen4_turbo", "status": "CACHED", "progress": 1.0, "cost": 0}
+{"ts": 1790252211.087, "type": "clip_ready", "clip": "v07", "file": "clips/v07.mp4"}
+{"type": "log", "line": "[generate] v07 ready", "ts": 1790252211.09}
+{"ts": 1790252211.092, "type": "clip_ready", "clip": "v03", "file": "clips/v03.mp4"}
+{"type": "log", "line": "[generate] v03 ready", "ts": 1790252211.098}
+{"ts": 1790252211.093, "type": "clip_ready", "clip": "v06", "file": "clips/v06.mp4"}
+{"type": "log", "line": "[generate] v06 ready", "ts": 1790252211.101}
+{"ts": 1790252211.484, "type": "footage_done", "clips": ["v01", "v03", "v06", "v07"], "balance": 48}
+{"ts": 1790252211.485, "type": "job_end", "stage": "footage", "ok": true, "seconds": 0.6}

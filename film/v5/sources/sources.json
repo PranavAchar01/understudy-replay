@@ -1,0 +1,74 @@
+[
+  {
+    "id": "s1",
+    "beat": "a",
+    "outlet": "IEEE Spectrum",
+    "headline": "Will Scaling Solve Robotics?",
+    "date": "28 May 2024",
+    "url": "https://spectrum.ieee.org/will-scaling-solve-robotics",
+    "quote": "The Internet is chock-full of data for CV and NLP, but not at all for robotics.",
+    "quote_speaker": null,
+    "screenshot": "s1.png",
+    "screenshot_note": "Headline and dek fully visible; a cookie-consent banner sits at the bottom of the frame but does not cover the headline."
+  },
+  {
+    "id": "s2",
+    "beat": "a",
+    "outlet": "Google DeepMind (blog)",
+    "headline": "Scaling up learning across many different robot types",
+    "date": "October 3, 2023",
+    "url": "https://deepmind.google/blog/scaling-up-learning-across-many-different-robot-types/",
+    "quote": "Robots are great specialists, but poor generalists.",
+    "quote_speaker": null,
+    "screenshot": "s2.png",
+    "screenshot_note": "Headline, byline (Quan Vuong and Pannag Sanketi) and date fully visible, no overlays. This is the Google DeepMind post announcing the Open X-Embodiment dataset/RT-X models."
+  },
+  {
+    "id": "s3",
+    "beat": "b",
+    "outlet": "Business Insider",
+    "headline": "Inside the glass-walled Tesla lab where workers train the Optimus robot to act like a human",
+    "date": "November 2, 2025",
+    "url": "https://www.businessinsider.com/tesla-optimus-humanoid-robot-training-elon-musk-2025-11",
+    "quote": "lab rat under a microscope",
+    "quote_speaker": "an unnamed former Tesla Optimus data-collection worker, quoted by Business Insider",
+    "screenshot": "s3.png",
+    "screenshot_note": "Headline fully visible with 'EXCLUSIVE' tag and byline (Grace Kay); a subscription promo banner appears at the very bottom but does not cover the headline."
+  },
+  {
+    "id": "s4",
+    "beat": "b",
+    "outlet": "Figure AI (blog)",
+    "headline": "Introducing Index: Building The World's Largest and Most Diverse Physical Dataset",
+    "date": "August 25, 2026",
+    "url": "https://www.figure.ai/news/introducing-index",
+    "quote": "The data needed to scale a truly general purpose robot doesn't exist on the internet",
+    "quote_speaker": null,
+    "screenshot": "s4.png",
+    "screenshot_note": "Headline and date fully visible overlaid on the hero photo of a Figure worker filming a chore; no banners or overlays block it. This is Figure's own announcement of Index, the app that pays people to record video for robot training instead of using teleoperation rigs."
+  },
+  {
+    "id": "s5",
+    "beat": "c",
+    "outlet": "TechCrunch",
+    "headline": "Nvidia wants to be the Android of generalist robotics",
+    "date": "January 5, 2026",
+    "url": "https://techcrunch.com/2026/01/05/nvidia-wants-to-be-the-android-of-generalist-robotics/",
+    "quote": "two world models for synthetic data generation and robot policy evaluation in simulation",
+    "quote_speaker": null,
+    "screenshot": "s5.png",
+    "screenshot_note": "Headline, byline (Rebecca Bellan) and date fully visible; a countdown promo bar sits above the masthead but does not cover the headline. Article covers NVIDIA's Cosmos world models used to generate synthetic robot training data."
+  },
+  {
+    "id": "s6",
+    "beat": "c",
+    "outlet": "Apple Machine Learning Research",
+    "headline": "EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video",
+    "date": "July 2025",
+    "url": "https://machinelearning.apple.com/research/egodex-learning-dexterous-manipulation",
+    "quote": "there is no Internet-scale corpus of data for dexterous manipulation",
+    "quote_speaker": null,
+    "screenshot": "s6.png",
+    "screenshot_note": "Headline, authors and 'Paper | July 2025' tag fully visible, no overlays. Apple's own research page for EgoDex, a dataset of human hand video (collected via Apple Vision Pro) used to train robot manipulation instead of robot teleoperation."
+  }
+]

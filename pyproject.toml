@@ -1,0 +1,30 @@
+[project]
+name = "understudy"
+version = "0.1.0"
+description = "Runway-generated human demonstrations turned into gated SO-101 training data"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "mujoco>=3.3",
+  "numpy",
+  "opencv-python-headless",
+  "pillow",
+  "torch",
+  "lerobot[dataset,smolvla]==0.6.1",
+  "pybullet==3.2.7",
+  "pytest",
+  "fastapi>=0.141.1",
+  "uvicorn>=0.53.0",
+]
+
+[tool.uv]
+package = false
+
+# PyPI has no macOS arm64 wheel for pybullet 3.2.7 and its sdist fails to compile with the macOS 15 SDK (zlib's
+# zutil.h defines fdopen as NULL when TARGET_OS_MAC is set). scripts/build_pybullet.sh patches that one define
+# and builds this wheel.
+[tool.uv.sources]
+pybullet = { path = "data/wheels/pybullet-3.2.7-cp312-cp312-macosx_15_0_arm64.whl" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--basetemp=data/work/pytest -p no:warnings -q"

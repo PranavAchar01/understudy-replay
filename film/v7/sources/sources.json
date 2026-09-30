@@ -1,0 +1,10 @@
+[
+ {"id": "smolvla-blog", "title": "SmolVLA: Efficient Vision-Language-Action Model trained on Lerobot Community Data",
+  "outlet": "Hugging Face blog", "date": "3 Jun 2025", "url": "https://huggingface.co/blog/smolvla",
+  "screenshot": "hf-smolvla-blog-crop.png", "screenshot_of": "blog header + TL;DR, shot 2026-09-24",
+  "quote": "SmolVLA goes through a pretraining phase on general manipulation data, followed by task-specific post-training.",
+  "quote2": "we curated a collection of 487 high-quality datasets focused on the SO100 robotic arm",
+  "quote3": "Small enough to run on CPU, train on a single consumer GPU, or even a MacBook!",
+  "paper": "arXiv 2506.01844, SmolVLA: A Vision-Language-Action Model for Affordable and Efficient Robotics (2 Jun 2025)",
+  "model": "lerobot/smolvla_base"}
+]

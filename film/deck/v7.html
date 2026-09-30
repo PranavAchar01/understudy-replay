@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Understudy film v7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Film v7 = the v6 frame (a real recorded session on the live site, pop-ups of real sources, slow push) with a site
+   that now ends at the dataset, then: the dataset checked by a second physics engine (PyBullet), the training in a
+   terminal (the verbatim output of the real lerobot-train and bin/understudy train runs, as a labelled time-lapse),
+   the fine-tuned SmolVLA foundation model next to the MLP baseline in MuJoCo with their real scores, the stack.
+   Nothing runs on a wall clock: window.seek(t) lays out the frame for time t; film/tools/render-v4.mts steps it. */
+:root{--ink:#f2f6ff;--blue:#7fb2ff;--violet:#b9a4ff;--gold:#e9c46a;--green:#7fe0b0;--red:#ff8a80;--serif:"Hedvig Letters Serif",Georgia,serif;--sans:Inter,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans);overflow:hidden}
+.stage{width:1920px;height:1080px;position:absolute;left:0;top:0;overflow:hidden;background:#05070d}
+#plate{position:absolute;inset:0;width:1920px;height:1080px;display:block;transform-origin:50% 50%;will-change:transform}
+.dim{position:absolute;inset:0;background:rgba(3,5,10,.62);opacity:0;z-index:3}
+.chip{position:absolute;left:50%;top:13px;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:11px 18px;border-radius:8px;background:rgba(8,12,22,.78);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);font:500 19px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:#e7eeff;opacity:0;z-index:20;white-space:nowrap}
+.chip.r{left:auto;right:28px;transform:none}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--blue));box-shadow:0 0 14px var(--c,var(--blue))}
+.chip b{font-weight:500;color:var(--c,var(--blue))}
+.cap{position:absolute;left:0;right:0;bottom:34px;margin:0 auto;width:fit-content;max-width:1560px;padding:18px 32px 20px;border-radius:16px;background:rgba(10,12,18,.86);backdrop-filter:blur(14px);font:500 36px/1.28 var(--sans);letter-spacing:-.005em;text-align:center;color:#fff;text-wrap:balance;opacity:0;z-index:21}
+.cap em{font-style:normal;color:var(--c,var(--blue))}
+.cap.top{top:74px;bottom:auto}
+.card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;opacity:0;z-index:12}
+.bgimg{position:absolute;inset:-40px;width:2000px;height:1160px;filter:blur(14px) brightness(.34);object-fit:cover}
+.card .copy{position:relative;display:flex;flex-direction:column;align-items:center}
+.kick{font:500 22px/1 var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--blue);display:flex;align-items:center;gap:14px}
+.kick i{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 16px currentColor}
+.card h1{font:400 200px/1 var(--serif);letter-spacing:-.03em;margin-top:30px}
+.card p{font:400 40px/1.35 var(--sans);color:#d3def6;margin-top:26px}
+.card p em{font-style:normal;color:#a9cbff}
+.chips{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;max-width:1780px;margin-top:44px}
+.chips span{font:500 20px/1 var(--mono);padding:13px 19px;border-radius:999px;border:1px solid color-mix(in oklab,var(--c) 55%,transparent);background:rgba(8,13,26,.62);color:var(--c)}
+/* pop-ups over the live plate */
+.pop{position:absolute;inset:0;z-index:6;pointer-events:none}
+.art{position:absolute;width:820px;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 40px 110px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.2);opacity:0}
+.art img,.art video{display:block;width:100%}
+.art .src{display:flex;justify-content:space-between;gap:16px;padding:12px 18px;background:#0b1120;font:500 17px/1.3 var(--mono);color:#c9d6f2;letter-spacing:.02em}
+.art .src b{font-weight:500;color:#fff}
+.art .src i{font-style:normal;color:#8fa0c4}
+.quote{position:absolute;max-width:900px;padding:22px 28px;border-radius:14px;background:rgba(9,13,24,.92);border:1px solid rgba(140,170,230,.3);font:400 34px/1.3 var(--serif);color:#fff;opacity:0;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.quote.q2{font-size:30px;max-width:790px}
+.quote small{display:block;margin-top:12px;font:500 17px/1.3 var(--mono);color:#8fa0c4;letter-spacing:.04em}
+/* post-site segments */
+.seg{position:absolute;inset:0;opacity:0;z-index:10}
+.seg .bgimg{filter:blur(18px) brightness(.22)}
+.glass{position:absolute;border-radius:18px;background:rgba(7,10,18,.92);border:1px solid rgba(140,170,230,.22);box-shadow:0 40px 120px rgba(0,0,0,.6);overflow:hidden}
+.gbar{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid rgba(140,170,230,.14);font:500 16px/1 var(--mono);color:#8fa0c4;letter-spacing:.04em;white-space:nowrap;overflow:hidden}
+.gbar span{width:13px;height:13px;border-radius:50%;background:#2a344d;flex:none}
+.gbar b{margin-left:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis}
+/* terminal */
+.tbody{padding:16px 22px;font:400 16.5px/1.42 var(--mono);color:#cfdcf5;height:calc(100% - 46px);display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
+.tbody div{white-space:pre;overflow:hidden;text-overflow:clip;min-height:23px}
+.tbody .cmd{white-space:pre-wrap;word-break:break-all;color:#fff;margin-bottom:6px}
+.tbody .cmd b{color:var(--green);font-weight:500}
+.tbody .cur::after{content:"";display:inline-block;width:10px;height:19px;background:#cfdcf5;vertical-align:-3px;margin-left:2px}
+.side{position:absolute;display:flex;flex-direction:column;gap:18px}
+.stat{padding:20px 24px;border-radius:16px;background:rgba(7,10,18,.9);border:1px solid rgba(140,170,230,.2)}
+.stat .k{font:500 15px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#8fa0c4}
+.stat .v{font:400 58px/1.05 var(--serif);margin-top:8px;color:#fff}
+.stat .v small{font:500 20px/1 var(--mono);color:#8fa0c4;margin-left:8px}
+.stat .n{font:400 17px/1.35 var(--mono);color:#b7c6e6;margin-top:8px}
+.bar{height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;background:var(--c,var(--blue))}
+svg.loss{display:block}
+svg.loss text{font:14px var(--mono);fill:#8fa0c4}
+/* engines */
+.eng{position:absolute;top:96px;width:800px}
+.eng video{display:block;width:100%;border-radius:12px}
+.eng .lab{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;font:500 22px/1.2 var(--mono);color:#dfe8ff}
+.eng .lab b{font-weight:500;color:var(--c)}
+.eng .lab i{font-style:normal;color:#8fa0c4;font-size:17px}
+.verdict{position:absolute;left:0;right:0;top:752px;text-align:center}
+.verdict .big{font:400 56px/1.1 var(--serif)}
+.verdict .big em{font-style:normal;color:var(--green)}
+.verdict .log{margin:18px auto 0;max-width:1640px;font:400 18px/1.4 var(--mono);color:#9fb2d8;white-space:pre-wrap}
+/* results */
+.res{position:absolute;top:120px;width:840px;padding:28px 32px}
+.res h2{font:400 44px/1.15 var(--serif)}
+.res .who{font:500 17px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--c)}
+.res .score{font:400 120px/1 var(--serif);margin-top:22px}
+.res .score small{font:400 44px/1 var(--serif);color:#8fa0c4}
+.res .dots{display:grid;grid-template-columns:repeat(25,1fr);gap:7px;margin-top:22px}
+.res .dots i{aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.1)}
+.res .dots i.ok{background:var(--green)}
+.res .dots i.no{background:var(--red)}
+.res dl{display:grid;grid-template-columns:150px 1fr;gap:8px 18px;margin-top:26px;font:400 20px/1.35 var(--mono)}
+.res dt{color:#6d7fa8}
+.res dd{margin:0;color:#dfe8ff}
+/* hero */
+.herov{position:absolute;inset:0;width:1920px;height:1080px;object-fit:cover}
+/* stack */
+.stackgrid{position:absolute;left:110px;right:110px;top:190px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.tool{padding:20px 24px;border-radius:16px;background:rgba(8,12,24,.88);border:1px solid color-mix(in oklab,var(--c) 40%,transparent);opacity:0}
+.tool b{display:block;font:500 25px/1.2 var(--mono);color:var(--c)}
+.tool span{display:block;margin-top:8px;font:400 20px/1.35 var(--sans);color:#c9d6f2}
+.stackh{position:absolute;left:0;right:0;top:92px;text-align:center;font:400 54px/1.1 var(--serif)}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <img id="plate" alt="">
+  <div class="dim" id="dim"></div>
+  <div class="pop" id="pops"></div>
+  <div id="segs"></div>
+  <div class="chip" id="chip"><i></i><span id="chip-t"></span></div>
+  <div class="chip r" id="speed" style="--c:var(--gold)"><i></i><span id="speed-t"></span></div>
+  <div class="cap" id="cap"></div>
+  <div class="card" id="title"><img class="bgimg" id="title-bg" alt=""><div class="copy">
+    <div class="kick"><i></i>Runway API hackathon</div><h1>Understudy</h1>
+    <p>Robot training data from one sentence, <em>powered by Runway</em>.</p><div class="chips" id="title-chips"></div></div></div>
+  <div class="card" id="end"><img class="bgimg" id="end-bg" alt=""><div class="copy">
+    <h1>Understudy</h1><p>Runway imagines the demonstration. <em>Physics decides if it counts.</em></p>
+    <div class="chips" id="end-chips"></div></div></div>
+</div>
+<script>
+(async () => {
+  const $ = (id) => document.getElementById(id);
+  const cl = (x) => Math.max(0, Math.min(1, x));
+  const OUT = (p) => 1 - Math.pow(1 - p, 3);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const J = async (u) => (await fetch(u)).json();
+  const E = await J('media/v7/edl.json');
+  const R = await J('media/v7/facts7.json');
+  const S = await J('media/v7/sources/sources.json');
+  const src = Object.fromEntries(S.map((s) => [s.id, s]));
+  const P = (await J('media/v7/sources6/sources.json'))[0];   // PhyT2V
+  const V = (await J('media/v7/sources7/sources.json'))[0];   // SmolVLA (Hugging Face)
+  const TS = await J('media/v7/term/smolvla.json'), TM = await J('media/v7/term/mlp.json'), TX = await J('media/v7/term/crosscheck.json');
+  const M = E.marks;
+  const FPS = 30, TITLE = 3.6, XF = 0.5, END = 4.6;
+  const LIVE0 = TITLE, LIVE = E.frames.length / FPS;
+  const at = (mark, d = 0) => LIVE0 + M[mark] + d;
+  const fmtT = (s) => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return h ? `${h} h ${m} min` : m ? `${m} min${x ? ` ${x} s` : ''}` : `${x} s`; };
+  const clock = (s) => { s = Math.max(0, Math.floor(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const sv = R.smolvla, ml = R.mlp, xc = R.xcheck;
+  const heroFrames = sv.hero.frames;
+
+  // ---------------------------------------------------------------- post-site timeline (film seconds)
+  const POST0 = LIVE0 + LIVE - XF;
+  const D = { ver: 9.0, fm: 6.5, t1: 11.0, t2: 5.5, res: 7.5, hero: Math.min(10.5, heroFrames / 30 + 1.2), stack: 7.0 };
+  const seg = {}; let tc = POST0;
+  for (const [k, d] of Object.entries(D)) { seg[k] = [tc, tc + d]; tc += d; }
+  const END0 = tc - XF;
+  const DURATION = END0 + END;
+  window.DURATION = DURATION;
+  window.PLAN = [{ id: 'title', start: 0 }, { id: 'live', start: LIVE0 }, ...Object.entries(seg).map(([k, v]) => ({ id: k, start: v[0] })), { id: 'end', start: END0 }];
+
+  const STACK = [
+    ['Runway API', 'gen4_image draws the first frame, gen4_image_turbo restyles it, gen4_turbo animates 5 s of a hand doing the task', 'var(--gold)'],
+    ['Claude', 'scene audit on every clip: Sonnet, run headless through Claude Code', 'var(--violet)'],
+    ['MediaPipe', '21 hand points on every frame', 'var(--green)'],
+    ['OpenCV', 'follows the red block', 'var(--blue)'],
+    ['MuJoCo', 'SO-101 retarget, the physics gates, the evaluation', '#f2f6ff'],
+    ['PyBullet', 'independent second engine: re-checks every episode', '#f2f6ff'],
+    ['LeRobot v3.0', 'the dataset format and lerobot-train', 'var(--gold)'],
+    ['SmolVLA', 'lerobot/smolvla_base, the robot foundation model we fine-tune', 'var(--gold)'],
+    ['PyTorch', 'trains both models, on the laptop GPU (MPS) and CPU', 'var(--red)'],
+    ['FastAPI', 'the live site\'s server, progress streamed live', 'var(--green)'],
+    ['FFmpeg', 'encodes every clip, overlay and rollout', 'var(--blue)'],
+  ];
+  const chipsHtml = STACK.map(([n, , c]) => `<span style="--c:${c}">${n}</span>`).join('');
+  $('title-chips').innerHTML = chipsHtml; $('end-chips').innerHTML = chipsHtml;
+  const frameUrl = (f) => `media/v7/${f}`;
+  const lastFrame = frameUrl(E.frames[E.frames.length - 1]);
+  $('title-bg').src = frameUrl(E.frames[0]);
+  $('end-bg').src = lastFrame;
+
+  // ---------------------------------------------------------------- live-site cues
+  const REJ = Object.fromEntries(R.rejected.map((r) => [r.clip, r.reason]));
+  const r0 = R.rejected[0].clip;
+  const dupAt = (REJ[r0].match(/first at ([\d.]+) s/) || [])[1];
+  const LIVE_END = LIVE0 + LIVE;
+  const chips = [
+    [at('compose'), at('generate'), 'Live site <b>localhost:8765</b>', 'var(--blue)'],
+    [at('generate'), at('data'), 'Step 1 <b>Runway API</b> footage from the cache, 0 credits', 'var(--gold)'],
+    [at('data'), at('inspect-accepted'), 'Step 2 <b>MediaPipe + OpenCV + Claude + MuJoCo</b>', 'var(--green)'],
+    [at('inspect-accepted'), at('inspect-rejected'), 'Gates <b>' + R.accepted.length + ' of ' + R.clips + ' accepted</b>', 'var(--green)'],
+    [at('inspect-rejected'), at('download', -0.8), 'Gates <b>' + R.rejected.length + ' of ' + R.clips + ' rejected</b>', 'var(--red)'],
+    [at('download', -0.8), LIVE_END, 'Step 3 <b>LeRobot v3.0 dataset</b>', 'var(--gold)'],
+  ];
+  const caps = [
+    [at('type', -0.2), at('generate', 0.4), 'Type the task. Understudy checks the <em>SO-101 can do it</em> before any credit is spent.'],
+    [at('generate', 0.5), at('data', 0.4), R.clips + ' Runway clips of a hand doing it, made for this sentence on Sep 23. <em>Replayed from the cache: 0 credits today.</em>'],
+    [at('data:start', 0.4), at('data:start', 3.4), 'Every frame is tracked and <em>21 gates</em> judge every clip.'],
+    [at('data:end', -0.2), at('inspect-accepted', 0.6), '<em style="--c:var(--green)">' + R.accepted.length + ' of ' + R.clips + ' pass.</em> ' + R.rejected.length + ' fail a gate. <em style="--c:var(--red)">Understudy will not train on bad data.</em>'],
+    [at('inspect-accepted', 0.9), at('inspect-rejected', -0.2), 'MediaPipe tracks <em>21 hand points</em> on every frame; OpenCV follows the block.'],
+    [at('inspect-rejected', 0.9), at('inspect-rejected', 4.4), 'Rejected: <em style="--c:var(--red)">a second red block appears' + (dupAt ? ' at ' + dupAt + '&nbsp;s' : '') + '.</em> The gate names it; the prompt gets a fix.', 'top'],
+    [at('download', 0.3), LIVE_END - 0.3, 'Out comes a <em>LeRobot dataset</em>: ' + R.episodes + ' episodes, ' + R.frames.toLocaleString('en-US') + ' frames, ' + R.dataset_mb + ' MB. <em>Ready for any LeRobot policy.</em>'],
+  ];
+  const artHtml = (id, style) => { const s = src[id]; return `<div class="art" data-pop style="${style}"><img src="media/v7/sources/${s.screenshot}"><div class="src"><b>${s.outlet}</b><span>${s.date}</span></div></div>`; };
+  const D0 = at('data:start'), D1 = at('data:end'), DM = (D0 + D1) / 2;
+  const pops = [
+    { from: D0 + 3.6, to: DM + 0.6, chip: 'The problem <b>robot data</b>', c: 'var(--red)',
+      cap: 'Robots learn from demonstrations, and today people <em>record every one by hand</em>.',
+      html: artHtml('s3', 'left:70px;top:190px;width:700px;transform:rotate(-2.5deg)') + artHtml('s1', 'left:610px;top:250px;width:700px;transform:rotate(1deg)') +
+        artHtml('s4', 'left:1150px;top:170px;width:700px;transform:rotate(2.6deg)') },
+    { from: DM + 0.9, to: D1 - 0.5, chip: 'Why hands, <b>not robots</b>', c: 'var(--green)',
+      cap: 'Video models have seen far more hands than robot arms. <em>A hand plus a tracker gives real joint angles.</em>',
+      html: artHtml('s6', 'left:170px;top:170px;transform:rotate(-2.2deg)') +
+        `<div class="art" data-pop style="left:1000px;top:190px;width:760px;transform:rotate(2deg)"><video data-v="media/v7/robot-clip.mp4" muted></video><div class="src"><b>Runway, asked for the SO-101 itself</b><span>no base, no joints</span></div></div>` +
+        `<div class="quote" data-pop style="left:230px;top:700px">“${src.s6.quote}”<small>${src.s6.outlet}, ${src.s6.date}</small></div>` },
+    { from: at('inspect-rejected', 4.7), to: at('download', -1.0), chip: 'Research <b>physics in generated video</b>', c: 'var(--gold)',
+      cap: 'We borrowed <em>PhyT2V\'s refine loop</em>: every gate rejection rewrites the next Runway prompt. <em>Our effect is measured on demo day.</em>',
+      html: `<div class="art" data-pop style="left:60px;top:110px;width:980px;transform:rotate(-1.6deg)"><img src="media/v7/sources6/${P.screenshot}"><div class="src"><b>arXiv 2412.00596 · ${P.venue}</b><span>${P.authors}</span></div></div>` +
+        `<div class="quote q2" data-pop style="left:1070px;top:170px">“${P.quote}”<small>PhyT2V abstract, ${P.venue}. The authors' result on open models (CogVideoX, OpenSora, VideoCrafter), not on Runway.</small></div>` +
+        `<div class="art" data-pop style="left:780px;top:600px;width:1080px;transform:rotate(1.2deg)"><img src="media/v7/sources6/${P.figure}"><div class="src"><b>PhyT2V, Figure 1</b><span>one apple, not several: <i>the kind of error our gates catch</i></span></div></div>` },
+  ];
+  const popEls = pops.map((p) => { const d = document.createElement('div'); d.style.cssText = 'position:absolute;inset:0;opacity:0'; d.innerHTML = p.html; $('pops').append(d); return d; });
+
+  // ---------------------------------------------------------------- post-site segments
+  const bg = `<img class="bgimg" src="${lastFrame}" alt="">`;
+  const mk = (id, html) => { const d = document.createElement('div'); d.className = 'seg'; d.id = `seg-${id}`; d.innerHTML = html; $('segs').append(d); return d; };
+  const lastLine = (T, re) => { const l = T.lines.filter(([, s]) => re.test(s)); return l.length ? l[l.length - 1][1] : ''; };
+  // 1. two engines
+  const xcLine = lastLine(TX, /engines agree/);
+  mk('ver', bg + `
+    <div class="eng" style="left:130px;--c:var(--blue)"><video data-v="media/v7/xc_mujoco.mp4" muted></video><div class="lab"><b>MuJoCo</b><i>Google DeepMind · the engine the gates use</i></div></div>
+    <div class="eng" style="left:990px;--c:var(--gold)"><video data-v="media/v7/xc_bullet.mp4" muted></video><div class="lab"><b>PyBullet</b><i>Bullet Physics · an independent engine</i></div></div>
+    <div class="verdict"><div class="big">Both engines put the block in the bowl on <em>${xc.both} of ${xc.episodes}</em> episodes</div>
+    <div class="log">${esc(xcLine)}</div></div>`);
+  // 2. foundation model framing
+  mk('fm', bg + `
+    <div class="art" data-pop style="left:90px;top:120px;width:900px;transform:rotate(-1.5deg);opacity:1"><img src="media/v7/sources7/${V.screenshot}"><div class="src"><b>${V.outlet}</b><span>${V.date}</span></div></div>
+    <div class="quote" data-pop style="left:1060px;top:170px;max-width:780px;opacity:1">“${V.quote}”<small>${V.outlet}, ${V.date}</small></div>
+    <div class="quote q2" data-pop style="left:1060px;top:520px;max-width:780px;opacity:1">“${V.quote2}”<small>the pretraining data, same post</small></div>`);
+  // 3. terminals
+  const termHtml = (id, T, title, side) => mk(id, bg + `
+    <div class="glass" style="left:60px;top:84px;width:1240px;height:840px"><div class="gbar"><span></span><span></span><span></span><b>${esc(title)}</b></div><div class="tbody" id="${id}-body"></div></div>
+    <div class="side" style="left:1340px;top:84px;width:520px">${side}</div>`);
+  termHtml('t1', TS, 'zsh · ~/helloworld/understudy · fine-tune SmolVLA', `
+    <div class="stat" style="--c:var(--gold)"><div class="k">real time on this laptop</div><div class="v" id="t1-clock">0:00</div><div class="bar"><i id="t1-bar"></i></div><div class="n">${fmtT(TS.dur)} in total, on the ${sv.device}</div></div>
+    <div class="stat"><div class="k">training loss, from the log</div><svg class="loss" id="t1-loss" width="470" height="210"></svg></div>
+    <div class="stat"><div class="k">recipe</div><div class="n">lerobot/smolvla_base, ${sv.steps} steps, batch ${sv.batch}, ${R.episodes} episodes, stock lerobot-train</div></div>`);
+  termHtml('t2', TM, 'zsh · ~/helloworld/understudy · the small MLP baseline', `
+    <div class="stat" style="--c:var(--green)"><div class="k">real time on this laptop</div><div class="v" id="t2-clock">0:00</div><div class="bar"><i id="t2-bar"></i></div><div class="n">train ${ml.train_s} s on the ${ml.device}, then 50 MuJoCo rollouts and the film</div></div>
+    <div class="stat"><div class="k">model</div><div class="n">MLP, ${ml.params.toLocaleString('en-US')} parameters, trained from scratch, reads the cube position from the simulator</div></div>`);
+  // 4. results
+  const dots = (i) => R.per_seed.map((r) => `<i class="${r[i] ? 'ok' : 'no'}"></i>`).join('');
+  mk('res', bg + `
+    <div class="glass res" style="left:80px;--c:var(--gold)"><div class="who">Robot foundation model, fine-tuned</div><h2>SmolVLA</h2>
+      <div class="score">${sv.eval_k}<small> / ${sv.eval_n}</small></div><div class="dots">${dots(1)}</div>
+      <dl><dt>sees</dt><dd>the camera, 6 joint angles, the sentence</dd><dt>pretrained</dt><dd>on 487 community SO-100 datasets</dd><dt>tuned</dt><dd>${fmtT(sv.wall_s)} on this laptop${sv.earlier_run ? `; after ${fmtT(sv.earlier_run.wall_s)}: ${sv.earlier_run.eval_k}/${sv.earlier_run.eval_n}` : ''}</dd></dl></div>
+    <div class="glass res" style="left:1000px;--c:var(--green)"><div class="who">Baseline, from scratch</div><h2>Small MLP</h2>
+      <div class="score">${ml.eval_k}<small> / ${ml.eval_n}</small></div><div class="dots">${dots(2)}</div>
+      <dl><dt>sees</dt><dd>6 joint angles + the cube position from the simulator</dd><dt>size</dt><dd>${ml.params.toLocaleString('en-US')} parameters</dd><dt>trained</dt><dd>${ml.train_s} s on the ${ml.device}</dd></dl></div>`);
+  // 5. hero
+  mk('hero', `<video class="herov" data-v="media/v7/smolvla_hero.mp4" muted></video>`);
+  // 6. stack
+  mk('stack', bg + `<div class="stackh">The whole stack, and what each part does</div><div class="stackgrid">${STACK.map(([n, r, c]) => `<div class="tool" style="--c:${c}"><b>${n}</b><span>${r}</span></div>`).join('')}</div>`);
+
+  const postCues = {
+    ver: ['Checked <b>by two physics engines</b>', 'var(--green)', `Like a proof checker for the data: an <em>independent engine</em> replays every episode. ${xc.episodes - xc.agree} where the engines disagree <em>get flagged</em>.`],
+    fm: ['Robot <b>foundation models</b>', 'var(--gold)', 'Foundation models are pretrained across many robots, then adapt to a new task <em>from a small number of demonstrations</em>. Not perfect; more good footage tunes them higher.'],
+    t1: ['Training <b>in the terminal</b>', 'var(--gold)', 'Now we use that footage to train this model: <em>SmolVLA, fine-tuned on the Understudy dataset</em>.'],
+    t2: ['Baseline <b>small MLP</b>', 'var(--green)', 'And a small model trained from scratch, <em>as a baseline</em>.'],
+    res: ['Evaluated <b>50 unseen cube positions in MuJoCo</b>', '#f2f6ff', null],
+    hero: ['Fine-tuned SmolVLA <b>in MuJoCo, sim only</b>', 'var(--gold)', null],
+    stack: ['The <b>stack</b>', 'var(--blue)', null],
+  };
+  const resCap = sv.eval_k >= ml.eval_k
+    ? `SmolVLA: <em>${sv.eval_k} of ${sv.eval_n}</em> without being told where the cube is. The MLP: ${ml.eval_k} of ${ml.eval_n}, given the cube position. <em>Sim only.</em>`
+    : `SmolVLA: <em>${sv.eval_k} of ${sv.eval_n}</em> from the camera, without the cube\'s position. The MLP, which is given it: ${ml.eval_k} of ${ml.eval_n}. <em>Not perfect: tuned ${fmtT(sv.wall_s)} on one laptop.</em>`;
+  postCues.res[2] = resCap;
+  postCues.hero[2] = `SmolVLA puts the block in the bowl from an unseen position (seed ${sv.hero.seed}). <em>${sv.eval_k} of ${sv.eval_n} overall. Sim only.</em>`;
+  if (!sv.hero.success) postCues.hero[2] = `A SmolVLA rollout from an unseen position (seed ${sv.hero.seed}): <em style="--c:var(--red)">a miss</em>. ${sv.eval_k} of ${sv.eval_n} overall. <em>Sim only.</em>`;
+
+  // videos, loaded as blobs so every frame is seekable
+  const vids = [...document.querySelectorAll('video[data-v]')];
+  await Promise.all(vids.map(async (v) => { const b = await (await fetch(v.dataset.v)).blob(); v.src = URL.createObjectURL(b); await new Promise((r) => { v.onloadeddata = r; }); }));
+  await document.fonts.ready;
+
+  // ---------------------------------------------------------------- terminal replay
+  const tbodies = {};
+  function drawTerm(id, T, u, typeEnd) {
+    // u = output seconds into the segment; the command types for typeEnd s, then the run plays at constant speed
+    const body = tbodies[id] || (tbodies[id] = $(`${id}-body`));
+    const segLen = D[id];
+    const nChars = Math.floor(cl(u / typeEnd) * T.cmd.length);
+    const real = u <= typeEnd ? 0 : cl((u - typeEnd) / (segLen - typeEnd - 0.9)) * T.dur;
+    const shown = T.lines.filter(([t]) => t <= real);
+    const last = shown.length ? shown[shown.length - 1][0] : -1;
+    let part = '';
+    for (const [t, s] of T.partial) { if (t > real) break; if (t >= last) part = s; }
+    if (part && shown.length && shown[shown.length - 1][1] === part) part = '';
+    const tail = shown.slice(-30).map(([, s]) => `<div>${esc(s) || ' '}</div>`).join('');
+    const done = real >= T.dur;
+    body.innerHTML = `<div class="cmd"><b>$</b> ${esc(T.cmd.slice(0, nChars))}${u <= typeEnd ? '<span class="cur"></span>' : ''}</div>${tail}${part ? `<div>${esc(part)}</div>` : ''}${done ? '<div><b style="color:var(--green)">$</b></div>' : ''}`;
+    return real;
+  }
+  function drawLoss(real) {
+    const svg = $('t1-loss'), pts = TS.loss.filter(([t]) => t <= real);
+    const W = 470, H = 180, x0 = 40, all = TS.loss, ymax = Math.max(...all.map((p) => p[2])), smax = all[all.length - 1][1];
+    const x = (s) => x0 + (W - x0 - 10) * s / smax, y = (l) => 10 + (H - 20) * (1 - l / ymax);
+    const d = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p[1]).toFixed(1)},${y(p[2]).toFixed(1)}`).join('');
+    const lp = pts[pts.length - 1];
+    svg.innerHTML = `<line x1="${x0}" y1="${H - 10}" x2="${W}" y2="${H - 10}" stroke="rgba(255,255,255,.2)"/><line x1="${x0}" y1="10" x2="${x0}" y2="${H - 10}" stroke="rgba(255,255,255,.2)"/>
+      <text x="0" y="18">${ymax.toFixed(2)}</text><text x="18" y="${H - 6}">0</text><text x="${x0}" y="${H + 18}">step</text><text x="${W - 48}" y="${H + 18}">${smax}</text>
+      <path d="${d}" fill="none" stroke="#e9c46a" stroke-width="3"/>${lp ? `<text x="${Math.min(W - 150, x(lp[1]) + 8)}" y="${y(lp[2]) - 8}" style="fill:#fff">loss ${lp[2].toFixed(3)}</text>` : ''}`;
+  }
+
+  // ---------------------------------------------------------------- seek
+  const win = (t, a, b, fi = 0.35, fo = 0.3) => (t < a || t > b ? 0 : Math.min(cl((t - a) / fi), cl((b - t) / fo)));
+  const seekVid = (v, x) => new Promise((r) => { x = Math.max(0, Math.min(v.duration - 0.02, x)); if (Math.abs(v.currentTime - x) < 0.004) return r(); v.onseeked = () => r(); v.currentTime = x; });
+  const plate = $('plate');
+  let shown = -1;
+  window.seek = async (t) => {
+    const waits = [];
+    const inLive = t >= LIVE0 && t < LIVE0 + LIVE;
+    if (t < LIVE0 + LIVE + 0.1) {
+      const k = Math.max(0, Math.min(E.frames.length - 1, Math.floor((t - LIVE0) * FPS + 1e-6)));
+      const fi = E.frames[k];
+      if (fi !== shown) { shown = fi; plate.src = frameUrl(fi); waits.push(plate.decode().catch(() => {})); }
+    }
+    plate.style.opacity = t < LIVE0 + LIVE + 0.1 ? 1 : 0;
+    // title and end
+    $('title').style.opacity = t < TITLE ? 1 : cl(1 - (t - TITLE) / XF);
+    $('title').querySelector('.copy').style.transform = `scale(${1 + 0.035 * t / TITLE})`;
+    $('title-bg').style.transform = `scale(${1.02 + 0.07 * t / TITLE}) translate(${-14 * t / TITLE}px, ${-6 * t / TITLE}px)`;
+    const te = Math.max(0, t - END0);
+    $('end-bg').style.transform = `scale(${1.04 + 0.035 * te}) translate(${-9 * te}px, ${-4 * te}px)`;
+    $('end').querySelector('.copy').style.transform = `scale(${1 + 0.014 * te})`;
+    $('end').style.opacity = cl((t - END0) / 0.8);
+    // slow push on the recording
+    const tl = t - LIVE0;
+    const tg = t - at('generate');
+    const pushC = t < at('generate') ? 0.0075 * Math.max(0, t - LIVE0) : 0.0075 * (at('generate') - LIVE0) * Math.max(0, 1 - tg / 0.7);
+    const td = t - at('download:end', 0);
+    const pushD = td > 0 ? 0.01 * td : 0;
+    plate.style.transform = `translate(${(5 * Math.sin(tl * 2 * Math.PI / 19)).toFixed(3)}px, ${(3 * Math.sin(tl * 2 * Math.PI / 17 + 1)).toFixed(3)}px) scale(${((1 + pushC + pushD) * (1.019 + 0.008 * Math.sin(tl * 2 * Math.PI / 13))).toFixed(5)})`;
+    // live chips, pops, captions
+    let chip = null, cap = null, speed = null;
+    const ch = chips.find(([a, b]) => t >= a && t < b);
+    const pop = pops.findIndex((p) => t >= p.from && t < p.to);
+    if (pop >= 0) chip = [pops[pop].chip, pops[pop].c, pops[pop].from, pops[pop].to];
+    else if (ch && inLive) chip = [ch[2], ch[3], ch[0], ch[1]];
+    const cp = pop >= 0 && pops[pop].cap ? [pops[pop].from + 0.5, pops[pop].to, pops[pop].cap] : caps.find(([a, b]) => t >= a && t < b);
+    if (cp && inLive) cap = cp;
+    const sp = inLive ? E.speed[Math.max(0, Math.min(E.frames.length - 1, Math.floor((t - LIVE0) * FPS)))] : 1;
+    if (sp > 1.5) {
+      const w = Object.entries(E.waits).find(([name]) => t >= at(`${name}:start`) && t < at(`${name}:end`));
+      if (w) speed = [`Sped up <b>${Math.round(sp)}x</b> · ${clock(w[1].real_s)} real`, at(`${w[0]}:start`), at(`${w[0]}:end`)];
+    }
+    let dim = 0;
+    pops.forEach((p, i) => {
+      const o = win(t, p.from, p.to, 0.4, 0.35);
+      popEls[i].style.opacity = o > 0 ? 1 : 0;
+      dim = Math.max(dim, o);
+      [...popEls[i].querySelectorAll('[data-pop]')].forEach((e, j) => {
+        const a = p.from + 0.15 + j * 0.45;
+        const q = OUT(cl((t - a) / 0.5)) * cl((p.to - t) / 0.35);
+        e.style.opacity = q;
+        const base = e.style.transform.replace(/ ?translateY\([^)]*\) scale\([^)]*\)/, '');
+        e.style.transform = `${base} translateY(${(1 - q) * 30 - 10 * cl((t - a) / 7)}px) scale(${0.94 + 0.06 * q + 0.035 * cl((t - a) / 7)})`.trim();
+        const v = e.querySelector('video');
+        if (v && o > 0) waits.push(seekVid(v, t - a));
+      });
+    });
+    $('dim').style.opacity = inLive ? dim : 0;
+    // post segments
+    for (const [id, [a, b]] of Object.entries(seg)) {
+      const el = $(`seg-${id}`);
+      const o = win(t, a, b + (id === 'stack' ? XF + 0.6 : 0.4), 0.45, 0.45);
+      el.style.opacity = o;
+      el.style.display = o > 0 ? 'block' : 'none';
+      if (o <= 0) continue;
+      const u = t - a;
+      // a slow camera push on the whole segment (Player Two style), so still moments still move every frame
+      el.style.transformOrigin = '50% 50%';
+      el.style.transform = id === 'hero' ? '' : `translate(${(4 * Math.sin(u * 2 * Math.PI / 9)).toFixed(3)}px, ${(3 * Math.sin(u * 2 * Math.PI / 7 + 1)).toFixed(3)}px) scale(${(1 + 0.009 * u).toFixed(5)})`;
+      const bgi = el.querySelector('.bgimg');
+      if (bgi) bgi.style.transform = `scale(${1.04 + 0.006 * u}) translate(${-3 * u}px, ${-1.5 * u}px)`;
+      if (t >= a && t < b) {
+        const c = postCues[id];
+        chip = [c[0], c[1], a, b];
+        if (c[2]) cap = [a + 0.5, b - 0.1, c[2]];
+      }
+      for (const v of el.querySelectorAll('video')) waits.push(seekVid(v, Math.max(0, u - 0.2)));
+      for (const [j, e] of [...el.querySelectorAll('[data-pop], .tool, .res, .eng, .verdict')].entries()) {
+        const q = OUT(cl((u - 0.2 - j * (id === 'stack' ? 0.18 : 0.3)) / 0.5));
+        e.style.opacity = q;
+        const base = (e.dataset.base ??= e.style.transform || '');
+        e.style.transform = `${base} translateY(${(1 - q) * 24 - 6 * cl(u / 8)}px) scale(${0.97 + 0.03 * q + 0.012 * cl(u / 8)})`.trim();
+      }
+      if (id === 't1') {
+        const real = drawTerm('t1', TS, u, 1.6);
+        drawLoss(real);
+        $('t1-clock').textContent = `${clock(real)} / ${clock(TS.dur)}`;
+        $('t1-bar').style.width = `${100 * real / TS.dur}%`;
+        if (t >= a && t < b) speed = [`${fmtT(TS.dur)} real, shown in ${Math.round(D.t1 - 2.5)} s <b>${Math.round(TS.dur / (D.t1 - 2.5))}x</b>`, a, b];
+      }
+      if (id === 't2') {
+        const real = drawTerm('t2', TM, u, 1.0);
+        $('t2-clock').textContent = `${clock(real)} / ${clock(TM.dur)}`;
+        $('t2-bar').style.width = `${100 * real / TM.dur}%`;
+        if (t >= a && t < b) speed = [`${fmtT(TM.dur)} real, shown in ${Math.round(D.t2 - 1.9)} s <b>${Math.round(TM.dur / (D.t2 - 1.9))}x</b>`, a, b];
+      }
+      if (id === 'hero') {
+        const hv = el.querySelector('video');
+        hv.style.transform = `translate(${(5 * Math.sin(u * 2 * Math.PI / 11)).toFixed(3)}px, ${(3 * Math.sin(u * 2 * Math.PI / 8 + 1)).toFixed(3)}px) scale(${(1.01 + 0.012 * u).toFixed(5)})`;
+      }
+    }
+    // chip, speed, caption
+    if (chip) { $('chip-t').innerHTML = chip[0]; $('chip').style.setProperty('--c', chip[1]); $('chip').style.opacity = win(t, chip[2], chip[3], 0.3, 0.25); } else $('chip').style.opacity = 0;
+    if (speed) { $('speed-t').innerHTML = speed[0]; $('speed').style.opacity = win(t, speed[1], speed[2], 0.2, 0.2); } else $('speed').style.opacity = 0;
+    $('cap').classList.toggle('top', !!(cap && cap[3] === 'top'));
+    if (cap) { $('cap').innerHTML = cap[2]; $('cap').style.opacity = win(t, cap[0], cap[1], 0.3, 0.3); } else $('cap').style.opacity = 0;
+    await Promise.all(waits);
+  };
+  window.deckReady = true;
+})();
+</script>
+</body>
+</html>

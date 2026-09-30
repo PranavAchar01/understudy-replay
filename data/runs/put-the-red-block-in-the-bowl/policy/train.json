@@ -1,0 +1,8 @@
+{
+ "samples": 14985,
+ "steps": 4000,
+ "final_l1": 0.0547,
+ "train_seconds": 30.1,
+ "params": 164984,
+ "chunk": 20
+}

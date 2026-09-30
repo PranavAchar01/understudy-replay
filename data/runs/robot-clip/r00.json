@@ -1,0 +1,15 @@
+{
+  "image_model": "gen4_image_turbo",
+  "video_model": "gen4_turbo",
+  "image_prompt": "A photorealistic photo in the style of @scene: the same light oak table, the same single red wooden block and the same white bowl, but no person and no hand. Instead, the small robot arm from @arm, an SO-101 open-source desktop arm made of 3D-printed plastic links with black servo motors at every joint and a two-finger gripper, is mounted on the table behind the block, its open gripper hovering just above the red block. The whole arm, the block and the bowl are fully in frame. Sharp focus, no text.",
+  "video_prompt": "The robot arm lowers its open gripper onto the red block, closes the gripper on it, lifts it about 10 cm, carries it to the right and releases it into the bowl, then rises back to its starting pose. One continuous smooth motion. Static camera, locked off. The arm keeps the same rigid links and joints the whole time, the block stays one solid red cube and the bowl does not move.",
+  "references": {
+    "arm": "data/runs/robot-clip/arm-ref.png",
+    "scene": "data/runs/put-the-red-block-in-the-bowl/clips/v01.png"
+  },
+  "seed": 31,
+  "balance_before": 213,
+  "balance_after": 186,
+  "spent": 27,
+  "balance_now": 186
+}

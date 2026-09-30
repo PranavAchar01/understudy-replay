@@ -1,0 +1,2034 @@
+{
+ "summary": {
+  "out": "/work/data/probes/expert74",
+  "repo_id": "local/understudy_expert",
+  "task": "put the red block in the bowl",
+  "cameras": [
+   "front",
+   "wrist"
+  ],
+  "episodes": 74,
+  "frames": 20075,
+  "mean_len": 271.3,
+  "min_len": 264,
+  "max_len": 281,
+  "exact_starts": 74,
+  "first_try_failures": 0,
+  "retries_run": 0,
+  "replaced": 0,
+  "aug25_all": {
+   "episodes": 74,
+   "frames": 25190,
+   "mean_len": 340.4,
+   "min_len": 310,
+   "max_len": 375
+  },
+  "aug25_same_episodes": {
+   "episodes": 74,
+   "frames": 25190,
+   "mean_len": 340.4
+  },
+  "writer_seconds": 6188.0,
+  "seconds": 6243.2
+ },
+ "episodes": [
+  {
+   "episode_index": 0,
+   "clip": "v01",
+   "aug25_kind": "retargeted clip",
+   "aug25_cube_xy": [
+    0.25,
+    -0.0851
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.25,
+    -0.0851
+   ],
+   "outcome": "same start",
+   "frames": 271,
+   "attempts": [
+    {
+     "xy": [
+      0.25,
+      -0.0851
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 1,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.230736,
+    -0.079503
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.230736,
+    -0.079503
+   ],
+   "outcome": "same start",
+   "frames": 268,
+   "attempts": [
+    {
+     "xy": [
+      0.23074,
+      -0.0795
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 2,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.248036,
+    -0.09028
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.248036,
+    -0.09028
+   ],
+   "outcome": "same start",
+   "frames": 274,
+   "attempts": [
+    {
+     "xy": [
+      0.24804,
+      -0.09028
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 3,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.241295,
+    -0.073479
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.241295,
+    -0.073479
+   ],
+   "outcome": "same start",
+   "frames": 265,
+   "attempts": [
+    {
+     "xy": [
+      0.2413,
+      -0.07348
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 4,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.259167,
+    -0.093168
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.259167,
+    -0.093168
+   ],
+   "outcome": "same start",
+   "frames": 276,
+   "attempts": [
+    {
+     "xy": [
+      0.25917,
+      -0.09317
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 5,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.278018,
+    -0.068306
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.278018,
+    -0.068306
+   ],
+   "outcome": "same start",
+   "frames": 268,
+   "attempts": [
+    {
+     "xy": [
+      0.27802,
+      -0.06831
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 6,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.258152,
+    -0.074991
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.258152,
+    -0.074991
+   ],
+   "outcome": "same start",
+   "frames": 267,
+   "attempts": [
+    {
+     "xy": [
+      0.25815,
+      -0.07499
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 7,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.250909,
+    -0.072064
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.250909,
+    -0.072064
+   ],
+   "outcome": "same start",
+   "frames": 265,
+   "attempts": [
+    {
+     "xy": [
+      0.25091,
+      -0.07206
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 8,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.246903,
+    -0.091548
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.246903,
+    -0.091548
+   ],
+   "outcome": "same start",
+   "frames": 274,
+   "attempts": [
+    {
+     "xy": [
+      0.2469,
+      -0.09155
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 9,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.236674,
+    -0.096047
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.236674,
+    -0.096047
+   ],
+   "outcome": "same start",
+   "frames": 277,
+   "attempts": [
+    {
+     "xy": [
+      0.23667,
+      -0.09605
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 10,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.251549,
+    -0.087864
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.251549,
+    -0.087864
+   ],
+   "outcome": "same start",
+   "frames": 273,
+   "attempts": [
+    {
+     "xy": [
+      0.25155,
+      -0.08786
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 11,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.259791,
+    -0.104586
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.259791,
+    -0.104586
+   ],
+   "outcome": "same start",
+   "frames": 281,
+   "attempts": [
+    {
+     "xy": [
+      0.25979,
+      -0.10459
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 12,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.246862,
+    -0.090493
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.246862,
+    -0.090493
+   ],
+   "outcome": "same start",
+   "frames": 274,
+   "attempts": [
+    {
+     "xy": [
+      0.24686,
+      -0.09049
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 13,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.231724,
+    -0.081305
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.231724,
+    -0.081305
+   ],
+   "outcome": "same start",
+   "frames": 270,
+   "attempts": [
+    {
+     "xy": [
+      0.23172,
+      -0.08131
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 14,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.246119,
+    -0.0931
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.246119,
+    -0.0931
+   ],
+   "outcome": "same start",
+   "frames": 276,
+   "attempts": [
+    {
+     "xy": [
+      0.24612,
+      -0.0931
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 15,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.232565,
+    -0.070115
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.232565,
+    -0.070115
+   ],
+   "outcome": "same start",
+   "frames": 265,
+   "attempts": [
+    {
+     "xy": [
+      0.23256,
+      -0.07012
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 16,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.267848,
+    -0.080832
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.267848,
+    -0.080832
+   ],
+   "outcome": "same start",
+   "frames": 271,
+   "attempts": [
+    {
+     "xy": [
+      0.26785,
+      -0.08083
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 17,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.240706,
+    -0.067227
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.240706,
+    -0.067227
+   ],
+   "outcome": "same start",
+   "frames": 265,
+   "attempts": [
+    {
+     "xy": [
+      0.24071,
+      -0.06723
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 18,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.253803,
+    -0.087789
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.253803,
+    -0.087789
+   ],
+   "outcome": "same start",
+   "frames": 273,
+   "attempts": [
+    {
+     "xy": [
+      0.2538,
+      -0.08779
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 19,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.26176,
+    -0.092547
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.26176,
+    -0.092547
+   ],
+   "outcome": "same start",
+   "frames": 276,
+   "attempts": [
+    {
+     "xy": [
+      0.26176,
+      -0.09255
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 20,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.235693,
+    -0.077066
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.235693,
+    -0.077066
+   ],
+   "outcome": "same start",
+   "frames": 267,
+   "attempts": [
+    {
+     "xy": [
+      0.23569,
+      -0.07707
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 21,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.233674,
+    -0.085376
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.233674,
+    -0.085376
+   ],
+   "outcome": "same start",
+   "frames": 271,
+   "attempts": [
+    {
+     "xy": [
+      0.23367,
+      -0.08538
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 22,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.254802,
+    -0.097544
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.254802,
+    -0.097544
+   ],
+   "outcome": "same start",
+   "frames": 277,
+   "attempts": [
+    {
+     "xy": [
+      0.2548,
+      -0.09754
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 23,
+   "clip": "v01",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.263874,
+    -0.083161
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.263874,
+    -0.083161
+   ],
+   "outcome": "same start",
+   "frames": 272,
+   "attempts": [
+    {
+     "xy": [
+      0.26387,
+      -0.08316
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 24,
+   "clip": "v03",
+   "aug25_kind": "retargeted clip",
+   "aug25_cube_xy": [
+    0.25,
+    -0.0709
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.25,
+    -0.0709
+   ],
+   "outcome": "same start",
+   "frames": 264,
+   "attempts": [
+    {
+     "xy": [
+      0.25,
+      -0.0709
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 25,
+   "clip": "v03",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.25729,
+    -0.076014
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.25729,
+    -0.076014
+   ],
+   "outcome": "same start",
+   "frames": 268,
+   "attempts": [
+    {
+     "xy": [
+      0.25729,
+      -0.07601
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 26,
+   "clip": "v03",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.245212,
+    -0.071107
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.245212,
+    -0.071107
+   ],
+   "outcome": "same start",
+   "frames": 264,
+   "attempts": [
+    {
+     "xy": [
+      0.24521,
+      -0.07111
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 27,
+   "clip": "v03",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.254631,
+    -0.074249
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.254631,
+    -0.074249
+   ],
+   "outcome": "same start",
+   "frames": 267,
+   "attempts": [
+    {
+     "xy": [
+      0.25463,
+      -0.07425
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 28,
+   "clip": "v03",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.251163,
+    -0.077838
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.251163,
+    -0.077838
+   ],
+   "outcome": "same start",
+   "frames": 268,
+   "attempts": [
+    {
+     "xy": [
+      0.25116,
+      -0.07784
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 29,
+   "clip": "v03",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.249997,
+    -0.087162
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.249997,
+    -0.087162
+   ],
+   "outcome": "same start",
+   "frames": 273,
+   "attempts": [
+    {
+     "xy": [
+      0.25,
+      -0.08716
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 30,
+   "clip": "v03",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.223524,
+    -0.076571
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.223524,
+    -0.076571
+   ],
+   "outcome": "same start",
+   "frames": 268,
+   "attempts": [
+    {
+     "xy": [
+      0.22352,
+      -0.07657
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 31,
+   "clip": "v03",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.263804,
+    -0.07833
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.263804,
+    -0.07833
+   ],
+   "outcome": "same start",
+   "frames": 270,
+   "attempts": [
+    {
+     "xy": [
+      0.2638,
+      -0.07833
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 32,
+   "clip": "v03",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.254023,
+    -0.074237
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.254023,
+    -0.074237
+   ],
+   "outcome": "same start",
+   "frames": 267,
+   "attempts": [
+    {
+     "xy": [
+      0.25402,
+      -0.07424
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 33,
+   "clip": "v03",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.221418,
+    -0.078992
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.221418,
+    -0.078992
+   ],
+   "outcome": "same start",
+   "frames": 269,
+   "attempts": [
+    {
+     "xy": [
+      0.22142,
+      -0.07899
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 34,
+   "clip": "v03",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.249242,
+    -0.087184
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.249242,
+    -0.087184
+   ],
+   "outcome": "same start",
+   "frames": 273,
+   "attempts": [
+    {
+     "xy": [
+      0.24924,
+      -0.08718
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 35,
+   "clip": "v03",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.249489,
+    -0.066845
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.249489,
+    -0.066845
+   ],
+   "outcome": "same start",
+   "frames": 266,
+   "attempts": [
+    {
+     "xy": [
+      0.24949,
+      -0.06684
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 36,
+   "clip": "v03",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.233996,
+    -0.066927
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.233996,
+    -0.066927
+   ],
+   "outcome": "same start",
+   "frames": 264,
+   "attempts": [
+    {
+     "xy": [
+      0.234,
+      -0.06693
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 37,
+   "clip": "v06",
+   "aug25_kind": "retargeted clip",
+   "aug25_cube_xy": [
+    0.25,
+    -0.0823
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.25,
+    -0.0823
+   ],
+   "outcome": "same start",
+   "frames": 270,
+   "attempts": [
+    {
+     "xy": [
+      0.25,
+      -0.0823
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 38,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.25693,
+    -0.086187
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.25693,
+    -0.086187
+   ],
+   "outcome": "same start",
+   "frames": 273,
+   "attempts": [
+    {
+     "xy": [
+      0.25693,
+      -0.08619
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 39,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.265962,
+    -0.099591
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.265962,
+    -0.099591
+   ],
+   "outcome": "same start",
+   "frames": 280,
+   "attempts": [
+    {
+     "xy": [
+      0.26596,
+      -0.09959
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 40,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.256409,
+    -0.068017
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.256409,
+    -0.068017
+   ],
+   "outcome": "same start",
+   "frames": 266,
+   "attempts": [
+    {
+     "xy": [
+      0.25641,
+      -0.06802
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 41,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.257701,
+    -0.089446
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.257701,
+    -0.089446
+   ],
+   "outcome": "same start",
+   "frames": 274,
+   "attempts": [
+    {
+     "xy": [
+      0.2577,
+      -0.08945
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 42,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.259348,
+    -0.088774
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.259348,
+    -0.088774
+   ],
+   "outcome": "same start",
+   "frames": 274,
+   "attempts": [
+    {
+     "xy": [
+      0.25935,
+      -0.08877
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 43,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.260116,
+    -0.097166
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.260116,
+    -0.097166
+   ],
+   "outcome": "same start",
+   "frames": 277,
+   "attempts": [
+    {
+     "xy": [
+      0.26012,
+      -0.09717
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 44,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.2368,
+    -0.100991
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.2368,
+    -0.100991
+   ],
+   "outcome": "same start",
+   "frames": 279,
+   "attempts": [
+    {
+     "xy": [
+      0.2368,
+      -0.10099
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 45,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.225035,
+    -0.080109
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.225035,
+    -0.080109
+   ],
+   "outcome": "same start",
+   "frames": 269,
+   "attempts": [
+    {
+     "xy": [
+      0.22503,
+      -0.08011
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 46,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.233902,
+    -0.081657
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.233902,
+    -0.081657
+   ],
+   "outcome": "same start",
+   "frames": 270,
+   "attempts": [
+    {
+     "xy": [
+      0.2339,
+      -0.08166
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 47,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.259574,
+    -0.067053
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.259574,
+    -0.067053
+   ],
+   "outcome": "same start",
+   "frames": 266,
+   "attempts": [
+    {
+     "xy": [
+      0.25957,
+      -0.06705
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 48,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.241304,
+    -0.089553
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.241304,
+    -0.089553
+   ],
+   "outcome": "same start",
+   "frames": 273,
+   "attempts": [
+    {
+     "xy": [
+      0.2413,
+      -0.08955
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 49,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.23882,
+    -0.097586
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.23882,
+    -0.097586
+   ],
+   "outcome": "same start",
+   "frames": 277,
+   "attempts": [
+    {
+     "xy": [
+      0.23882,
+      -0.09759
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 50,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.259791,
+    -0.069514
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.259791,
+    -0.069514
+   ],
+   "outcome": "same start",
+   "frames": 266,
+   "attempts": [
+    {
+     "xy": [
+      0.25979,
+      -0.06951
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 51,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.24838,
+    -0.079968
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.24838,
+    -0.079968
+   ],
+   "outcome": "same start",
+   "frames": 269,
+   "attempts": [
+    {
+     "xy": [
+      0.24838,
+      -0.07997
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 52,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.264702,
+    -0.06672
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.264702,
+    -0.06672
+   ],
+   "outcome": "same start",
+   "frames": 271,
+   "attempts": [
+    {
+     "xy": [
+      0.2647,
+      -0.06672
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 53,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.232947,
+    -0.076293
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.232947,
+    -0.076293
+   ],
+   "outcome": "same start",
+   "frames": 267,
+   "attempts": [
+    {
+     "xy": [
+      0.23295,
+      -0.07629
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 54,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.263044,
+    -0.068611
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.263044,
+    -0.068611
+   ],
+   "outcome": "same start",
+   "frames": 266,
+   "attempts": [
+    {
+     "xy": [
+      0.26304,
+      -0.06861
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 55,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.240627,
+    -0.074748
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.240627,
+    -0.074748
+   ],
+   "outcome": "same start",
+   "frames": 266,
+   "attempts": [
+    {
+     "xy": [
+      0.24063,
+      -0.07475
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 56,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.256264,
+    -0.085926
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.256264,
+    -0.085926
+   ],
+   "outcome": "same start",
+   "frames": 273,
+   "attempts": [
+    {
+     "xy": [
+      0.25626,
+      -0.08593
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 57,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.226101,
+    -0.088178
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.226101,
+    -0.088178
+   ],
+   "outcome": "same start",
+   "frames": 273,
+   "attempts": [
+    {
+     "xy": [
+      0.2261,
+      -0.08818
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 58,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.226818,
+    -0.087593
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.226818,
+    -0.087593
+   ],
+   "outcome": "same start",
+   "frames": 273,
+   "attempts": [
+    {
+     "xy": [
+      0.22682,
+      -0.08759
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 59,
+   "clip": "v06",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.226059,
+    -0.091612
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.226059,
+    -0.091612
+   ],
+   "outcome": "same start",
+   "frames": 275,
+   "attempts": [
+    {
+     "xy": [
+      0.22606,
+      -0.09161
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 60,
+   "clip": "v07",
+   "aug25_kind": "retargeted clip",
+   "aug25_cube_xy": [
+    0.25,
+    -0.0824
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.25,
+    -0.0824
+   ],
+   "outcome": "same start",
+   "frames": 270,
+   "attempts": [
+    {
+     "xy": [
+      0.25,
+      -0.0824
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 61,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.255153,
+    -0.09285
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.255153,
+    -0.09285
+   ],
+   "outcome": "same start",
+   "frames": 275,
+   "attempts": [
+    {
+     "xy": [
+      0.25515,
+      -0.09285
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 62,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.260079,
+    -0.097294
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.260079,
+    -0.097294
+   ],
+   "outcome": "same start",
+   "frames": 277,
+   "attempts": [
+    {
+     "xy": [
+      0.26008,
+      -0.09729
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 63,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.267389,
+    -0.085482
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.267389,
+    -0.085482
+   ],
+   "outcome": "same start",
+   "frames": 273,
+   "attempts": [
+    {
+     "xy": [
+      0.26739,
+      -0.08548
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 64,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.253257,
+    -0.084874
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.253257,
+    -0.084874
+   ],
+   "outcome": "same start",
+   "frames": 271,
+   "attempts": [
+    {
+     "xy": [
+      0.25326,
+      -0.08487
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 65,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.241917,
+    -0.100676
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.241917,
+    -0.100676
+   ],
+   "outcome": "same start",
+   "frames": 279,
+   "attempts": [
+    {
+     "xy": [
+      0.24192,
+      -0.10068
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 66,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.227228,
+    -0.083767
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.227228,
+    -0.083767
+   ],
+   "outcome": "same start",
+   "frames": 271,
+   "attempts": [
+    {
+     "xy": [
+      0.22723,
+      -0.08377
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 67,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.232471,
+    -0.088995
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.232471,
+    -0.088995
+   ],
+   "outcome": "same start",
+   "frames": 273,
+   "attempts": [
+    {
+     "xy": [
+      0.23247,
+      -0.08899
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 68,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.268686,
+    -0.090546
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.268686,
+    -0.090546
+   ],
+   "outcome": "same start",
+   "frames": 276,
+   "attempts": [
+    {
+     "xy": [
+      0.26869,
+      -0.09055
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 69,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.264356,
+    -0.099215
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.264356,
+    -0.099215
+   ],
+   "outcome": "same start",
+   "frames": 279,
+   "attempts": [
+    {
+     "xy": [
+      0.26436,
+      -0.09921
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 70,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.259778,
+    -0.089539
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.259778,
+    -0.089539
+   ],
+   "outcome": "same start",
+   "frames": 274,
+   "attempts": [
+    {
+     "xy": [
+      0.25978,
+      -0.08954
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 71,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.229688,
+    -0.080421
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.229688,
+    -0.080421
+   ],
+   "outcome": "same start",
+   "frames": 269,
+   "attempts": [
+    {
+     "xy": [
+      0.22969,
+      -0.08042
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 72,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.258515,
+    -0.082453
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.258515,
+    -0.082453
+   ],
+   "outcome": "same start",
+   "frames": 271,
+   "attempts": [
+    {
+     "xy": [
+      0.25852,
+      -0.08245
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  },
+  {
+   "episode_index": 73,
+   "clip": "v07",
+   "aug25_kind": "re-anchored",
+   "aug25_cube_xy": [
+    0.237327,
+    -0.088151
+   ],
+   "exact_start": true,
+   "yaw": 0.0,
+   "expert_cube_xy": [
+    0.237327,
+    -0.088151
+   ],
+   "outcome": "same start",
+   "frames": 273,
+   "attempts": [
+    {
+     "xy": [
+      0.23733,
+      -0.08815
+     ],
+     "success": true,
+     "lifted": true
+    }
+   ]
+  }
+ ]
+}

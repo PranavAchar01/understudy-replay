@@ -1,0 +1,9 @@
+build_start 1790746986
+build_end 1790753232 0
+expert-3000_train_start 1790753232
+expert-20000_train_start 1790753232
+expert-3000_train_end 1790753693 0
+expert-20000_train_end 1790755798 0
+expert-3000_eval_end 1790756803 0
+expert-20000_eval_end 1790758728 0
+all_done 1790758728

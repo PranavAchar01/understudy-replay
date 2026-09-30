@@ -1,0 +1,14 @@
+[
+ {"id": "phyt2v", "title": "PhyT2V: LLM-Guided Iterative Self-Refinement for Physics-Grounded Text-to-Video Generation",
+  "authors": "Qiyao Xue, Xiangyu Yin, Boyuan Yang, Wei Gao", "affiliation": "University of Pittsburgh",
+  "venue": "CVPR 2025", "pages": "pp. 18826-18836",
+  "url": "https://arxiv.org/abs/2412.00596",
+  "cvf": "https://openaccess.thecvf.com/content/CVPR2025/html/Xue_PhyT2V_LLM-Guided_Iterative_Self-Refinement_for_Physics-Grounded_Text-to-Video_Generation_CVPR_2025_paper.html",
+  "code": "https://github.com/pittisl/PhyT2V",
+  "screenshot": "phyt2v-arxiv-crop.png", "screenshot_of": "arXiv abstract page, v2 (1 Apr 2025), shot 2026-09-24",
+  "figure": "phyt2v-fig1-apple.png", "figure_of": "Figure 1, first row (apple, quantity & material) + column labels, arXiv HTML v2",
+  "quote": "improves existing T2V models' adherence to real-world physical rules by 2.3x",
+  "quote_where": "abstract (verbatim)",
+  "quote_detail": "Sec. 4.1: largest gain on CogVideoX-2B, PC (physical commonsense) up to 2.2x, SA (semantic adherence) up to 2.3x; other models 1.3x to 1.9x. Models: CogVideoX-5B/2B, OpenSora 1.2, VideoCrafter; prompts from VideoPhy and PhyGenBench. Not Runway.",
+  "caveat": "Appendix D: even after several rounds, the models still failed to generate human bodies precisely, especially hands."}
+]

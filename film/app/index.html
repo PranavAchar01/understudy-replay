@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Understudy</title>
+  <meta name="description" content="One sentence to SO-101 demonstrations: Runway generates the lead, physics decides if it counts.">
+  <meta name="theme-color" content="#05070d">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:title" content="Understudy">
+  <meta property="og:description" content="Compose a robot training run in one sentence.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2305070d'/%3E%3Ccircle cx='24' cy='32' r='9' fill='none' stroke='%23eef2f8' stroke-width='4'/%3E%3Ccircle cx='42' cy='32' r='11' fill='%237fb2ff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="preload" as="image" href="media/wallpaper-hero.jpg">
+  <link rel="stylesheet" href="site.css">
+  <script src="site.js" defer></script>
+</head>
+<body>
+  <main class="page" id="page">
+    <section class="hero" id="hero">
+      <div class="hero-media" aria-hidden="true"><div class="hero-img"></div></div>
+      <div class="hero-scrim" aria-hidden="true"></div>
+
+      <header class="hero-bar">
+        <span class="wordmark">Understudy</span>
+        <span class="hero-tag">Robot demonstrations from Runway video</span>
+      </header>
+
+      <h1 class="sr-only">Understudy: compose a robot training run</h1>
+
+      <form class="composer" id="composer" novalidate autocomplete="off">
+        <p class="sentence" id="sentence">
+          I want to train <span class="article" id="article">a</span>
+          <span class="blank blank--robot" id="robot-blank"><span class="sizer" id="robot-sizer" aria-hidden="true">robot</span><input
+              id="robot" type="text" size="1" inputmode="text" enterkeyhint="next"
+              role="combobox" aria-label="Robot" aria-autocomplete="list" aria-haspopup="listbox"
+              aria-expanded="false" aria-controls="robot-list"
+              placeholder="robot" maxlength="60" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off"><button
+              type="button" class="chev" id="robot-chev" tabindex="-1" aria-label="Show robots"><svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1.5 1.5 6 6l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span>
+          to
+          <span class="blank blank--task" id="task" contenteditable="true" role="textbox" aria-multiline="false"
+            aria-label="Task" aria-placeholder="Describe the task, for example: fold a t-shirt in half on a table"
+            data-placeholder="put the red block in the bowl" spellcheck="false" autocapitalize="off" autocorrect="off" enterkeyhint="next"></span>
+          with
+          <button type="button" class="blank blank--tier" id="tier" role="combobox" aria-label="Data quality"
+            aria-haspopup="listbox" aria-expanded="false" aria-controls="tier-list"><span class="tier-label" id="tier-label">Runway video</span><span class="chev" aria-hidden="true"><svg viewBox="0 0 12 8"><path d="M1.5 1.5 6 6l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+          data.
+        </p>
+
+        <div class="spec" id="spec">
+          <div class="spec-top">
+            <span class="spec-name">Specificity <span class="spec-score" id="spec-score">0/5</span></span>
+            <div class="meter" id="meter" role="meter" aria-label="Task specificity" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" aria-valuetext="0 of 5">
+              <span class="seg" data-check="length"><i></i><b>Length</b></span>
+              <span class="seg" data-check="object"><i></i><b>Object</b></span>
+              <span class="seg" data-check="side"><i></i><b>Side</b></span>
+              <span class="seg" data-check="count"><i></i><b>Count</b></span>
+              <span class="seg" data-check="manner"><i></i><b>Manner</b></span>
+            </div>
+          </div>
+          <div class="spec-copy">
+            <p class="spec-line">The more specific you are, the better the training data. <span class="spec-hint" id="spec-hint" role="status"></span></p>
+            <div class="fit" id="fit" data-level="ok">
+              <div class="fit-inner" id="fit-inner">
+                <p class="fit-line" id="fit-line" role="status"></p>
+                <div class="fit-actions" id="fit-actions"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="cta" id="compose" disabled aria-describedby="compose-hint">Compose run</button>
+          <p class="cta-hint" id="compose-hint">Choose a robot and describe the task.</p>
+        </div>
+
+        <div class="chips" id="chips" aria-label="Suggestions"></div>
+      </form>
+    </section>
+
+    <section class="output" id="output" aria-label="Run output">
+      <div class="output-clip">
+        <div class="output-panel">
+          <div class="output-art" aria-hidden="true"></div>
+
+          <section class="run-wrap" id="run-wrap" aria-labelledby="run-title" hidden>
+            <header class="run-head">
+              <div class="run-heading">
+                <p class="run-kicker"><span class="rec-dot" aria-hidden="true"></span><span id="run-kicker-text">Recorded run</span></p>
+                <h2 class="run-title" id="run-title"></h2>
+              </div>
+              <button type="button" class="ghost ghost--sm" id="run-skip">Skip</button>
+            </header>
+
+            <div class="timeline" id="timeline">
+              <ol class="steps" id="steps"></ol>
+              <p class="step-status" id="step-status" role="status"><span class="step-status-text"><i class="step-by" id="step-by" hidden></i><b id="step-status-name"></b><span id="step-status-detail"></span></span><span class="step-took" id="step-took"></span></p>
+            </div>
+
+            <div class="summary-sentinel" id="summary-sentinel" aria-hidden="true"></div>
+            <div class="summary" id="summary">
+              <dl class="stats" id="stats">
+                <div class="stat" data-key="found"><dd>0</dd><dt>Generated</dt></div>
+                <div class="stat" data-key="judged"><dd>0</dd><dt>Judged</dt></div>
+                <div class="stat stat--ok" data-key="accepted"><dd>0</dd><dt>Accepted</dt></div>
+                <div class="stat stat--no" data-key="rejected"><dd>0</dd><dt>Rejected</dt></div>
+                <div class="stat" data-key="episodes"><dd>0</dd><dt>Episodes</dt></div>
+              </dl>
+              <div class="download">
+                <button type="button" class="ghost" id="download" disabled aria-describedby="download-hint">Download dataset</button>
+                <p class="download-hint" id="download-hint">Runs locally. <button type="button" class="link" id="see-brief">See the brief.</button></p>
+              </div>
+            </div>
+
+            <div class="results" id="results" inert>
+              <div class="results-clip">
+                <div class="grid" id="grid" role="group" aria-label="Episodes"></div>
+                <p class="grid-note" id="grid-note" hidden></p>
+                <div class="rejects" id="rejects" hidden>
+                  <p class="rejects-title" id="rejects-title"></p>
+                  <ul class="rejects-list" id="rejects-list"></ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="brief-wrap" id="brief-wrap" aria-labelledby="brief-title" inert>
+            <article class="brief" id="brief" tabindex="-1">
+              <header class="brief-head">
+                <h2 class="brief-kicker" id="brief-title">Run brief</h2>
+                <p class="brief-note">Nothing has been queued or trained. This is the brief.</p>
+              </header>
+
+              <p class="brief-sentence" id="brief-sentence"></p>
+
+              <dl class="brief-rows">
+                <div class="brief-row brief-row--fit" id="brief-fit-row" hidden>
+                  <dt id="brief-fit-label">Caveat</dt>
+                  <dd><p id="brief-fit-line"></p></dd>
+                </div>
+                <div class="brief-row">
+                  <dt>Robot</dt>
+                  <dd>
+                    <span class="brief-value" id="brief-robot"></span>
+                    <span class="tag" id="brief-status"></span>
+                    <p id="brief-robot-line"></p>
+                  </dd>
+                </div>
+                <div class="brief-row">
+                  <dt>Data</dt>
+                  <dd>
+                    <span class="brief-value" id="brief-tier"></span>
+                    <span class="tag" id="brief-tier-tag"></span>
+                    <p id="brief-tier-line"></p>
+                  </dd>
+                </div>
+                <div class="brief-row">
+                  <dt>Specificity</dt>
+                  <dd>
+                    <span class="brief-value" id="brief-spec"></span>
+                    <p id="brief-spec-line"></p>
+                  </dd>
+                </div>
+                <div class="brief-row" id="brief-run-row">
+                  <dt>Run it</dt>
+                  <dd>
+                    <div class="cmd" id="cmd-block">
+                      <pre><code id="cmd"></code></pre>
+                      <button type="button" class="ghost ghost--sm" id="copy-cmd">Copy</button>
+                    </div>
+                    <p id="brief-operator-line"></p>
+                  </dd>
+                </div>
+              </dl>
+
+              <footer class="brief-actions">
+                <button type="button" class="ghost" id="copy-json">Copy brief as JSON</button>
+                <button type="button" class="ghost" id="copy-link">Copy link</button>
+              </footer>
+            </article>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <noscript><p class="noscript">This page needs JavaScript to compose a run.</p></noscript>
+  </main>
+
+  <footer class="foot" id="foot">
+    <p>Understudy turns one sentence into gated SO-101 demonstrations.</p>
+  </footer>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="pop pop--robot" id="robot-list" role="listbox" aria-label="Robots"></div>
+  <div class="pop pop--tier" id="tier-list" role="listbox" aria-label="Data quality"></div>
+
+  <div class="ql" id="ql" role="dialog" aria-modal="true" aria-label="Clip viewer" data-open="false">
+    <div class="ql-backdrop" id="ql-backdrop"></div>
+    <div class="ql-frame" id="ql-frame">
+      <div class="ql-stage" id="ql-stage">
+        <div class="ql-media" id="ql-media">
+          <img class="ql-poster" id="ql-poster" alt="">
+          <video id="ql-video" playsinline muted loop preload="none"></video>
+          <div class="ql-progress" aria-hidden="true"><i id="ql-progress-bar"></i></div>
+          <p class="ql-missing" id="ql-missing" hidden>This clip is not on this machine.</p>
+        </div>
+        <button type="button" class="ql-nav ql-nav--prev" id="ql-prev" aria-label="Previous clip"><svg viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2 2 10l8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button type="button" class="ql-nav ql-nav--next" id="ql-next" aria-label="Next clip"><svg viewBox="0 0 12 20" aria-hidden="true"><path d="m2 2 8 8-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <aside class="ql-info" id="ql-info">
+        <p class="ql-count" id="ql-count"></p>
+        <h2 class="ql-title" id="ql-title"></h2>
+        <dl class="ql-rows">
+          <div><dt>Source</dt><dd><a id="ql-source" target="_blank" rel="noopener noreferrer"></a></dd></div>
+          <div><dt>Episode</dt><dd id="ql-licence"></dd></div>
+          <div><dt>Cube</dt><dd id="ql-author"></dd></div>
+        </dl>
+        <h3 class="ql-sub">Measured on the clip and the robot</h3>
+        <dl class="ql-stats" id="ql-stats"></dl>
+      </aside>
+      <button type="button" class="ql-close" id="ql-close" aria-label="Close viewer"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="m2 2 10 10M12 2 2 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </div>
+  </div>
+
+  <div class="grain" aria-hidden="true"></div>
+  <div class="sr-only" id="announce" aria-live="polite"></div>
+</body>
+</html>

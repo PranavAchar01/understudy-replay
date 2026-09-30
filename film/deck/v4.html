@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Understudy film v4</title>
+<meta name="theme-color" content="#05070d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Film v4. The Player Two (Personal Brains) cut's frame, v3's story. Stage, chip, caption pill, title and end card are
+   film/deck/broll.html's, the composer is the Player Two app's (film/app/site.css). Every shot fills the frame.
+
+   Nothing here runs on a wall clock. The page is a pure function of time: window.seek(t) lays out every element for
+   the instant t (seconds) and seeks every visible <video> to the exact frame, and film/tools/render-v4.mts calls it
+   once per output frame (1/30 s apart) and screenshots. So every frame of the film is a real, different frame.
+   Shots cross-fade into each other over 0.5 s (the reference's join fade); every shot has a slow push.
+   Every number and log line is read from media/v3/facts3.json (scripts/film3_assets.py). */
+:root{--ink:#f2f6ff;--blue:#7fb2ff;--violet:#b9a4ff;--gold:#e9c46a;--green:#7fe0b0;--red:#ff8a80;--serif:"Hedvig Letters Serif",Georgia,serif;--sans:Inter,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;--panel:rgba(9,13,24,.84);--line:rgba(140,170,230,.2)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans);overflow:hidden}
+.stage{width:1920px;height:1080px;position:absolute;left:50%;top:50%;margin:-540px 0 0 -960px;transform-origin:center;overflow:hidden;background:#05070d}
+.shot{position:absolute;inset:0;display:none;background:#05070d;overflow:hidden}
+.plate{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:50% 50%}
+.shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,5,10,.42) 0%,rgba(3,5,10,0) 22%,rgba(3,5,10,0) 58%,rgba(3,5,10,.62) 100%);z-index:2}
+.chip{position:absolute;left:72px;top:64px;display:flex;align-items:center;gap:14px;padding:13px 20px;border-radius:8px;background:rgba(8,12,22,.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);font:500 21px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:#e7eeff;opacity:0;z-index:6;white-space:nowrap}
+.chip.r{left:auto;right:72px}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--blue));box-shadow:0 0 14px var(--c,var(--blue))}
+.chip b{font-weight:500;color:var(--c,var(--blue))}
+.cap{position:absolute;left:0;right:0;bottom:96px;margin:0 auto;width:fit-content;max-width:1400px;padding:20px 34px 22px;border-radius:16px;background:rgba(10,12,18,.8);backdrop-filter:blur(14px);font:500 44px/1.28 var(--sans);letter-spacing:-.005em;text-align:center;color:#fff;text-wrap:balance;opacity:0;z-index:6}
+.cap em{font-style:normal;color:var(--c,var(--blue))}
+.pane{position:absolute;display:flex;align-items:center;gap:14px;padding:14px 20px;border-radius:8px;background:rgba(8,12,22,.8);border:1px solid rgba(255,255,255,.12);font:500 22px/1.4 var(--mono);letter-spacing:.02em;color:#e7eeff;opacity:0;z-index:6;max-width:640px}
+.pane i{flex:none;width:9px;height:9px;border-radius:50%;background:var(--p);box-shadow:0 0 14px var(--p)}
+.pane b{font-weight:500;color:var(--p)}
+
+/* ---- title and end (broll.html) ---- */
+.mosaic{position:absolute;inset:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:4px;background:#05070d}
+.mosaic video{width:100%;height:100%;object-fit:cover;display:block}
+.title .mosaic{filter:blur(8px) brightness(.36) saturate(.9)}
+.veil{position:absolute;inset:0;background:radial-gradient(1100px 620px at 50% 50%,rgba(5,7,13,.25),rgba(5,7,13,.8))}
+.title .copy{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.kick{font:500 22px/1 var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--blue);display:flex;align-items:center;gap:14px}
+.kick i{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 16px currentColor}
+.title h1{font:400 210px/1 var(--serif);letter-spacing:-.03em;margin-top:34px}
+h1 em{font-style:normal;color:#a9cbff}
+.title p{font:400 40px/1.35 var(--sans);color:#d3def6;margin-top:28px}
+.chips{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:1700px;margin-top:52px}
+.chips span{font:500 22px/1 var(--mono);padding:15px 22px;border-radius:999px;border:1px solid color-mix(in oklab,var(--c) 55%,transparent);background:rgba(8,13,26,.62);color:var(--c)}
+.end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:rgba(3,5,10,.74);backdrop-filter:blur(3px);opacity:0;padding-bottom:150px;z-index:4}
+.end h1{font:400 168px/1 var(--serif);letter-spacing:-.025em}
+.end p{font:500 26px/1 var(--mono);letter-spacing:.12em;color:#c9d6f2}
+.end .chips{margin-top:30px}
+
+/* ---- the composer (film/app/site.css, at the film's 1.5x) ---- */
+.app{position:absolute;inset:36px;border-radius:36px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#0a1020}
+.app .sky{position:absolute;inset:-4%;background:url("../app/media/wallpaper-results.jpg") 72% 0/165% auto no-repeat;transform-origin:70% 20%}
+.app .scrim{position:absolute;inset:0;background:radial-gradient(90% 56% at 50% 30%,rgba(5,7,13,.5),rgba(5,7,13,0) 72%),linear-gradient(to bottom,rgba(5,7,13,.5) 0%,rgba(5,7,13,.12) 34%,rgba(5,7,13,0) 60%,rgba(5,7,13,.3) 80%,rgba(5,7,13,.75) 100%)}
+.app .bar{position:absolute;left:48px;right:48px;top:44px;display:flex;justify-content:space-between;align-items:baseline}
+.app .wm{font:400 30px/36px var(--serif);letter-spacing:-.01em;color:rgb(238,242,248)}
+.app .tag{font:400 19.5px/36px var(--sans);color:rgba(238,242,248,.6)}
+.sentence{position:absolute;left:0;right:0;top:190px;margin:0 auto;max-width:1500px;font:400 96px/1.26 var(--serif);letter-spacing:-.02em;text-align:center;color:#fff;text-shadow:0 1px 24px rgba(5,7,13,.55)}
+.blank{color:#a9ccff;border-bottom:1.5px solid rgba(238,242,248,.36);border-radius:9px 9px 0 0;padding:0 .06em}
+.blank.focus{border-bottom-color:#7fb2ff;background:rgba(127,178,255,.09);box-shadow:0 1.5px 0 0 #7fb2ff,0 24px 42px -24px rgba(127,178,255,.8)}
+.caret{display:inline-block;width:4px;height:.9em;background:#fff;vertical-align:-.1em;margin-left:4px}
+.hint{position:absolute;left:0;right:0;top:640px;text-align:center;font:400 27px/1.6 var(--sans);color:rgba(238,242,248,.6)}
+.hint b{font-weight:400;color:#fff}
+.go{position:absolute;left:50%;top:760px;transform:translateX(-50%);padding:22px 44px;border-radius:999px;font:600 28px/1 var(--sans);color:rgba(238,242,248,.45);background:rgba(12,19,38,.64);border:1.5px solid rgba(255,255,255,.12);backdrop-filter:blur(20px);white-space:nowrap}
+.go.hot{color:#05070d;background:#7fb2ff;border-color:#a9ccff;box-shadow:0 18px 48px -12px rgba(127,178,255,.8)}
+.cursor{position:absolute;left:0;top:0;width:46px;z-index:7;opacity:0;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
+
+/* ---- the Runway grid: eight clips fill the frame ---- */
+.grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:4px;background:#05070d;transform-origin:50% 50%}
+.cell{position:relative;overflow:hidden;background:#0d1426}
+.cell video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.cell .ph{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(100deg,#0d1426 20%,#18233d 40%,#0d1426 60%);background-size:300% 100%;font:500 19px/1 var(--mono);letter-spacing:.14em;color:#6d7fa8;text-transform:uppercase}
+.cell .nm{position:absolute;left:14px;bottom:14px;padding:7px 11px;border-radius:6px;background:rgba(5,8,16,.72);font:500 18px/1 var(--mono);color:#dfe8ff;z-index:2}
+.cell .ring{position:absolute;inset:0;border:4px solid transparent;z-index:3;pointer-events:none}
+.cell .why{position:absolute;left:14px;right:14px;top:14px;padding:14px 16px 16px;border-radius:10px;background:rgba(38,10,14,.88);border:1px solid rgba(255,138,128,.6);opacity:0;z-index:4}
+.cell .why .h{font:600 19px/1 var(--mono);color:var(--red);letter-spacing:.06em;margin-bottom:10px}
+.cell .why .w{font:400 18px/1.42 var(--mono);color:#f6dcd9}
+.cell .ok{position:absolute;right:14px;bottom:14px;padding:7px 11px;border-radius:6px;background:rgba(10,40,26,.85);border:1px solid rgba(127,224,176,.6);font:600 17px/1 var(--mono);letter-spacing:.12em;color:var(--green);opacity:0;z-index:4}
+
+/* ---- the drop ---- */
+.zone{position:absolute;left:560px;top:250px;width:800px;height:420px;border-radius:30px;border:3px dashed rgba(127,178,255,.55);background:rgba(10,16,32,.78);backdrop-filter:blur(20px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;opacity:0;z-index:3}
+.zone h3{font:400 96px/1 var(--serif);letter-spacing:-.02em}
+.zone h3 em{font-style:normal;color:#a9cbff}
+.zone .st{display:grid;font:500 24px/1 var(--mono);letter-spacing:.12em;color:#8fa0c4;text-transform:uppercase}
+.zone .st p{grid-area:1/1}
+.zone .st b{font-weight:500;color:var(--green)}
+.fly{position:absolute;overflow:hidden;border-radius:0;z-index:5;transform-origin:50% 50%}
+.fly video{width:100%;height:100%;object-fit:cover;display:block}
+.fly .nm{position:absolute;left:14px;bottom:14px;padding:7px 11px;border-radius:6px;background:rgba(5,8,16,.72);font:500 18px/1 var(--mono);color:#dfe8ff}
+.fly .ring{position:absolute;inset:0;border:4px solid #7fb2ff;opacity:0}
+
+/* ---- glass panels over a plate (the model shot of broll.html) ---- */
+.glass{position:absolute;border-radius:18px;background:rgba(7,10,18,.86);border:1px solid rgba(140,170,230,.22);box-shadow:0 40px 120px rgba(0,0,0,.6);backdrop-filter:blur(18px);overflow:hidden;z-index:4}
+.gbar{display:flex;align-items:center;gap:10px;padding:16px 22px;border-bottom:1px solid rgba(140,170,230,.14);font:500 17px/1 var(--mono);color:#8fa0c4;letter-spacing:.06em}
+.gbar span{width:13px;height:13px;border-radius:50%;background:#2a344d}
+.gbar b{margin-left:14px;font-weight:500}
+.jgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:22px 24px 26px}
+.jt{border-radius:10px;background:rgba(5,8,16,.6);border:1px solid var(--line);padding:12px 14px 6px}
+.jt .n{font:500 18px/1 var(--mono);color:#c9d6f2;display:flex;justify-content:space-between}
+.jt .n span{color:#6d7fa8}
+.jt svg{width:100%;height:118px;display:block}
+.jt path{fill:none;stroke:var(--blue);stroke-width:2.5;stroke-dasharray:1 1}
+.jsub{padding:0 24px 22px;font:400 17px/1.4 var(--mono);color:#8fa0c4}
+
+/* ---- episodes ---- */
+.map svg{display:block}
+.side{display:flex;flex-direction:column;gap:18px}
+.big{font:400 84px/1 var(--serif);letter-spacing:-.02em}
+.big em{font-style:normal;color:#a9cbff}
+.leg{font:500 21px/1.55 var(--mono);color:#c9d6f2}
+.leg i{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:10px;vertical-align:-1px}
+.logl{font:400 20px/1.5 var(--mono);color:#9fb0d4;padding:12px 14px;border-radius:8px;background:rgba(5,8,16,.7);border:1px solid var(--line)}
+.small{font:400 19px/1.5 var(--mono);color:#8fa0c4}
+
+/* ---- training ---- */
+.bar2 .tr{height:14px;border-radius:7px;background:#16203a;overflow:hidden}
+.bar2 .fl{height:100%;width:0;background:linear-gradient(90deg,#6b8fe0,var(--blue));border-radius:7px}
+.bar2 .lb{display:flex;justify-content:space-between;margin-top:12px;font:500 21px/1 var(--mono);color:#c9d6f2}
+.bar2 .lb span{color:#6d7fa8}
+.term pre{padding:26px 30px 30px;font:400 26px/1.75 var(--mono);color:#cbd8f5;white-space:pre-wrap}
+.term .l{display:block;opacity:0}
+.term .t{color:#5b6a8a}
+
+/* ---- the model ---- */
+.mhead{position:absolute;left:0;right:0;top:150px;text-align:center;font:400 90px/1 var(--serif);letter-spacing:-.02em;opacity:0;z-index:4}
+.mhead em{font-style:normal;color:#a9cbff}
+.net{position:absolute;left:0;right:0;top:270px;display:flex;justify-content:center;align-items:center;z-index:4}
+.lay{display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0}
+.lay .bx{min-width:150px;padding:22px 22px;border-radius:12px;border:1px solid color-mix(in oklab,var(--c) 60%,transparent);background:rgba(12,18,34,.92);font:600 34px/1 var(--sans);text-align:center;color:var(--c)}
+.lay .s{font:500 17px/1.3 var(--mono);color:#8fa0c4;text-align:center;max-width:240px;height:44px}
+.arr{width:70px;height:2px;background:linear-gradient(90deg,rgba(127,178,255,.2),rgba(127,178,255,.8));margin:0 10px 54px;opacity:0;position:relative}
+.arr::after{content:"";position:absolute;right:-2px;top:-5px;border:6px solid transparent;border-left-color:rgba(127,178,255,.8)}
+.specs{position:absolute;left:50%;top:468px;width:1400px;margin-left:-700px;display:grid;grid-template-columns:200px 1fr;row-gap:16px;column-gap:26px;padding:28px 36px;z-index:4}
+.specs div{font:400 27px/1.3 var(--mono);color:#dfe8ff;opacity:0}
+.specs div.k{color:#6d7fa8}
+.specs b{font-weight:500;color:var(--green)}
+
+/* ---- the question ---- */
+.q{position:absolute;inset:0;display:grid;place-items:center;background:rgba(5,7,13,.8);backdrop-filter:blur(24px);z-index:5;text-align:center}
+.q h2{font:400 110px/1.1 var(--serif);letter-spacing:-.02em;max-width:1500px}
+.q h2 em{font-style:normal;color:#a9cbff}
+.fadeblack{position:absolute;inset:0;background:#000;opacity:0;z-index:50;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <!-- a. title: no robot behind it, only the Runway clips, blurred -->
+  <section class="shot title" data-id="title">
+    <div class="mosaic plate" id="title-mosaic" data-push="1.08,1.14"></div>
+    <div class="veil"></div>
+    <div class="copy">
+      <div class="kick" data-tin="0.1"><i></i>Runway API Hackathon</div>
+      <h1 data-tin="0.25">Under<em>study</em></h1>
+      <p data-tin="0.65">Robot demonstrations from one sentence, made with Runway video.</p>
+      <div class="chips" data-tin="1.0" id="title-chips"></div>
+    </div>
+  </section>
+
+  <!-- b. the hook -->
+  <section class="shot" data-id="hook" style="--c:var(--gold)">
+    <video class="plate" data-v="media/v4/full/v03.mp4" data-push="1,1.05"></video><div class="shade"></div>
+    <div class="chip" data-in=".15"><i></i>Runway <b>· gen4_turbo video</b></div>
+    <div class="cap" data-in=".35">AI video now models gravity, contact and grasping. <em>The natural next step</em> is to use it as robot data.</div>
+  </section>
+
+  <!-- c1. one sentence (the Player Two composer) -->
+  <section class="shot" data-id="compose">
+    <div class="app"><div class="sky" data-push="1,1.03"></div><div class="scrim"></div>
+      <div class="bar"><span class="wm">Understudy</span><span class="tag">Robot demonstrations from Runway video</span></div>
+      <div class="sentence">I want to train an <span class="blank">SO-101</span> to <span class="blank" id="task"><span id="typed"></span><span class="caret" id="caret"></span></span> with <span class="blank">Runway video</span> data.</div>
+      <div class="hint">One sentence. Understudy writes the prompts: <b>a new table, bowl and light for every clip.</b></div>
+      <div class="go" id="go">Generate 8 clips</div>
+    </div>
+    <svg class="cursor" id="cur1" viewBox="0 0 24 24"><path d="M3 2l17 10-7.5 1.6L9 21z" fill="#fff" stroke="#05070d" stroke-width="1.2"/></svg>
+  </section>
+
+  <!-- c2. Runway generates eight clips -->
+  <section class="shot" data-id="grid" style="--c:var(--gold)">
+    <div class="grid" id="grid" data-push="1,1.03"></div>
+    <div class="chip" data-in=".15"><i></i>Runway API <b>· gen4_image, gen4_image_turbo, gen4_turbo</b></div>
+    <div class="cap" data-in="1.9">One sentence becomes <em>8 Runway videos</em> of a hand doing the task, each on a new table, bowl and light.</div>
+  </section>
+
+  <!-- d. all eight go into Understudy -->
+  <section class="shot" data-drift data-id="drop" style="--c:var(--blue)">
+    <div class="app" id="drop-app" style="opacity:0"><div class="sky"></div><div class="scrim"></div>
+      <div class="bar"><span class="wm">Understudy</span><span class="tag">Robot demonstrations from Runway video</span></div></div>
+    <div class="zone" id="zone"><h3>Under<em>study</em></h3><div class="st"><p id="z0">Drop videos here</p><p id="z1" style="opacity:0"><b>8 videos</b> received</p></div></div>
+    <div id="flies" style="position:absolute;inset:0;transform:scale(1.03);z-index:5"></div>
+    <svg class="cursor" id="cur2" viewBox="0 0 24 24"><path d="M3 2l17 10-7.5 1.6L9 21z" fill="#fff" stroke="#05070d" stroke-width="1.2"/></svg>
+    <div class="cap" data-in="2.5">All 8 go into <em>Understudy</em>.</div>
+  </section>
+
+  <!-- e. track -->
+  <section class="shot" data-id="track" style="--c:var(--green)">
+    <video class="plate" data-v="media/v4/track-v01.mp4" data-push="1,1.04"></video><div class="shade"></div>
+    <div class="chip" data-in=".15"><i></i>Understudy 1/4 <b>· Track · MediaPipe + OpenCV</b></div>
+    <div class="cap" data-in=".35"><em>MediaPipe</em> tracks 21 hand points on every frame. <em>OpenCV</em> follows the red block.</div>
+  </section>
+
+  <!-- f. the gates -->
+  <section class="shot" data-id="gate" style="--c:var(--red)">
+    <div class="grid" id="gate-grid" data-push="1,1.025"></div>
+    <div class="chip r" data-in=".15"><i></i>Understudy 2/4 <b>· Gate</b></div>
+    <div class="cap" data-in=".35">Strict gates throw out <em>4 of 8</em>, and each one says why.</div>
+  </section>
+
+  <!-- g. grasp point to joint angles -->
+  <section class="shot" data-id="joints" style="--c:var(--blue)">
+    <video class="plate" data-v="media/v4/track-v01.mp4" data-push="1.02,1.06" style="transform-origin:30% 50%"></video>
+    <div class="shade" style="background:linear-gradient(90deg,rgba(3,5,10,0) 30%,rgba(3,5,10,.7) 62%),linear-gradient(180deg,rgba(3,5,10,.42) 0%,rgba(3,5,10,0) 22%,rgba(3,5,10,0) 58%,rgba(3,5,10,.62) 100%)"></div>
+    <div class="chip" data-in=".15"><i></i>Understudy 3/4 <b>· Retarget · SO-101 joint angles</b></div>
+    <div class="glass" id="jpanel" data-in=".5" style="left:1010px;top:150px;width:840px;opacity:0"><div class="gbar"><span></span><span></span><span></span><b id="joint-h"></b></div><div class="jgrid" id="joints"></div><div class="jsub" id="joint-sub"></div></div>
+    <div class="cap" data-in=".35">The 4 that pass: the hand's grasp point goes through IK into <em>the SO-101's joint angles</em>.</div>
+  </section>
+
+  <!-- g'. the aside: why a human hand? -->
+  <section class="shot" data-drift data-id="robot" style="--c:var(--gold)">
+    <video class="plate" data-v="media/v4/robot-clip.mp4" data-at="0.6" data-push="1,1.04"></video><div class="shade"></div>
+    <div class="q" id="q"><h2>Why not just generate videos <em>of the robot?</em></h2></div>
+    <div class="chip" data-in="2.1"><i></i>Runway API <b>· the same task, asked for the SO-101</b></div>
+    <div class="pane" data-in="2.5" style="left:72px;top:150px;--p:var(--red)"><i></i><span><b>No base, no shoulder:</b> a floating<br>gripper, no joints to read</span></div>
+    <div class="pane" id="pane2" data-in="4.8" style="left:72px;top:262px;--p:var(--red)"><i></i><span><b>Then</b> the block rides back<br>out of the bowl</span></div>
+    <div class="cap" data-in="2.8" style="font-size:40px">Video models have seen far more hands than hobby robot arms. <em>A hand plus a tracker gives real joint angles.</em></div>
+  </section>
+
+  <!-- h. 4 clips -> 44 episodes -->
+  <section class="shot" data-drift data-id="episodes" style="--c:var(--blue)">
+    <div class="mosaic plate" id="acc-mosaic" data-push="1.1,1.14" style="grid-template-columns:1fr 1fr;filter:blur(16px) brightness(.3) saturate(.9)"></div>
+    <div class="chip" data-in=".15"><i></i>Understudy 4/4 <b>· Write · LeRobot v3.0</b></div>
+    <div class="glass map" data-in=".3" style="left:170px;top:160px;width:1580px;height:640px;opacity:0;display:flex;gap:44px;padding:36px 44px;align-items:center">
+      <svg id="map" width="620" height="560" viewBox="0 0 620 560" style="flex:none;border-radius:14px;background:rgba(5,8,16,.6);border:1px solid var(--line)"></svg>
+      <div class="side" id="side"></div>
+    </div>
+    <div class="cap" data-in="3.0">Each clip is re-anchored to new cube spots and <em>gated again</em>: 44 LeRobot episodes.</div>
+  </section>
+
+  <!-- i1. training -->
+  <section class="shot" data-drift data-id="train" style="--c:var(--violet)">
+    <div class="mosaic plate" id="acc-mosaic2" data-push="1.14,1.17" style="grid-template-columns:1fr 1fr;filter:blur(16px) brightness(.24) saturate(.8)"></div>
+    <div class="chip" data-in=".15"><i></i>Training <b>· PyTorch, on the 44 episodes</b></div>
+    <div class="glass" data-in=".3" style="left:72px;top:160px;width:1030px;height:690px;opacity:0;padding:26px 10px 0 10px">
+      <svg id="loss" width="1010" height="540" viewBox="0 0 1010 540"></svg>
+      <div class="bar2" style="margin:14px 20px 0 110px"><div class="tr"><div class="fl" id="fill"></div></div><div class="lb"><span id="stepn">step 0 / 4,000</span><span>30.1 s of training, shown in 5 s</span></div></div>
+    </div>
+    <div class="glass term" data-in=".45" style="left:1140px;top:160px;width:708px;opacity:0"><div class="gbar"><span></span><span></span><span></span><b>data/run2.log</b></div><pre id="tlog"></pre></div>
+    <div class="cap" id="train-cap" data-in="5.0"></div>
+  </section>
+
+  <!-- i2. what was trained -->
+  <section class="shot" data-drift data-id="model" style="--c:var(--violet)">
+    <div class="mosaic plate" id="acc-mosaic3" data-push="1.17,1.2" style="grid-template-columns:1fr 1fr;filter:blur(16px) brightness(.2) saturate(.8)"></div>
+    <div class="chip" data-in=".15"><i></i>The model <b>· MLPChunk, src/understudy/policy.py</b></div>
+    <div class="mhead" data-in=".2">What was <em>trained</em></div>
+    <div class="net" id="net"></div>
+    <div class="glass specs" id="specs" data-in="1.0" style="opacity:0"></div>
+    <div class="cap" data-in="2.9">Small and state-based, <em>trained from scratch</em>. Not a foundation model.</div>
+  </section>
+
+  <!-- j. the hero: the first time the working robot is on screen -->
+  <section class="shot" data-id="hero" style="--c:var(--blue)">
+    <video class="plate" data-v="media/v4/hero.mp4" data-push="1,1.035"></video><div class="shade"></div>
+    <div class="chip" data-in=".15"><i></i>The SO-101 <b>· trained policy in MuJoCo</b></div>
+    <div class="chip r" style="--c:var(--green)" data-in=".15"><i></i><span id="seg-t"></span></div>
+    <div class="cap" data-in=".9">The trained policy puts the cube in the bowl from <em>46 of 50</em> unseen positions. Sim only.</div>
+  </section>
+
+  <!-- k. end -->
+  <section class="shot" data-id="end" style="--c:var(--blue)">
+    <video class="plate" data-v="media/v4/hero.mp4" data-at="-6.1" data-push="1.02,1.06" style="filter:blur(3px)"></video>
+    <div class="end" data-in=".4" data-dur=".9"><h1>Under<em>study</em></h1><p>Runway API Hackathon</p><div class="chips" id="end-chips"></div></div>
+    <div class="cap" data-in="1.0">Runway imagines the demonstration. <em>Physics decides if it counts.</em></div>
+  </section>
+
+  <div class="fadeblack" id="fadeblack"></div>
+</div>
+<script>
+(async () => {
+  const q = new URLSearchParams(location.search);
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+  const fmt = (n) => n.toLocaleString('en-US');
+  const F = await (await fetch('media/v3/facts3.json')).json();
+
+  // ------------------------------------------------------------------ timing (seconds)
+  // own = how long the shot is the top shot; the next shot then fades in over it for XF.
+  const XF = 0.5, END_FADE = 0.8;
+  const PLAN = [['title', 4.5], ['hook', 4.9], ['compose', 3.6], ['grid', 6.2], ['drop', 4.6], ['track', 4.95], ['gate', 8.0],
+    ['joints', 5.4], ['robot', 5.9], ['episodes', 7.0], ['train', 6.8], ['model', 5.8], ['hero', 12.8], ['end', 5.4]];
+  const shots = []; let t0 = 0;
+  for (const [id, own] of PLAN) { shots.push({ id, own, start: Math.round(t0 * 30) / 30, el: document.querySelector(`.shot[data-id="${id}"]`) }); t0 += own; }
+  const DURATION = t0;
+  shots.forEach((s, i) => { s.end = i < shots.length - 1 ? s.start + s.own + XF : DURATION; });
+  window.DURATION = DURATION;
+  window.PLAN = shots.map((s) => ({ id: s.id, start: +s.start.toFixed(3) }));
+
+  // ------------------------------------------------------------------ easing
+  const bez = (x1, y1, x2, y2) => (x) => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 10; i++) {
+      const cx = 3 * x1 * t * (1 - t) ** 2 + 3 * x2 * t * t * (1 - t) + t ** 3 - x;
+      const d = 3 * x1 * (1 - t) ** 2 + 6 * (x2 - x1) * t * (1 - t) + 3 * (1 - x2) * t * t;
+      if (Math.abs(cx) < 1e-6 || Math.abs(d) < 1e-6) break;
+      t = Math.min(1, Math.max(0, t - cx / d));
+    }
+    return 3 * y1 * t * (1 - t) ** 2 + 3 * y2 * t * t * (1 - t) + t ** 3;
+  };
+  const OUT = bez(0.2, 0.7, 0.2, 1), POP = bez(0.3, 1.6, 0.5, 1), INOUT = bez(0.55, 0.05, 0.35, 1), SMOOTH = bez(0.45, 0, 0.55, 1);
+  const cl = (x) => Math.max(0, Math.min(1, x));
+  const prog = (lt, at, dur) => cl((lt - at) / dur);
+
+  // ------------------------------------------------------------------ build
+  const clips = F.clips, acc = F.accepted;
+  const rejected = Object.fromEntries(F.rejected.map((r) => [r.clip, r]));
+  // where the action is in each clip (between the block and the bowl, scripts/film4 notes), as a share of the width
+  const CENTRE = { v00: 0.53, v01: 0.562, v02: 0.558, v03: 0.597, v04: 0.56, v05: 0.587, v06: 0.568, v07: 0.566 };
+  const objPos = (c) => `${(cl((CENTRE[c] - 0.28) / 0.44) * 100).toFixed(1)}% 50%`;
+  const vid = (c, extra = '') => `<video data-v="media/v4/grid/${c}.mp4" ${extra} style="object-position:${objPos(c)}"></video>`;
+  const TOOLS = `<span style="--c:var(--gold)">Runway API</span><span style="--c:var(--green)">MediaPipe</span><span style="--c:var(--blue)">OpenCV</span><span style="--c:var(--violet)">Claude</span><span style="--c:#f2f6ff">MuJoCo</span><span style="--c:#f2f6ff">LeRobot</span><span style="--c:#f2f6ff">PyTorch</span>`;
+  $('title-chips').innerHTML = TOOLS; $('end-chips').innerHTML = TOOLS;
+  $('title-mosaic').innerHTML = clips.map((c, k) => vid(c, `data-at="${-k * 0.6}" data-loop`)).join('');
+  // the grid: cell k is "generated" at REVEAL[k] and plays from its first frame
+  const REVEAL = clips.map((_, k) => 0.35 + k * 0.2);
+  $('grid').innerHTML = clips.map((c, k) => `<div class="cell">${vid(c, `data-at="${REVEAL[k]}" data-loop`)}<div class="ph">generating ${c}</div><div class="nm">${c}.mp4</div></div>`).join('');
+  // the drop continues the grid exactly: same cells, same frames
+  const G = shots.find((s) => s.id === 'grid'), D = shots.find((s) => s.id === 'drop');
+  const CW = (1920 - 12) / 4, CH = (1080 - 4) / 2;
+  const cellXY = (k) => [(k % 4) * (CW + 4), Math.floor(k / 4) * (CH + 4)];
+  $('flies').innerHTML = clips.map((c, k) => { const [x, y] = cellXY(k); return `<div class="fly" style="left:${x}px;top:${y}px;width:${CW}px;height:${CH}px">${vid(c, `data-at="${REVEAL[k] - (D.start - G.start)}" data-loop`)}<div class="nm">${c}.mp4</div><div class="ring"></div></div>`; }).join('');
+  // the gates: each rejected clip is shown around the moment its gate fired
+  const GATE_AT = { v00: 0.6, v02: 1.5, v04: 2.4, v05: 3.3 };
+  const FIRST = { v00: 0, v02: 3.3, v04: 3.5, v05: 3.4 };   // first frame the problem is visible (run2.log)
+  $('gate-grid').innerHTML = clips.map((c) => {
+    const r = rejected[c];
+    const at = r ? GATE_AT[c] - FIRST[c] - 0.15 : -1.2;
+    return `<div class="cell" data-c="${c}">${vid(c, `data-at="${at.toFixed(2)}" data-loop`)}<div class="nm">${c}.mp4</div><div class="ring"></div>` +
+      (r ? `<div class="why"><div class="h">${c} · REJECTED</div><div class="w">${esc(r.why)}</div></div>` : `<div class="ok">ACCEPTED</div>`) + `</div>`;
+  }).join('');
+  const accMosaic = acc.map((c, k) => `<video data-v="media/v4/grid/${c}.mp4" data-at="${-k * 0.9}" data-loop></video>`).join('');
+  ['acc-mosaic', 'acc-mosaic2', 'acc-mosaic3'].forEach((id) => { $(id).innerHTML = accMosaic; });
+
+  // g. joint angles of the first accepted clip, as written to the dataset
+  const J = F.joints, jv = J.values;
+  $('joint-h').textContent = `${J.clip} → SO-101 joint angles (dataset)`;
+  $('joints').innerHTML = J.names.map((n, j) => {
+    const ys = jv.map((r) => r[j]); let lo = Math.min(...ys), hi = Math.max(...ys); if (hi - lo < 1) { lo -= 1; hi += 1; }
+    const d = ys.map((y, i) => `${i ? 'L' : 'M'}${(i / (ys.length - 1) * 300).toFixed(1)},${(8 + (1 - (y - lo) / (hi - lo)) * 104).toFixed(1)}`).join('');
+    return `<div class="jt"><div class="n">${n}<span>${lo.toFixed(0)} to ${hi.toFixed(0)}</span></div><svg viewBox="0 0 300 120" preserveAspectRatio="none"><path pathLength="1" d="${d}"/></svg></div>`;
+  }).join('');
+  $('joint-sub').textContent = `${fmt(J.frames)} frames at 30 fps. Degrees; gripper 0 to 100.`;
+
+  // h. top-down map: the bowl and the 44 episode start positions (horizontal = y, vertical = x, metres)
+  const PXM = 3100, CX = 0.245, CY = -0.035;
+  const px = (x, y) => [310 + (y - CY) * PXM, 280 - (x - CX) * PXM];
+  const [bx, by] = px(F.bowl.xy[0], F.bowl.xy[1]);
+  const dots = F.episodes.map((e) => { const [cx, cy] = px(e.xy[0], e.xy[1]); const src = e.kind !== 're-anchored'; return { src, svg: `<circle class="dot" data-r="${src ? 10 : 7}" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="0" fill="${src ? 'var(--gold)' : 'var(--blue)'}" ${src ? 'stroke="#05070d" stroke-width="2"' : 'fill-opacity=".85"'}/>` }; });
+  const srcDots = dots.filter((d) => d.src), cpDots = dots.filter((d) => !d.src);
+  $('map').innerHTML = `<text x="20" y="34" fill="#6d7fa8" font-family="JetBrains Mono" font-size="18">table, seen from above</text><circle cx="${bx}" cy="${by}" r="${F.bowl.r * PXM}" fill="none" stroke="#dfe8ff" stroke-width="3"/><text x="${bx}" y="${by + 6}" text-anchor="middle" fill="#8fa0c4" font-family="JetBrains Mono" font-size="18">bowl</text>` + cpDots.map((d) => d.svg).join('') + srcDots.map((d) => d.svg).join('');
+  const R = F.reanchor, reasons = Object.entries(R.reasons).map(([k, v]) => `${v} ${esc(k)}`).join(', ');
+  $('side').innerHTML = `<div class="big"><em>${acc.length}</em> clips → <em>${F.dataset.episodes}</em> episodes</div>
+    <div class="leg"><i style="background:var(--gold)"></i>cube where the clip put it (${acc.length})<br><i style="background:var(--blue)"></i>re-anchored copy that passed (${R.accepted})</div>
+    <div class="small">${R.tried - R.accepted} of ${R.tried} copies failed the gates: ${reasons}</div>
+    <div class="logl">${esc(F.log.episodes[0])}</div>
+    <div class="small">LeRobot ${F.dataset.codebase_version}: ${fmt(F.dataset.frames)} frames at ${F.dataset.fps} fps</div>`;
+
+  // i1. loss points exactly as logged (every 1,000 steps), no curve between them
+  const L = F.loss, lmin = 0.04, lmax = 1.0;
+  const lx = (s) => 110 + s / 4000 * 860, ly = (v) => 40 + (Math.log(lmax) - Math.log(v)) / (Math.log(lmax) - Math.log(lmin)) * 440;
+  let g = '';
+  for (const v of [1, 0.5, 0.2, 0.1, 0.05]) g += `<line x1="110" x2="970" y1="${ly(v)}" y2="${ly(v)}" stroke="#1b2540"/><text x="96" y="${ly(v) + 6}" text-anchor="end" fill="#6d7fa8" font-family="JetBrains Mono" font-size="18">${v}</text>`;
+  for (const s of [0, 1000, 2000, 3000, 4000]) g += `<text x="${lx(s)}" y="514" text-anchor="middle" fill="#6d7fa8" font-family="JetBrains Mono" font-size="18">${fmt(s)}</text>`;
+  g += `<text x="110" y="18" fill="#8fa0c4" font-family="JetBrains Mono" font-size="19">L1 loss (log scale), as logged every 1,000 steps</text><text x="970" y="538" text-anchor="end" fill="#8fa0c4" font-family="JetBrains Mono" font-size="18">step</text>`;
+  g += L.map((p, i) => `<g class="pt" style="opacity:0"><circle cx="${lx(p.step)}" cy="${ly(p.l1)}" r="0" data-r="11" fill="var(--violet)"/><text x="${lx(p.step) + (i === L.length - 1 ? -16 : 16)}" y="${ly(p.l1) - 18}" text-anchor="${i === L.length - 1 ? 'end' : 'start'}" fill="#dfe8ff" font-family="JetBrains Mono" font-size="22">${p.l1.toFixed(4)}</text></g>`).join('');
+  $('loss').innerHTML = g;
+  $('tlog').innerHTML = F.log.train.map((ln) => `<span class="l"><span class="t">${esc(ln.slice(0, 7))}</span>${esc(ln.slice(7))}</span>`).join('');
+  const M = F.model;
+  $('train-cap').innerHTML = `A small policy trains on all <em>${F.dataset.episodes} episodes</em>: ${fmt(M.steps)} steps in ${M.train_seconds} s on an ${esc(M.cpu)} CPU.`;
+
+  // i2. the network, from the module's own layer shapes
+  const lay = M.layers; let net = '', d0 = 0.5;
+  const box = (t, s, c) => { const h = `<div class="lay" data-in="${d0.toFixed(2)}" style="--c:${c}"><div class="bx">${t}</div><div class="s">${s}</div></div>`; d0 += 0.14; return h; };
+  const arr = () => `<div class="arr" data-in="${(d0 - 0.07).toFixed(2)}"></div>`;
+  net += box(lay[0][0], '6 joint angles + cube xyz', 'var(--gold)');
+  for (let i = 0; i < lay.length - 1; i++) net += arr() + box(lay[i][1], 'hidden, GELU', 'var(--blue)');
+  net += arr() + box(`${lay.at(-1)[1]}`, `= next ${M.chunk} targets × ${M.act_dim} joints`, 'var(--green)');
+  $('net').innerHTML = net;
+  const spec = [['type', 'MLP with action chunking; chunks blended over time, as in ACT'], ['params', `<b>${fmt(M.params)}</b>`], ['input', '6 joint angles + the cube position from the simulator. No camera.'], ['output', `the next ${M.chunk} joint targets for all ${M.act_dim} joints`], ['training', `${fmt(M.steps)} steps, batch ${M.batch}, ${M.loss} loss, AdamW, <b>${M.train_seconds} s</b> on an ${esc(M.cpu)} CPU`]];
+  let sd = 1.2; $('specs').innerHTML = spec.map(([k, v]) => { const h = `<div class="k" data-in="${sd.toFixed(2)}">${k}</div><div data-in="${sd.toFixed(2)}">${v}</div>`; sd += 0.16; return h; }).join('');
+
+  // j. which rollout is on screen
+  const segs = F.hero.segments;
+
+  // ------------------------------------------------------------------ per-shot layout at local time lt
+  const typed = 'put the red block in the bowl';
+  const custom = {
+    compose(lt, s) {
+      const n = Math.max(0, Math.min(typed.length, Math.floor((lt - 0.35) / 0.052)));
+      $('typed').textContent = typed.slice(0, n);
+      $('task').classList.toggle('focus', lt < 2.5);
+      $('caret').style.opacity = lt < 2.5 && (n < typed.length || Math.floor(lt * 2) % 2 === 0) ? 1 : 0;
+      $('go').classList.toggle('hot', lt > 2.15);
+      const c = $('cur1'); const p = INOUT(prog(lt, 1.6, 0.9));
+      c.style.opacity = cl((lt - 1.4) / 0.2);
+      const press = lt > 2.75 && lt < 2.95 ? 0.86 : 1;
+      c.style.transform = `translate(${1320 + (1000 - 1320) * p}px,${980 + (820 - 980) * p}px) scale(${press})`;
+      $('go').style.transform = `translateX(-50%) scale(${lt > 2.75 && lt < 2.95 ? 0.97 : 1})`;
+    },
+    grid(lt) {
+      s_cells('grid', lt, (cell, k) => {
+        const p = prog(lt, REVEAL[k], 0.35);
+        const ph = cell.querySelector('.ph');
+        ph.style.opacity = 1 - p; ph.style.backgroundPosition = `${100 - ((lt * 70) % 100)}% 0`;
+      });
+    },
+    drop(lt) {
+      $('drop-app').style.opacity = OUT(prog(lt, 0.5, 0.8));
+      const z = $('zone'); const pz = OUT(prog(lt, 0.8, 0.5));
+      z.style.opacity = pz; z.style.translate = `0 ${12 * (1 - pz)}px`;
+      const glow = prog(lt, 2.35, 0.4);
+      z.style.borderStyle = glow > 0 ? 'solid' : 'dashed';
+      z.style.borderColor = glow > 0 ? `rgba(127,224,176,${0.55 + 0.45 * glow})` : 'rgba(127,178,255,.55)';
+      z.style.boxShadow = `0 0 ${60 * glow}px rgba(127,224,176,${0.35 * glow})`;
+      $('z0').style.opacity = 1 - prog(lt, 2.3, 0.15); $('z1').style.opacity = prog(lt, 2.35, 0.25);
+      [...$('flies').children].forEach((f, k) => {
+        const [x, y] = cellXY(k);
+        f.querySelector('.ring').style.opacity = prog(lt, 0.45 + k * 0.03, 0.15);
+        const p = INOUT(prog(lt, 1.0 + k * 0.07, 1.2));
+        const dx = 960 - (x + CW / 2), dy = 460 - (y + CH / 2);
+        f.style.transform = `translate(${dx * p}px,${dy * p}px) scale(${1 - 0.86 * p}) rotate(${(k % 2 ? 1 : -1) * (3 + k) * p}deg)`;
+        f.style.opacity = 1 - cl((p - 0.7) / 0.3);
+        f.style.borderRadius = `${24 * p}px`;
+      });
+      const c = $('cur2'); const pc = INOUT(prog(lt, 0.2, 0.7)), pd = INOUT(prog(lt, 1.0, 1.2));
+      c.style.opacity = cl((lt - 0.1) / 0.2) * (1 - prog(lt, 2.4, 0.3));
+      c.style.transform = `translate(${1560 + (1180 - 1560) * pc + (960 - 1180) * pd}px,${930 + (600 - 930) * pc + (470 - 600) * pd}px)`;
+    },
+    gate(lt) {
+      s_cells('gate-grid', lt, (cell, k) => {
+        if (!cell.dataset.abs) { const [x, y] = cellXY(k); Object.assign(cell.style, { position: 'absolute', left: `${x}px`, top: `${y}px`, width: `${CW}px`, height: `${CH}px` }); cell.dataset.abs = 1; }
+        const c = cell.dataset.c, r = rejected[c];
+        const ring = cell.querySelector('.ring');
+        if (r) {
+          const p = prog(lt, GATE_AT[c], 0.35);
+          const why = cell.querySelector('.why'); const pw = OUT(p);
+          why.style.opacity = pw; why.style.translate = `0 ${-10 * (1 - pw)}px`;
+          ring.style.borderColor = `rgba(255,138,128,${0.9 * p})`;
+          // bounce, then out
+          const kk = Object.keys(GATE_AT).indexOf(c);
+          const pb = prog(lt, 5.5 + kk * 0.18, 0.28), po = prog(lt, 5.78 + kk * 0.18, 0.55);
+          const sc = 1 + 0.045 * Math.sin(Math.PI * pb) - 0.12 * INOUT(po);
+          cell.style.transform = `translateY(${INOUT(po) * 70}px) scale(${sc})`;
+          cell.style.opacity = 1 - INOUT(po);
+          cell.style.zIndex = pb > 0 ? 2 : 1;
+        } else {
+          // the four that pass close ranks: from their grid cell to a quarter of the frame each
+          const q = acc.indexOf(c), k = clips.indexOf(c);
+          const [x, y] = cellXY(k), tx = (q % 2) * 962, ty = Math.floor(q / 2) * 542;
+          const pm = INOUT(prog(lt, 6.55, 0.95));
+          cell.style.left = `${x + (tx - x) * pm}px`; cell.style.top = `${y + (ty - y) * pm}px`;
+          cell.style.width = `${CW + (958 - CW) * pm}px`; cell.style.height = `${CH + (538 - CH) * pm}px`;
+          cell.style.zIndex = 3;
+          const p = OUT(prog(lt, 6.2, 0.4));
+          ring.style.borderColor = `rgba(127,224,176,${0.9 * p})`;
+          const ok = cell.querySelector('.ok'); ok.style.opacity = p; ok.style.translate = `0 ${10 * (1 - p)}px`;
+        }
+      });
+    },
+    joints(lt) {
+      const p = cl((lt - 0.8) / 3.2);
+      document.querySelectorAll('#joints path').forEach((path, j) => { path.style.strokeDashoffset = String(1 - SMOOTH(cl(p * 1.08 - j * 0.015))); });
+    },
+    robot(lt) {
+      const pq = prog(lt, 1.55, 0.45); const qq = $('q');
+      qq.style.opacity = 1 - pq; qq.style.display = pq >= 1 ? 'none' : '';
+    },
+    episodes(lt) {
+      const all = [...document.querySelectorAll('#map .dot')];
+      const nCp = cpDots.length;
+      all.forEach((e, i) => {
+        const at = i < nCp ? 1.3 + i * 0.045 : 0.7 + (i - nCp) * 0.12;
+        e.setAttribute('r', (Number(e.dataset.r) * Math.max(0, POP(prog(lt, at, 0.35)))).toFixed(2));
+      });
+    },
+    train(lt) {
+      const f = cl((lt - 0.6) / 5.0); const step = Math.round(f * 4000);
+      $('fill').style.width = `${f * 100}%`; $('stepn').textContent = `step ${fmt(Math.min(step, 3999))} / 4,000`;
+      const pts = [...document.querySelectorAll('#loss .pt')], lines = [...document.querySelectorAll('#tlog .l')];
+      L.forEach((pt, i) => {
+        const at = 0.6 + (pt.step / 4000) * 5.0;
+        const pp = prog(lt, at, 0.35);
+        pts[i].style.opacity = pp > 0 ? 1 : 0;
+        pts[i].querySelector('circle').setAttribute('r', (11 * Math.max(0, POP(pp))).toFixed(2));
+        const pl = OUT(prog(lt, at, 0.3)); lines[i].style.opacity = pl; lines[i].style.translate = `0 ${12 * (1 - pl)}px`;
+      });
+    },
+    hero(lt) {
+      let k = 0; segs.forEach((sg, i) => { if (lt >= sg.start_s) k = i; });
+      $('seg-t').textContent = `unseen position ${k + 1} of ${segs.length} · ${segs[k].speed}x`;
+    },
+  };
+  function s_cells(id, lt, fn) { [...$(id).children].forEach((cell, k) => fn(cell, k)); }
+
+  // ------------------------------------------------------------------ generic: rise, title-in, push, video frame
+  const videoTargets = [];
+  function layout(s, lt) {
+    s.el.querySelectorAll('[data-in]').forEach((e) => {
+      const p = OUT(prog(lt, Number(e.dataset.in), Number(e.dataset.dur || 0.5)));
+      e.style.opacity = p; e.style.translate = `0 ${12 * (1 - p)}px`;
+    });
+    s.el.querySelectorAll('[data-tin]').forEach((e) => {
+      const p = OUT(prog(lt, Number(e.dataset.tin), 0.9));
+      e.style.opacity = p; e.style.filter = p < 1 ? `blur(${10 * (1 - p)}px)` : 'none'; e.style.transform = `translateY(${18 * (1 - p)}px)`;
+    });
+    s.el.querySelectorAll('[data-push]').forEach((e) => {
+      const [a, b] = e.dataset.push.split(',').map(Number);
+      const base = e.style.transform.replace(/scale\([^)]*\)/, '').trim();
+      e.style.transform = `${base} scale(${a + (b - a) * cl(lt / (s.end - s.start))})`.trim();
+    });
+    // shots whose content comes to rest (a card, a panel) keep a slow push on the whole frame, like the B-roll
+    // plates, so no second of the film is a held still
+    if (s.el.hasAttribute('data-drift')) s.el.style.transform = `scale(${1 + 0.025 * cl(lt / (s.end - s.start))})`;
+    if (custom[s.id]) custom[s.id](lt, s);
+    s.el.querySelectorAll('video[data-v]').forEach((v) => {
+      if (!Number.isFinite(v.duration)) return;
+      const mt = lt - Number(v.dataset.at || 0);
+      const n = Math.round(v.duration * 30);
+      let f = Math.round(mt * 30 + 1e-4);
+      if (v.hasAttribute('data-loop')) f = f < 0 ? 0 : f % n; else f = Math.max(0, Math.min(n - 1, f));
+      videoTargets.push([v, f]);
+    });
+  }
+  const seekTo = (v, f) => new Promise((res) => {
+    if (v._f === f) return res();
+    v._f = f;
+    // "seeked" can fire before the decoded frame reaches the compositor (seen on the 1080p hero: the screenshot kept
+    // the old frame for 3 frames out of 4), so wait until the frame presented is the one asked for.
+    const target = (f + 0.3) / 30;
+    let done = false; const fin = () => { if (!done) { done = true; res(); } };
+    const want = () => v.requestVideoFrameCallback((_, m) => { if (Math.abs(m.mediaTime - target) < 0.5 / 30) fin(); else if (!done) want(); });
+    want(); v.currentTime = target; setTimeout(fin, 3000);
+  });
+
+  window.seek = async (t) => {
+    videoTargets.length = 0;
+    for (const [i, s] of shots.entries()) {
+      const on = t >= s.start - 1e-6 && t < s.end - 1e-6 || (i === shots.length - 1 && t >= s.start);
+      s.el.style.display = on ? 'block' : 'none';
+      if (!on) continue;
+      s.el.style.zIndex = String(i + 1);
+      s.el.style.opacity = i === 0 ? 1 : SMOOTH(cl((t - s.start) / XF));
+      layout(s, t - s.start);
+    }
+    $('fadeblack').style.opacity = SMOOTH(cl((t - (DURATION - END_FADE)) / END_FADE));
+    await Promise.all(videoTargets.map(([v, f]) => seekTo(v, f)));
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  };
+
+  // ------------------------------------------------------------------ load everything before the first frame
+  // Every video is fetched whole and played from a blob: python's http.server answers no Range requests, so a
+  // streamed 1080p video could not seek past what happened to be buffered (the hero froze for 3 frames in 4).
+  const blobs = {};
+  for (const src of new Set([...document.querySelectorAll('video[data-v]')].map((v) => v.dataset.v))) {
+    try { blobs[src] = URL.createObjectURL(await (await fetch(src)).blob()); } catch (_) { blobs[src] = src; }
+  }
+  document.querySelectorAll('video[data-v]').forEach((v) => { v.muted = true; v.preload = 'auto'; v.playsInline = true; v.src = blobs[v.dataset.v]; });
+  const vids = [...document.querySelectorAll('video')].map((v) => new Promise((res) => { if (v.readyState >= 2) res(); else { v.addEventListener('loadeddata', res, { once: true }); v.addEventListener('error', () => { console.log('video error', v.src); res(); }, { once: true }); } }));
+  const imgs = ['../app/media/wallpaper-results.jpg'].map((src) => { const im = new Image(); im.src = src; return im.decode().catch(() => {}); });
+  await Promise.all([...vids, ...imgs, document.fonts.ready]);
+  const fit = () => { $('stage').style.transform = `scale(${Math.min(innerWidth / 1920, innerHeight / 1080)})`; };
+  addEventListener('resize', fit); fit();
+  await window.seek(Number(q.get('t') || 0));
+  window.deckReady = true;
+})();
+</script>
+</body>
+</html>

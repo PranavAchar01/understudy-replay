@@ -1,0 +1,10 @@
+{
+  "clip_id": "v00",
+  "note": "first prompt attempt (older wording, before 'only two objects on the table'); kept because it is a real Runway clip and a useful rejection",
+  "image_prompt": "Photorealistic photo, a three-quarter view from the front and above, about 45 degrees down, of a light oak wooden table. On the table: a small red wooden block about 3 cm wide on the left, and a shallow white ceramic bowl on the right, about 20 cm apart. A person's right hand hovers just above and behind the red block, thumb and index finger apart, ready to pinch it; the forearm enters from the bottom right of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. soft natural daylight from a window on the left. Sharp focus, no motion blur, no text, no other objects.",
+  "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red block the whole time.",
+  "image_model": "gen4_image",
+  "video_model": "gen4_turbo",
+  "first_frame": "clips/v00.png",
+  "video": "clips/v00.mp4"
+}

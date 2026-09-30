@@ -1,0 +1,16 @@
+{
+  "clip_id": "v01",
+  "lighting": "soft natural daylight from a window on the left",
+  "table": "a light oak wooden table",
+  "bowl": "white ceramic",
+  "angle": "a low front view from table height, about 25 degrees down",
+  "image_prompt": "Photorealistic photo, a low front view from table height, about 25 degrees down, of a light oak wooden table with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow white ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. soft natural daylight from a window on the left. Sharp focus, no text.",
+  "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+  "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a light oak wooden table, a white ceramic bowl, soft natural daylight from a window on the left, seen from a low front view from table height, about 25 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text.",
+  "prompt_version": 1,
+  "fixes": [],
+  "image_model": "gen4_image",
+  "video_model": "gen4_turbo",
+  "first_frame": "clips/v01.png",
+  "video": "clips/v01.mp4"
+}

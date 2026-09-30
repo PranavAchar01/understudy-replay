@@ -1,0 +1,53 @@
+{
+ "task": "put the red block in the bowl",
+ "clips": [
+  {
+   "clip_id": "v01",
+   "accepted": true,
+   "reason": "accepted",
+   "failed": []
+  },
+  {
+   "clip_id": "v03",
+   "accepted": true,
+   "reason": "accepted",
+   "failed": []
+  },
+  {
+   "clip_id": "v06",
+   "accepted": true,
+   "reason": "accepted",
+   "failed": []
+  },
+  {
+   "clip_id": "v07",
+   "accepted": true,
+   "reason": "accepted",
+   "failed": []
+  }
+ ],
+ "reanchor": {
+  "tried": 60,
+  "accepted": 40,
+  "reasons": {
+   "gripper closes before lift": 8,
+   "IK inside SO-101 joint limits": 6,
+   "gripper opens over the bowl": 6
+  }
+ },
+ "dataset": {
+  "repo_id": "local/understudy_put_the_red_block_in_the_bowl",
+  "root": "/Users/pranavachar/helloworld/understudy/data/web-runs/put-the-red-block-in-the-bowl/lerobot",
+  "episodes": 44,
+  "frames": 14985,
+  "fps": 30,
+  "codebase_version": "v3.0",
+  "seconds": 714.1,
+  "loaded_back": {
+   "episodes": 44,
+   "frames": 14985,
+   "codebase_version": "v3.0"
+  }
+ },
+ "seconds": 878.5
+}
