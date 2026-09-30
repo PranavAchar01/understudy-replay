@@ -144,7 +144,7 @@
         root.classList.add("is-film"); return t;
       },
     };
-    root.addEventListener("click", () => { if (root.classList.contains("is-film")) openOverview(root.dataset.slug, t.src, m); });
+    root.addEventListener("click", () => { if (root.classList.contains("is-film") && !root.dataset.live) openOverview(root.dataset.slug, t.src, m); });
     tiles.set(key, t);
     return t;
   }
@@ -183,9 +183,50 @@
     if (url) { dl.href = url; dl.removeAttribute("aria-disabled"); dl.innerHTML = `Download VLA${o.download && o.download.size && !(film && film.download) ? ` <small>${esc(o.download.size)}</small>` : ""}`; }
     else { dl.removeAttribute("href"); dl.setAttribute("aria-disabled", "true"); dl.innerHTML = "Download VLA <small>uploading</small>"; }
   }
+  // ---------- gallery: every Runway clip for the task (data/gallery.json, keyed by slug) ----------
+  //   [{id, url, router, model, credits, verdict: "Accepted" | "Rejected" | null, reason}]
+  const gal = $("#ov-gallery"), grid = $("#ov-grid"), gsum = $("#ov-gsum"), jump = $("#ov-jump");
+  let gallery = null;
+  const loadGallery = () => (gallery ||= getJSON(`data/gallery.json?t=${Date.now()}`).then((r) => (r.ok ? r.body : {})));
+  const lazy = "IntersectionObserver" in window ? new IntersectionObserver((es) => {
+    for (const e of es) {
+      const v = e.target;
+      if (e.isIntersecting) { if (!v.src && v.dataset.src) v.src = v.dataset.src; v.play().catch(() => {}); }
+      else if (v.src) v.pause();
+    }
+  }, { rootMargin: "200px 0px" }) : null;
+  function clearGallery() {
+    for (const v of grid.querySelectorAll("video")) { lazy && lazy.unobserve(v); v.pause(); v.removeAttribute("src"); v.load(); }
+    grid.innerHTML = ""; gal.hidden = true; jump.hidden = true;
+  }
+  function renderGallery(clips) {
+    clearGallery();
+    if (!clips || !clips.length) return;
+    const credits = clips.reduce((s, c) => s + (c.credits || 0), 0);
+    const judged = clips.filter((c) => c.verdict), ok = judged.filter((c) => c.verdict === "Accepted").length;
+    const models = [...new Set(clips.map((c) => c.model).filter(Boolean))];
+    gsum.textContent = join(`${clips.length} clips`, `${fmt(credits)} credits`, models.join(", "), judged.length ? `${ok}/${judged.length} judged clips accepted` : "");
+    for (const c of clips) {
+      const li = el("li", "ov-clip");
+      const v = el("video");
+      v.muted = true; v.loop = true; v.playsInline = true; v.preload = "none";
+      v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("aria-label", `Runway clip ${c.id}`);
+      if (lazy) { v.dataset.src = c.url; lazy.observe(v); } else { v.src = c.url; v.autoplay = true; }
+      const vd = c.verdict ? `<span class="ov-vd ${c.verdict === "Accepted" ? "is-ok" : "is-no"}">${esc(c.verdict)}</span>` : "";
+      const why = c.verdict === "Rejected" && c.reason ? `<br><span class="ov-why">${esc(c.reason)}</span>` : "";
+      li.append(v, el("p", "", `${vd}<b>${esc(c.id)}</b> · ${esc(c.router || "?")} · ${esc(c.model || "?")}${c.credits != null ? ` · ${fmt(c.credits)} cr` : ""}${why}`));
+      grid.append(li);
+    }
+    jump.textContent = `See all ${clips.length} Runway clips below`;
+    gal.hidden = false; jump.hidden = false;
+  }
+  jump.addEventListener("click", (e) => { e.preventDefault(); gal.scrollIntoView({ behavior: "smooth", block: "start" }); });
+
   async function openOverview(slug, src, meta) {
     const seq = ++ovSeq;
     sv.src = src; sheet.hidden = false; document.body.classList.add("is-locked"); sv.play().catch(() => {});
+    sheet.scrollTop = 0; $(".sheet-panel.ov").scrollTop = 0;
+    loadGallery().then((g) => { if (seq === ovSeq) renderGallery(g[slug]); });
     const all = await loadOverview();
     if (seq !== ovSeq) return;
     const o = all[slug] || {};
@@ -193,7 +234,7 @@
     const j = await getJSON(String(src).replace(/\.mp4(\?.*)?$/, ".json"));
     if (seq === ovSeq && j.ok && (j.body.eval || j.body.download)) renderOverview(o, meta, j.body);
   }
-  function closeFilm() { ovSeq++; sheet.hidden = true; sv.pause(); sv.removeAttribute("src"); sv.load(); document.body.classList.remove("is-locked"); }
+  function closeFilm() { ovSeq++; clearGallery(); sheet.hidden = true; sv.pause(); sv.removeAttribute("src"); sv.load(); document.body.classList.remove("is-locked"); }
   $("#sheet-close").addEventListener("click", closeFilm);
   $("#sheet-backdrop").addEventListener("click", closeFilm);
   dl.addEventListener("click", (e) => { if (dl.getAttribute("aria-disabled") === "true") e.preventDefault(); });
@@ -258,6 +299,52 @@
     M.seconds = R.seconds; paintTime(); state.runTimes[R.slug] = R.seconds;
     status("", true);
     prompts(R.slug, "runs");
+  }
+
+  // ---------- cloud: a new sentence is generated live by Runway (Vercel functions in api/cloud) ----------
+  //   a sentence that matches a finished task replays it; anything else: route -> gen4_image first frame -> Model Router video
+  const libraryMatch = (text) => /\b(bowl|push|shove|slide|stack|tower|on top)\b/i.test(String(text || ""));
+  async function poll(id, onTick) {
+    for (let i = 0; i < 200; i++) {
+      await wait(i < 3 ? 2500 : 4000);
+      const r = await getJSON(`/api/cloud/task?id=${encodeURIComponent(id)}`);
+      if (!r.ok) continue;
+      if (r.body.status === "SUCCEEDED") return r.body.output && r.body.output[0];
+      if (r.body.status === "FAILED" || r.body.status === "CANCELLED") throw new Error(r.body.failure || "Runway could not make this clip.");
+      onTick(r.body);
+    }
+    throw new Error("Runway is taking too long; try again.");
+  }
+  async function cloud(text) {
+    const s = await post("/api/cloud/start", { prompt: text });
+    if (!s.ok) { line.classList.add("is-no"); line.textContent = (s.body && s.body.error) || "Live generation is unavailable right now."; return; }
+    const { task, router, reasons, image_task } = s.body;
+    const dry = state.dry[router] || DRY_FALLBACK[router];
+    startRun(task, `Live · ${Route.NAME[router]} · ${dry.model}`, router);
+    CUR.slug = "";
+    const t = tile("live"), t0 = performance.now();
+    t.root.dataset.live = "1";
+    M.t0 = 0; M.seconds = 0; clearInterval(M.timer);
+    const clock = setInterval(() => { M.seconds = (performance.now() - t0) / 1000; paintTime(); }, 500);
+    const pct = (b) => (b.progress != null ? ` · ${Math.round(b.progress * 100)}%` : "");
+    try {
+      status(`Routed to ${Route.NAME[router]}: ${(reasons || []).join(", ")}`);
+      t.set("gen", "first frame · gen4_image");
+      const frame = await poll(image_task, (b) => t.set("gen", `first frame${pct(b)}`));
+      $("video", t.root).poster = frame;
+      const v = await post("/api/cloud/video", { prompt: task, image_task });
+      if (!v.ok) throw new Error((v.body && v.body.error) || "The router refused this clip.");
+      const model = v.body.model || dry.model;
+      status(`Runway generating · ${model} · ${v.body.credits ?? dry.credits} credits`);
+      t.set("gen", `${model} video`);
+      const url = await poll(v.body.video_task, (b) => t.set("gen", `${model}${pct(b)}`));
+      t.film(url, true, `Runway · ${model} · live`);
+      M.seconds = (performance.now() - t0) / 1000; paintTime();
+      status("", true); line.classList.remove("is-no");
+      line.textContent = "Live Runway clip, generated just now. The physics check, retargeting and SmolVLA training run in the full pipeline on a GPU (see the repo).";
+    } catch (e) {
+      t.set("no", String(e.message || e)); status("", true); line.classList.add("is-no"); line.textContent = String(e.message || e);
+    } finally { clearInterval(clock); }
   }
 
   // ---------- live: the real pipeline ----------
@@ -347,7 +434,7 @@
     if (state.running) return;
     const text = textNow();
     state.running = true; $("#go").disabled = true;
-    try { await ready; await (state.backend ? live(text) : replay(text)); }
+    try { await ready; await (state.backend ? live(text) : libraryMatch(text) ? replay(text) : cloud(text)); }
     finally { state.running = false; $("#go").disabled = false; }
   });
 
