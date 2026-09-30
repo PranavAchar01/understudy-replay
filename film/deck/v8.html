@@ -28,6 +28,9 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
 .dim{position:absolute;inset:0;background:rgba(3,5,10,.6)}
 .chip{position:absolute;left:72px;top:64px;display:flex;align-items:center;gap:14px;padding:13px 20px;border-radius:8px;background:rgba(8,12,22,.72);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);font:500 21px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:#e7eeff;z-index:5}
 .chip.r{left:auto;right:72px;letter-spacing:.14em}
+.chip.top{top:14px;left:0;right:0;margin:0 auto;width:fit-content;font-size:19px;padding:11px 18px;letter-spacing:.16em}
+.chip.r.top{left:auto;right:18px;margin:0}
+.plate.site{object-fit:contain;background:#05070d}
 .chip i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--blue));box-shadow:0 0 14px var(--c,var(--blue))}
 .chip b{font-weight:500;color:var(--c,var(--blue))}
 .cap{position:absolute;left:0;right:0;bottom:82px;margin:0 auto;width:fit-content;max-width:1480px;padding:20px 34px 22px;border-radius:16px;background:rgba(10,12,18,.84);backdrop-filter:blur(14px);font:500 42px/1.28 var(--sans);letter-spacing:-.005em;text-align:center;color:#fff;text-wrap:balance;z-index:5}
@@ -138,7 +141,7 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
 
   <!-- ================= 1. THE PROBLEM (0:00-0:20) ================= -->
 
-  <section class="shot" data-a="0" data-b="4.6">
+  <section class="shot" data-cut="all" data-len="4.6">
     <video class="plate blur" data-src="c1" data-rate="0.9"></video>
     <div class="card">
       <div class="kick" data-in="0.1"><i></i>Runway API Hackathon</div>
@@ -147,7 +150,7 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
     </div>
   </section>
 
-  <section class="shot" data-a="4.6" data-b="11" style="--c:var(--red)">
+  <section class="shot" data-cut="all" data-len="6.4" style="--c:var(--red)">
     <video class="plate" data-src="c3" data-push="0.07"></video><div class="shade"></div>
     <div class="dim" data-in="0.6"></div>
     <div class="chip r" data-in="0.1"><i></i>1 / 3 <b>· The problem</b></div>
@@ -157,7 +160,7 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
     <div class="cap" data-in="2.4">Language models learned from the internet. <em>Robots have no internet of demonstrations.</em></div>
   </section>
 
-  <section class="shot" data-a="11" data-b="16.6" style="--c:var(--gold)">
+  <section class="shot" data-cut="all" data-len="5.6" style="--c:var(--gold)">
     <video class="plate" data-src="c6" data-push="0.07"></video><div class="shade"></div>
     <div class="dim" data-in="0.4"></div>
     <div class="chip r" data-in="0"><i></i>1 / 3 <b>· The problem</b></div>
@@ -167,15 +170,40 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
     <div class="cap" data-in="2.0">So labs pay people to perform every demonstration, <em>one take at a time</em>.</div>
   </section>
 
-  <section class="shot" data-a="16.6" data-b="20.4">
+  <section class="shot" data-cut="all" data-len="3.8">
     <div class="grid4"><video data-src="c1"></video><video data-src="c3"></video><video data-src="c6"></video><video data-src="c7"></video></div>
     <div class="dim" data-in="0.3" style="background:rgba(3,5,10,.66)"></div>
     <div class="qbig"><div class="kick" data-in="0.4" style="--c:var(--gold)"><i></i>Understudy</div><h2 data-in="0.6" style="margin-top:28px">What if <em>Runway</em> made the demonstrations?</h2></div>
   </section>
 
-  <!-- ================= 2. THE BENCHMARK (0:20-1:40) ================= -->
+  <!-- ================= 2a. THE DEMO (0:20-1:40, the default cut) ================= -->
+  <!-- The real site, recorded by film/tools/record-site.mts (a replay of the saved run: typed, clicked, the saved
+       stage events played at a compressed pace). data-at / data-until are the recording's beat marks
+       (media/v8/site.json) plus an offset in seconds; the camera pushes in on each beat's subject. -->
 
-  <section class="shot" data-a="20.4" data-b="26" style="--c:var(--gold)">
+  <section class="shot" data-cut="site" data-len="80" data-site>
+    <video class="plate site" data-src="site"></video>
+    <div class="chip top" data-at="compose+0.3" data-until="footage" style="--c:var(--blue)"><i></i>The site <b>· one sentence in</b></div>
+    <div class="chip top" data-at="footage+0.2" data-until="footage_done+1" style="--c:var(--gold)"><i></i>Runway API <b>· gen4_image, gen4_image_turbo, gen4_turbo</b></div>
+    <div class="chip top" data-at="data+0.2" data-until="data+11" style="--c:var(--green)"><i></i>Perception <b>· MediaPipe + OpenCV + Claude</b></div>
+    <div class="chip top" data-at="data+11" data-until="data+20" style="--c:var(--blue)"><i></i>Gates <b>· 21 per clip, MuJoCo replay</b></div>
+    <div class="chip top" data-at="data+20" data-until="gates" style="--c:#f2f6ff"><i></i>Dataset <b>· LeRobot v3.0</b></div>
+    <div class="chip top" data-at="gates" data-until="vla" style="--c:var(--green)"><i></i>Gates <b>· every verdict with its reasons</b></div>
+    <div class="chip top" data-at="vla" data-until="end+9" style="--c:var(--violet)"><i></i>Next <b>· SmolVLA</b></div>
+    <div class="chip r top" data-at="footage+0.4" data-until="footage_done+1" style="--c:var(--gold)"><i></i>Saved run <b>· from cache, 0 credits</b></div>
+    <div class="chip r top" data-at="data+0.4" data-until="data_done" style="--c:var(--gold)"><i></i>Replay <b>· 14:39 real, sped up</b></div>
+    <div class="cap" data-at="type+0.4" data-until="footage-0.2" style="--c:var(--blue)">Type one task. A <em>live planner</em> checks that the SO-101 can do it.</div>
+    <div class="cap" data-at="footage+0.6" data-until="footage_done+1" style="--c:var(--gold)"><em>Runway</em> films a person doing it, with a new table, bowl and light per clip.</div>
+    <div class="cap" data-at="data+0.8" data-until="data+11" style="--c:var(--green)"><em>MediaPipe</em> tracks the hand, <em>OpenCV</em> the block, <em>Claude</em> audits the scene.</div>
+    <div class="cap" data-at="data+11.4" data-until="data+20" style="--c:var(--blue)">21 gates per clip, then <em>MuJoCo</em> replays the motion on the SO-101 with physics.</div>
+    <div class="cap" data-at="data+20.4" data-until="data_done+2" style="--c:var(--gold)">4 clips, re-anchored and gated again: <em>44 episodes</em> in a LeRobot v3.0 dataset.</div>
+    <div class="cap" data-at="gates+0.5" data-until="vla-0.2" style="--c:var(--green)">Nothing is hidden: <em>all 21 gates</em>, each with its value and limit.</div>
+    <div class="cap" data-at="vla+0.4" data-until="end+9" style="--c:var(--violet)">Fine-tune <em>SmolVLA</em> on it in a terminal; each tile becomes the robot running that scenario.</div>
+  </section>
+
+  <!-- ================= 2b. THE BENCHMARK (0:20-1:40, ?cut=bench) ================= -->
+
+  <section class="shot" data-cut="bench" data-len="5.6" style="--c:var(--gold)">
     <video class="plate blur" data-src="c7" data-rate="0.9"></video>
     <div class="chip r" data-in="0.1"><i></i>2 / 3 <b>· The benchmark</b></div>
     <div class="card">
@@ -185,7 +213,7 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
     </div>
   </section>
 
-  <section class="shot" data-a="26" data-b="40" style="--c:var(--gold)">
+  <section class="shot" data-cut="bench" data-len="14" style="--c:var(--gold)">
     <video class="plate blur" data-src="c6"></video>
     <div class="chip r" data-in="0"><i></i>2 / 3 <b>· The benchmark</b></div>
     <div class="chip" data-in="0.1"><i></i>Controlled variable <b>· where the demos came from</b></div>
@@ -210,7 +238,7 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
     <div class="cap" data-in="3.0" style="--c:var(--gold)">The only thing that changes: <em>where the demonstrations came from</em>.</div>
   </section>
 
-  <section class="shot" data-a="40" data-b="52" style="--c:var(--green)">
+  <section class="shot" data-cut="bench" data-len="12" style="--c:var(--green)">
     <video class="plate blur" data-src="c3"></video>
     <div class="chip r" data-in="0"><i></i>2 / 3 <b>· The benchmark</b></div>
     <div class="chip" data-in="0.1"><i></i>Held fixed <b>· everything else</b></div>
@@ -226,7 +254,7 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
     </div>
   </section>
 
-  <section class="shot" data-a="52" data-b="59" style="--c:var(--red)">
+  <section class="shot" data-cut="bench" data-len="7" style="--c:var(--red)">
     <video class="plate blur" data-src="c1"></video>
     <div class="chip r" data-in="0"><i></i>2 / 3 <b>· The benchmark</b></div>
     <div class="chip" data-in="0.1"><i></i>Starting point <b>· no Understudy data</b></div>
@@ -239,7 +267,7 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
     <div class="cap" data-in="1.6" style="--c:var(--red)">Out of the box, the robot foundation model <em>never lands the cube</em>.</div>
   </section>
 
-  <section class="shot" data-a="59" data-b="73" style="--c:var(--gold)">
+  <section class="shot" data-cut="bench" data-len="14" style="--c:var(--gold)">
     <video class="plate blur" data-src="c7"></video>
     <div class="chip r" data-in="0"><i></i>2 / 3 <b>· The benchmark</b></div>
     <div class="chip" data-in="0.1"><i></i>Round 1 <b>· 3,000 training steps</b></div>
@@ -258,7 +286,7 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
     <div class="cap" data-in="5.0" style="--c:var(--violet)">Short training: <em>the expert wins clearly</em>, 44 to 34.</div>
   </section>
 
-  <section class="shot" data-a="73" data-b="89" style="--c:var(--green)">
+  <section class="shot" data-cut="bench" data-len="16" style="--c:var(--green)">
     <video class="plate blur" data-src="c6"></video>
     <div class="chip r" data-in="0"><i></i>2 / 3 <b>· The benchmark</b></div>
     <div class="chip" data-in="0.1"><i></i>Round 2 <b>· 20,000 training steps</b></div>
@@ -283,7 +311,7 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
     <div class="cap" data-in="7.6" style="--c:var(--green)">Longer training: <em>43 vs 44</em>. The 95% intervals overlap almost completely.</div>
   </section>
 
-  <section class="shot" data-a="89" data-b="100.4" style="--c:var(--blue)">
+  <section class="shot" data-cut="bench" data-len="11.4" style="--c:var(--blue)">
     <video class="plate blur" data-src="c3"></video>
     <div class="chip r" data-in="0"><i></i>2 / 3 <b>· The benchmark</b></div>
     <div class="chip" data-in="0.1"><i></i>All results <b>· one RTX 5090</b></div>
@@ -304,7 +332,7 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
 
   <!-- ================= 3. THE TAKEAWAY (1:40-2:00) ================= -->
 
-  <section class="shot" data-a="100.4" data-b="113" style="--c:var(--gold)">
+  <section class="shot" data-cut="all" data-len="12.6" style="--c:var(--gold)">
     <div class="grid4"><video data-src="c1"></video><video data-src="c3"></video><video data-src="c6"></video><video data-src="c7"></video></div>
     <div class="dim" data-in="1.2"></div>
     <div class="chip r" data-in="0"><i></i>3 / 3 <b>· Takeaway</b></div>
@@ -315,7 +343,7 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
     <div class="cap" data-in="4.0" style="--c:var(--gold)">Generated video, gated by physics, trained a robot <em>about as well as robot demonstrations</em>.</div>
   </section>
 
-  <section class="shot" data-a="113" data-b="120" style="--c:var(--blue)">
+  <section class="shot" data-cut="all" data-len="7" style="--c:var(--blue)">
     <video class="plate blur" data-src="c1" data-rate="0.9"></video>
     <div class="card">
       <h1 data-in="0.2">Under<em>study</em></h1>
@@ -340,8 +368,12 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
   const IMGS = { s1: '../v5/sources/s1.png', s3: '../v5/sources/s3.png', s4: '../v5/sources/s4.png' };
 
   const stage = $('#stage');
-  const shots = $$('.shot').map((el) => ({ el, a: +el.dataset.a, b: +el.dataset.b }));
-  const DURATION = shots[shots.length - 1].b;
+  // ?cut=site (default): the middle 1:20 is the site demo; ?cut=bench: the benchmark slides
+  const CUT = q.get('cut') || 'site';
+  let acc = 0;
+  const shots = $$('.shot').filter((el) => { const keep = el.dataset.cut === 'all' || el.dataset.cut === CUT; if (!keep) el.remove(); return keep; })
+    .map((el) => { const a = acc; acc += +el.dataset.len; return { el, a, b: acc }; });
+  const DURATION = acc;
   window.DURATION = DURATION;
   window.PLAN = shots.map((s) => [s.a, s.b]);
 
@@ -351,6 +383,15 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
   const h264 = document.createElement('video').canPlayType('video/mp4; codecs="avc1.64001F"') !== '';
   const clipUrl = (v) => (h264 ? `${RUN}${v}.mp4` : `media/v8/${v}.webm`);
   await Promise.all(Object.entries(CLIPS).map(async ([k, v]) => { blobs[k] = URL.createObjectURL(await (await fetch(clipUrl(v))).blob()); }));
+  // the site recording and its beat marks (film/tools/record-site.mts)
+  let SITE = null;
+  if ($('[data-site]')) {
+    SITE = await (await fetch('media/v8/site.json')).json();
+    blobs.site = URL.createObjectURL(await (await fetch(`media/v8/site.${h264 ? 'mp4' : 'webm'}`)).blob());
+    const at = (x) => { const m = x.match(/^([a-z_]+)([+-][\d.]+)?$/); return SITE.marks[m[1]] + +(m[2] || 0); };
+    for (const e of $$('[data-at]')) { e.dataset.in = at(e.dataset.at); e.dataset.out = at(e.dataset.until); }
+    $('.plate.site').dataset.rate = '1';
+  }
   for (const v of $$('video[data-src]')) { v.src = blobs[v.dataset.src]; v.muted = true; v.playsInline = true; v.preload = 'auto'; }
   for (const i of $$('img[data-img]')) i.src = IMGS[i.dataset.img];
   await Promise.all($$('video').map((v) => new Promise((r) => { if (v.readyState >= 2) r(); else { v.addEventListener('loadeddata', r, { once: true }); setTimeout(r, 8000); } })));
@@ -369,6 +410,27 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
     if (v.dataset.loop === 'pingpong') { const p = x % (2 * d); return p < d ? p : 2 * d - p; }
     return Math.min(d, x);
   };
+  // the site shot's camera: pushes in on each beat's subject (the recorder saved where it sits), never past an edge
+  const keys = [];
+  if (SITE) {
+    const M = SITE.marks, R = SITE.rects, C = [960, 540];
+    const ctr = (r, fy = 0.5) => (r ? [r.x + r.w / 2, r.y + r.h * fy] : C);
+    const K = (t, z, c) => keys.push([t, z, c[0], c[1]]);
+    K(0, 1, C); K(M.type - 0.6, 1, C); K(M.type + 0.5, 1.32, ctr(R.type)); K(M.footage - 0.4, 1.32, ctr(R.type)); K(M.footage + 0.6, 1, C);
+    K(M.data + 0.3, 1, C); K(M.data + 1.5, 1.3, ctr(R.data, 0.42)); K(M.data + 19, 1.3, ctr(R.data, 0.6)); K(M.data + 21, 1, C);
+    K(M.gates + 0.3, 1, C); K(M.gates + 1.4, 1.4, ctr(R.gates)); K(M.vla - 0.5, 1.4, ctr(R.gates)); K(M.vla + 0.5, 1, C);
+    K(M.vla + 1.2, 1.2, ctr(R.vla, 0.55)); K(M.gates2 - 0.8, 1.2, ctr(R.vla, 0.55)); K(M.gates2, 1, C); K(SITE.secs, 1.03, C);
+    keys.sort((a, b) => a[0] - b[0]);
+  }
+  function camera(p, u) {
+    if (!keys.length) return;
+    let i = keys.findIndex((k) => k[0] > u); if (i < 0) i = keys.length; const A = keys[Math.max(0, i - 1)], B = keys[Math.min(keys.length - 1, i)];
+    const f = B[0] > A[0] ? cl((u - A[0]) / (B[0] - A[0])) : 1, e = f * f * (3 - 2 * f);
+    const z = A[1] + (B[1] - A[1]) * e, cx = A[2] + (B[2] - A[2]) * e, cy = A[3] + (B[3] - A[3]) * e;
+    const tx = Math.min(0, Math.max(1920 - 1920 * z, 960 - z * cx)), ty = Math.min(0, Math.max(1080 - 1080 * z, 540 - z * cy));
+    p.style.transformOrigin = '0 0';
+    p.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${z.toFixed(5)})`;
+  }
   const seekVid = (v, x) => new Promise((r) => { if (Math.abs(v.currentTime - x) < 0.004) return r(); v.onseeked = () => r(); v.currentTime = x; });
 
   window.seek = async (t) => {
@@ -383,12 +445,14 @@ html,body{height:100%;background:#05070d;color:var(--ink);font-family:var(--sans
       s.el.style.opacity = last ? Math.min(cl(u / XF), cl((DURATION - t) / 0.9)) : cl(u / XF);
       s.el.style.zIndex = String(shots.indexOf(s));
       // slow camera push on the whole shot, Player Two style: every frame moves, even on a still card
-      s.el.style.transform = `translate(${(4 * Math.sin(u * 2 * Math.PI / 9)).toFixed(2)}px, ${(3 * Math.sin(u * 2 * Math.PI / 7 + 1)).toFixed(2)}px) scale(${(1 + 0.006 * u).toFixed(5)})`;
-      for (const p of $$('.plate', s.el)) p.style.transform = `scale(${(1.02 + (+(p.dataset.push || 0.05)) * cl(u / len)).toFixed(5)})`;
+      if (s.el.hasAttribute('data-site')) camera($('.plate.site', s.el), u);
+      else s.el.style.transform = `translate(${(4 * Math.sin(u * 2 * Math.PI / 9)).toFixed(2)}px, ${(3 * Math.sin(u * 2 * Math.PI / 7 + 1)).toFixed(2)}px) scale(${(1 + 0.006 * u).toFixed(5)})`;
+      for (const p of $$('.plate:not(.site)', s.el)) p.style.transform = `scale(${(1.02 + (+(p.dataset.push || 0.05)) * cl(u / len)).toFixed(5)})`;
       // pop-ups: rise in at data-in, drop out just before the cut
       for (const e of $$('[data-in]', s.el)) {
         const a = +e.dataset.in;
-        const k = OUT(cl((u - a) / 0.55)) * (last ? 1 : cl((len + XF * 0.5 - u) / 0.3));
+        const end = e.dataset.out != null ? +e.dataset.out : len + XF * 0.5;
+        const k = OUT(cl((u - a) / 0.55)) * (last && e.dataset.out == null ? 1 : cl((end - u) / 0.3));
         e.style.opacity = k.toFixed(4);
         const base = (e.dataset.base ??= e.style.transform || '');
         if (e.classList.contains('dim')) continue;
