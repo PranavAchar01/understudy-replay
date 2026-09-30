@@ -8,7 +8,7 @@ a LeRobot SO-101 arm.
 
 - **Live site:** https://understudy-replay.vercel.app
 - **Benchmark slide:** https://understudy-benchmark.vercel.app
-- **Trained model:** [vla-pick-20k release](https://github.com/PranavAchar01/understudy-replay/releases/tag/vla-pick-20k) (SmolVLA, 907 MB)
+- **Trained models:** [vla-pick-20k](https://github.com/PranavAchar01/understudy-replay/releases/tag/vla-pick-20k) and [vla-tower-14k](https://github.com/PranavAchar01/understudy-replay/releases/tag/vla-tower-14k) (SmolVLA, 907 MB each)
 - Built at the Runway API hackathon, 2026-09-30.
 
 **Runway imagines the demonstration. Physics decides whether it counts.**
