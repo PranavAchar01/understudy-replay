@@ -13,6 +13,88 @@ a LeRobot SO-101 arm.
 
 **Runway imagines the demonstration. Physics decides whether it counts.**
 
+## How it works
+
+Everything below runs in simulation. The images come from a real run of "put the red block in the bowl".
+
+```mermaid
+flowchart LR
+    A["One sentence"] --> B["Budget router<br/>picks the Runway model"]
+    B --> C["Runway<br/>first frame + 5 s video"]
+    C --> D["MediaPipe<br/>hand + arm tracking"]
+    D --> E["Claude<br/>scene audit"]
+    E --> F{"21 physics gates"}
+    F -- "rejected, with a reason" --> X["Clip thrown out<br/>PhyT2V fix added to the prompt"]
+    F -- "accepted" --> G["Retarget to SO-101<br/>in MuJoCo"]
+    G --> H["LeRobot dataset"]
+    H --> I["SmolVLA training<br/>on a RunPod GPU"]
+    I --> J["MuJoCo evaluation<br/>on unseen starts"]
+    J --> K["Tile film<br/>on the site"]
+```
+
+### 1. Runway films a person doing the task
+
+![Four accepted Runway clips](docs/img/step-runway.jpg)
+
+Runway draws a first frame of a table, a red block and a bowl, then animates a hand doing the task for 5 seconds.
+Nobody is filmed. The budget router picks which video model makes the clip.
+
+### 2. MediaPipe tracks the hand, frame by frame
+
+![MediaPipe hand skeleton on a Runway clip](docs/img/tracking.gif)
+
+MediaPipe finds 21 landmarks on the hand and the arm pose in every frame. OpenCV finds the red block by colour.
+The gold ring is the pinch point between thumb and index finger; the gold line is its path.
+
+![Reach, grasp, lift, carry, release](docs/img/tracking-phases.jpg)
+
+The events come from the block, not the fingers. The grasp is when the fingers reach the block just before it
+moves, and the release is when the block is at rest again. The 3 cm block is the ruler: in this clip the hand lifts
+it 5.2 cm and carries it 8.5 cm, and the robot copies those distances in metres.
+
+### 3. Claude audits the scene, then 21 gates decide if the clip counts
+
+![Rejected clip next to an accepted clip](docs/img/step-gates.jpg)
+
+Claude counts blocks, bowls and hands in the first frame and checks the last frame. Then 21 gates run, each with
+a limit and a plain reason. The clip on the left was rejected because the video duplicated the block. The one on
+the right passed every gate.
+
+| Clip side (the video) | Robot side (the replay) |
+|---|---|
+| frame rate, clip length, Claude scene audit | IK inside SO-101 joint limits |
+| one red object, no second red object appears | joint velocity, acceleration and jerk |
+| hand and wrist visible, block tracked | gripper closes before lift |
+| grasp, lift and release found in order | gripper opens over the bowl |
+| block moves with the hand | cube ends in the bowl in MuJoCo |
+| lift at least 3 cm, carry at least 5 cm | no self-collision |
+| video ends with the block in the bowl (Claude) | episode length 2 to 30 s |
+
+A real rejection reads like this: "a second red block appears on 63 frames: the video duplicated the object".
+Every limit is in [docs/DATA-SPEC.md](docs/DATA-SPEC.md).
+
+### 4. Accepted clips are retargeted onto the SO-101 in MuJoCo
+
+![Human clip next to the SO-101 replay in MuJoCo](docs/img/retarget.gif)
+
+The pinch point becomes the robot's grasp point, 1:1 in metres, and inverse kinematics turns it into SO-101 joint
+angles. MuJoCo replays it with physics. Only episodes where the cube really lands in the bowl are kept.
+
+### 5. The episodes become a LeRobot dataset
+
+Each accepted clip is also replayed with the cube shifted by up to 3 cm, and every copy goes through the same robot
+gates. For this task, 4 accepted clips became 74 episodes (25,190 frames) with front and wrist cameras, in LeRobot
+format v3.0.
+
+### 6. SmolVLA trains on a rented GPU, then runs on starts it never saw
+
+![Trained SmolVLA putting the block in the bowl](docs/img/smolvla.gif)
+
+SmolVLA learns from camera images, joint angles and the sentence. The trained policy is filmed in MuJoCo, and that
+film becomes the task's tile on the site. Details in [Training](#training) below.
+
+![Four rollouts of the trained policy](docs/img/step-rollout.jpg)
+
 ## Why
 
 Robots learn new skills from demonstrations, and today a person records every one of them, one take at a time,
@@ -55,6 +137,38 @@ demonstrations come from the scripted operator, not from Runway footage:
 | push the red block onto the blue square | 30 | 3,000 | RTX 4090, 17.5 min | 3/5 |
 | stack the red block on the blue block | 30 | 10,000 | L40S ($0.54) | 0/5 (not learned yet; its tile shows the scripted demo) |
 | stack three blocks into a tower | 25 | 14,000 | L40S, 33.7 min ($0.73) | 1/5 |
+
+## Training
+
+```mermaid
+flowchart LR
+    A["LeRobot dataset<br/>accepted episodes"] --> B["Rent a GPU pod<br/>on RunPod"]
+    B --> C["Upload the dataset"]
+    C --> D["lerobot-train<br/>SmolVLA base"]
+    D --> E["Evaluate on unseen<br/>start positions in MuJoCo"]
+    E --> F["Film the rollouts<br/>download the model zip"]
+    F --> G["Pod terminated<br/>even on failure"]
+```
+
+`gpu/train_vla.py` does every step. You pick the GPU (4090, 5090, L40S, A100 or H100). The pod is always shut
+down at the end, so a crashed run can't keep billing.
+
+![How the pick model was trained](docs/img/training-overview.jpg)
+
+Click any tile on the site to see this card: the route, how many clips passed, the dataset, the training run and
+the score.
+
+| Task | Demonstrations | Episodes | Steps | GPU | Time | GPU cost | Unseen starts |
+|---|---|---|---|---|---|---|---|
+| put the red block in the bowl | Runway video, physics-filtered | 74 | 20,000 | RTX 5090 | 48 min | about $0.55 | **43/50** |
+| stack three blocks into a tower | scripted operator | 25 | 14,000 | L40S | 33.7 min | $0.73 | 1/5 |
+| push the red block onto the blue square | scripted operator | 30 | 3,000 | RTX 4090 | 17.5 min | | 3/5 |
+| stack the red block on the blue block | scripted operator | 30 | 10,000 | L40S | | $0.54 | 0/5 |
+
+![RunPod pods training two runs at once](docs/img/step-train-gpu.jpg)
+
+The same 3,000 steps take 9 minutes on one RTX 5090 and 4 h 36 min on a MacBook. All scores are in MuJoCo
+simulation. Push, stack and tower learned from scripted demos, not Runway video, and their 5-start scores are rough.
 
 ## Budget routing (Runway Model Router)
 
