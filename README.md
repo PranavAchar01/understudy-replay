@@ -208,7 +208,9 @@ Runway credits**: paste a Runway API key under the prompt. The key stays in your
 only to Runway, through three Vercel functions in `site-v2/api/cloud/` (`start`, `task`, `video`). They draw the
 first frame with gen4_image, create the five `understudy-q*` routers on your account the first time you use them,
 and animate the frame through the router for your budget. The hosted site generates the Runway clip live; the
-physics gates, retargeting and SmolVLA training need the local pipeline below.
+physics gates, retargeting and SmolVLA training need the local pipeline below. Every Train, key or no key, first
+shows a scripted MuJoCo preview of the sentence generated in your browser (`site-v2/preview.js`: MuJoCo WebAssembly
+and three.js, no server); it is scripted motion, not a learned policy.
 
 ### Local: the whole pipeline
 

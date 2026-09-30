@@ -8,7 +8,9 @@ slug="put-the-red-block-in-the-bowl"
 run="$repo/data/web-runs/$slug"
 
 mkdir -p "$out/runs/$slug/media/vla" "$out/data" "$out/media"
-cp "$here/index.html" "$here/site.css" "$here/site.js" "$here/route.js" "$out/"
+cp "$here/index.html" "$here/site.css" "$here/site.js" "$here/preview.js" "$here/route.js" "$out/"
+# the SO-101 model for the in-browser MuJoCo preview (decimated meshes, ~1.2 MB)
+[ -f "$out/sim/so101/so101_new_calib.xml" ] || "$repo/.venv/bin/python" "$repo/scripts/web_meshes.py" "$out/sim/so101"
 rm -rf "$out/api" && cp -R "$here/api" "$out/api"   # live Runway generation (Vercel functions; key in the RUNWAY_API_KEY env var)
 cp "$here/media/hero-cine.jpg" "$out/media/"
 cp "$here/data/recorded.json" "$here/data/overview.json" "$out/data/"
