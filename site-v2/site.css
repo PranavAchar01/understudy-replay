@@ -276,3 +276,10 @@ body.is-locked { overflow: hidden; }
   .ov-h { padding-right: 0; }
   .sheet-backdrop { position: fixed; }
 }
+
+/* route pill appears only once the user types; GPU picker lives in the prompt section */
+.route-pill.is-empty { width: 0; padding: 0; margin: 0; border-width: 0; opacity: 0; overflow: hidden; }
+.route-pill { transition: opacity .2s ease, width .2s ease, padding .2s ease; }
+.route-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.route-row .route-line { flex: 1 1 260px; min-height: 1.2em; }
+.route-row .gpu { display: flex; align-items: center; gap: 8px; }

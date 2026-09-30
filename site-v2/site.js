@@ -57,7 +57,10 @@
       : `Routed to <b>${esc(name)}</b>: ${esc((r.reasons || []).join(", "))} · ${esc(dry.model)} · ${esc(dry.credits)} credits a clip`;
   }
   async function route() {
-    const seq = ++routeSeq, text = textNow();
+    const seq = ++routeSeq;
+    if (!input.value.trim()) { pill.classList.add("is-empty"); line.textContent = ""; state.route = null; return; }
+    pill.classList.remove("is-empty");
+    const text = textNow();
     const local = Route.decide(text, { live: state.live });
     paintRoute(local, state.dry[local.router] || DRY_FALLBACK[local.router]);
     await ready;

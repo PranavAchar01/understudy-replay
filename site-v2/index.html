@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="site.css?v=3">
-  <script src="route.js?v=2" defer></script>
+  <script src="route.js?v=3" defer></script>
   <script src="site.js?v=3" defer></script>
 </head>
 <body>
@@ -31,8 +31,8 @@
 
       <form class="composer" id="composer" autocomplete="off">
         <div class="bar">
-          <div class="route-pill" id="route-pill" role="status" aria-live="polite" title="Picked from your sentence by the Runway Model Router rubric">
-            <span class="robot-dot"></span><span id="route-label">Cheap</span>
+          <div class="route-pill is-empty" id="route-pill" role="status" aria-live="polite" title="Picked from your sentence by the Runway Model Router rubric">
+            <span class="robot-dot"></span><span id="route-label"></span>
           </div>
           <label class="sr-only" for="prompt">What should the robot learn?</label>
           <input class="prompt" id="prompt" type="text" maxlength="160" spellcheck="false" placeholder="put the red block in the bowl">
@@ -40,6 +40,12 @@
         </div>
         <div class="route-row">
           <p class="route-line" id="route-line"></p>
+          <div class="gpu" title="GPU for SmolVLA training, RunPod on-demand">
+          <span class="gpu-label" id="gpu-label">GPU</span>
+          <div class="gpu-seg" id="gpu-seg" role="radiogroup" aria-labelledby="gpu-label"></div>
+          <span class="gpu-hint" id="gpu-hint" aria-live="polite"></span>
+          </div>
+
           <button type="button" class="live" id="live" aria-pressed="false" title="On stage: route for lowest latency">Live</button>
         </div>
         <div class="chips" id="chips">
@@ -54,11 +60,6 @@
       <header class="fleet-head">
         <div class="run-title"><span class="route-pill sm" id="run-pill"><span class="robot-dot"></span><span></span></span><h2 id="run-task"></h2>
           <div class="stats" id="stats"><div data-m="time"><b>0:00</b><span>Time</span></div></div>
-        </div>
-        <div class="gpu" title="GPU for SmolVLA training, RunPod on-demand">
-          <span class="gpu-label" id="gpu-label">GPU</span>
-          <div class="gpu-seg" id="gpu-seg" role="radiogroup" aria-labelledby="gpu-label"></div>
-          <span class="gpu-hint" id="gpu-hint" aria-live="polite"></span>
         </div>
       </header>
       <div class="grid" id="grid"></div>
