@@ -112,7 +112,8 @@
       film(src, success = true, cap = null) {
         const v = $("video", root); t.src = src;
         v.onerror = () => { root.classList.remove("is-film"); t.set("film", "film not found"); };
-        v.src = src; v.play().catch(() => {});
+        v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true;
+        v.src = src; v.play().catch(() => {}); v.oncanplay = () => { if (v.paused) v.play().catch(() => {}); };
         const c = $(".tile-cap", root); c.textContent = cap || `SmolVLA · ${success ? "in the bowl" : "missed"}`; c.classList.toggle("miss", !success);
         root.classList.add("is-film"); return t;
       },
@@ -123,7 +124,7 @@
   }
   const pillHTML = (router) => `<span class="robot-dot"></span><span>${esc(Route.NAME[router] || router || "")}</span>`;
   function startRun(task, head, router) {
-    tiles.clear(); $("#grid").innerHTML = ""; $("#prompts").innerHTML = "";
+    tiles.clear(); $("#grid").innerHTML = ""; $("#grid").classList.remove("one"); $("#prompts").innerHTML = "";
     $("#fleet").hidden = false; $("#run-task").textContent = task; $("#run-pill").innerHTML = pillHTML(router); status(head); meterReset();
     requestAnimationFrame(() => window.scrollTo({ top: $("#fleet").getBoundingClientRect().top + scrollY - 12, behavior: "smooth" }));
   }
@@ -163,7 +164,7 @@
       let ids = Array.isArray(e.accepted) ? e.accepted : Array.isArray(e.films) ? e.films : [];
       if (!ids.length && state.backend) { const v = await getJSON(`/api/runs/${e.slug}/vla`); if (v.ok) ids = Object.keys(v.body.films || {}); }
       if (!ids.length) { row.append(el("p", "prow-empty", "SmolVLA films rendering")); continue; }
-      for (const raw of ids) {
+      for (const raw of ids.slice(0, 1)) {
         const id = String(raw).replace(/\.mp4$/, ""), url = `${base}/${e.slug}/${dir}/${id}.mp4`;
         const t = tile(id, $(".grid", row), `${n}:${id}`).film(url, true, "SmolVLA");
         getJSON(url.replace(/\.mp4$/, ".json")).then((j) => {
@@ -175,32 +176,29 @@
   }
 
   // ---------- static: replay the recorded run ----------
-  async function replay() {
+  async function replay(_text, fast = false) {
     const R = state.recorded;
+    const wait_ = (ms) => (fast ? Promise.resolve() : wait(ms));
     if (!R) { line.classList.add("is-no"); line.textContent = "No recorded run on this page."; return; }
     const tag = `Recorded run · ${R.model} · no credits spent`;
     startRun(R.task, tag, R.router);
-    const base = "runs", filmDir = `${base}/${R.slug}/media/vla`;
-    const ts = R.clips.map((c) => tile(c.id));
-    const T = 11000, t0 = performance.now();
+    const filmDir = `runs/${R.slug}/media/vla`;
+    const hero = R.clips.find((c) => c.accepted && c.film && c.success !== false) || R.clips.find((c) => c.film);
+    const t = tile(hero ? hero.id : "demo");
+    const T = fast ? 0 : 9000, t0 = performance.now();
     M.t0 = 0; M.seconds = 0; clearInterval(M.timer);
-    const tick = () => { const f = Math.min(1, (performance.now() - t0) / T); M.seconds = R.seconds * f; paintMeter(); if (f < 1 && state.running) requestAnimationFrame(tick); };
+    const tick = () => { const f = T ? Math.min(1, (performance.now() - t0) / T) : 1; M.seconds = R.seconds * f; paintMeter(); if (f < 1 && state.running) requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
-    status("Runway generating · recorded run");
-    for (let i = 0; i < R.clips.length; i++) { ts[i].set("gen"); await wait(260); }
-    for (let i = 0; i < R.clips.length; i++) { M.credits += R.clips[i].credits; ts[i].set("physics"); paintMeter(); await wait(380); }
-    status("Physics check · 21 gates in MuJoCo");
-    for (let i = 0; i < R.clips.length; i++) {
-      const c = R.clips[i]; M.judged++; if (c.accepted) M.accepted++;
-      ts[i].set(c.accepted ? "ok" : "no", c.accepted ? "" : c.reason); paintMeter(); await wait(520);
-    }
-    status(`SmolVLA training on ${R.episodes} episodes`);
-    R.clips.forEach((c, i) => c.accepted && ts[i].set("train"));
-    await wait(Math.max(0, T - (performance.now() - t0) - 900));
-    for (let i = 0; i < R.clips.length; i++) { const c = R.clips[i]; if (c.film) { ts[i].film(`${filmDir}/${c.film}`, c.success); await wait(220); } }
+    status("Runway generating · recorded run"); t.set("gen"); await wait_(1600);
+    for (const c of R.clips) { M.credits += c.credits; M.judged++; if (c.accepted) M.accepted++; }
+    status("Physics check · 21 gates in MuJoCo"); t.set("physics"); paintMeter(); await wait_(1800);
+    t.set("ok"); await wait_(700);
+    status(`SmolVLA training on ${R.episodes} episodes`); t.set("train");
+    await wait_(Math.max(0, T - (performance.now() - t0) - 600));
+    if (hero) t.film(`${filmDir}/${hero.film}`, hero.success !== false);
     M.seconds = R.seconds; paintMeter();
     status(`Done · ${tag}`, true);
-    prompts(R.slug, base);
+    prompts(R.slug, "runs");
   }
 
   // ---------- live: the real pipeline ----------
@@ -284,6 +282,8 @@
       }
       if (shown.size < accepted.length) await wait(5000);
     }
+    const first = [...document.querySelectorAll("#grid .tile.is-film")][0];
+    if (first) { first.classList.add("is-hero"); $("#grid").classList.add("one"); }
     status(shown.size ? "Done" : "Films still rendering", !!shown.size);
     prompts(slug, base);
   }
@@ -296,5 +296,17 @@
     state.running = true; $("#go").disabled = true;
     try { await ready; await (state.backend ? live(text) : replay(text)); }
     finally { state.running = false; $("#go").disabled = false; }
+  });
+
+  // keep every tile film playing while it is on screen (browsers pause muted autoplay offscreen or during load)
+  const playIO = new IntersectionObserver((es) => es.forEach((e) => { const v = e.target; if (e.isIntersecting && v.src && v.paused) v.play().catch(() => {}); }), { threshold: 0.2 });
+  new MutationObserver(() => document.querySelectorAll("video").forEach((v) => { if (!v.__io) { v.__io = 1; playIO.observe(v); } })).observe(document.body, { childList: true, subtree: true });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) document.querySelectorAll("video").forEach((v) => { if (v.src && v.paused && v.getBoundingClientRect().top < innerHeight) v.play().catch(() => {}); }); });
+
+  // ---------- library: finished runs are already on the page when you scroll down ----------
+  ready.then(async () => {
+    if (qs.get("preload") === "0" || !state.recorded || state.running) return;
+    state.running = true;
+    try { await replay(null, true); } finally { state.running = false; }
   });
 })();

@@ -217,3 +217,9 @@ body.is-locked { overflow: hidden; }
 .prow-meta b { font-weight: 500; color: var(--accent-hi); }
 .prow .grid { margin-top: var(--s3); }
 .prow-empty { margin: var(--s3) 0 0; font: 400 12px/1.4 var(--mono); color: var(--text-3); }
+
+/* one prompt, one result: rejected clips and extra films stay out of sight */
+.tile.is-no { display: none; }
+.grid.one .tile:not(.is-hero) { display: none; }
+#grid { grid-template-columns: minmax(0, 760px); justify-content: center; }
+#grid .tile { aspect-ratio: 16 / 9; }
