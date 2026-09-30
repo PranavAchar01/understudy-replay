@@ -275,10 +275,13 @@
       if (!ids.length && state.backend) { const v = await getJSON(`/api/runs/${e.slug}/vla`); if (v.ok) ids = Object.keys(v.body.films || {}); }
       if (!ids.length) continue;
       const id = String(ids[0]).replace(/\.mp4$/, ""), url = `${base}/${e.slug}/${dir}/${id}.mp4`;
-      const t = tile(id, $("#grid"), `lib:${e.slug}`, { title: e.prompt || e.slug, router: e.router, slug: e.slug }).film(url, true, "SmolVLA");
+      const t = tile(id, $("#grid"), `lib:${e.slug}`, { title: e.prompt || e.slug, router: e.router, slug: e.slug }).film(url, true, " ");
       getJSON(url.replace(/\.mp4$/, ".json")).then((j) => {
-        if (!j.ok || j.body.success == null) return;
-        const c = $(".tile-cap", t.root); c.textContent = `SmolVLA · ${j.body.success ? "success" : "missed"}`; c.classList.toggle("miss", !j.body.success);
+        const c = $(".tile-cap", t.root);
+        // a preview film is the scripted operator doing the task, not a trained VLA: say so
+        if (j.ok && j.body.source === "preview") { c.textContent = "Scripted demo · VLA not ready yet"; return; }
+        if (!j.ok || j.body.success == null) { c.textContent = "SmolVLA"; return; }
+        c.textContent = `SmolVLA · ${j.body.success ? "success" : "missed"}`; c.classList.toggle("miss", !j.body.success);
       });
     }
   }
