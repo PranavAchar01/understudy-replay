@@ -146,20 +146,23 @@
       root, src: null,
       set(k, note = "") {
         const [cls, label] = STATE[k];
+        if (k === "no" && root.dataset.preview) { root.classList.remove("is-film"); delete root.dataset.preview; }
         const s = $(".status", root); s.className = `status ${cls}`; $("span", s).textContent = label;
         $("small", root).textContent = note; root.classList.toggle("is-no", k === "no"); return t;
       },
       time(sec) { if (sec == null || !isFinite(sec)) return t; const b = $(".tile-time", root); b.textContent = clock(sec); b.title = "Time for this run"; b.hidden = false; return t; },
-      film(src, success = true, cap = null) {
-        const v = $("video", root); t.src = src;
+      film(src, success = true, cap = null, preview = null) {
+        const v = $("video", root); t.src = src; t.real = !preview;
+        if (preview) { root.dataset.preview = "1"; root.classList.add("is-preview"); } else { delete root.dataset.preview; root.classList.remove("is-preview"); }
         v.onerror = () => { root.classList.remove("is-film"); t.set("film", "film not found"); };
         v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true;
         v.src = src; v.play().catch(() => {}); v.oncanplay = () => { if (v.paused) v.play().catch(() => {}); };
         const c = $(".tile-cap", root); c.textContent = cap || `SmolVLA · ${success ? "in the bowl" : "missed"}`; c.classList.toggle("miss", !success);
+        c.title = preview ? `Scripted motion, not a learned policy: ${preview}` : "";
         root.classList.add("is-film"); return t;
       },
     };
-    root.addEventListener("click", () => { if (root.classList.contains("is-film") && !root.dataset.live) openOverview(root.dataset.slug, t.src, m); });
+    root.addEventListener("click", () => { if (root.classList.contains("is-film") && !root.dataset.live && !root.dataset.preview) openOverview(root.dataset.slug, t.src, m); });
     tiles.set(key, t);
     return t;
   }
@@ -309,6 +312,7 @@
     CUR.slug = lib ? lib.slug : R.slug;
     document.querySelectorAll(`#grid .tile[data-slug="${CUR.slug}"]`).forEach((n) => n.remove());
     const t = tile(hero ? hero.id : "demo");
+    if (!fast) attachPreview(t);
     const T = fast ? 0 : 9000, t0 = performance.now();
     M.t0 = 0; M.seconds = 0; clearInterval(M.timer);
     const tick = () => { const f = T ? Math.min(1, (performance.now() - t0) / T) : 1; M.seconds = R.seconds * f; paintTime(); if (f < 1 && state.running) requestAnimationFrame(tick); };
@@ -360,7 +364,7 @@
     startRun(task, `Live · ${Route.NAME[router]} · ${dry.model}`, router);
     CUR.slug = "";
     const t = tile("live"), t0 = performance.now();
-    t.root.dataset.live = "1";
+    t.root.dataset.live = "1"; attachPreview(t);
     M.t0 = 0; M.seconds = 0; clearInterval(M.timer);
     const clock = setInterval(() => { M.seconds = (performance.now() - t0) / 1000; paintTime(); }, 500);
     const pct = (b) => (b.progress != null ? ` · ${Math.round(b.progress * 100)}%` : "");
@@ -413,6 +417,7 @@
       }
     }
     ids.forEach((c) => tile(c));
+    if (ids.length && !existing.length) attachPreview(tile(ids[0]));
     status(`Runway generating · ${name}`);
     const okFoot = await job(f.body.job, (ev) => {
       if (ev.type === "runway" && ev.clip) {
@@ -461,12 +466,46 @@
       if (shown.size < accepted.length) await wait(5000);
     }
     const mine = [...document.querySelectorAll(`#grid .tile[data-run="${RUN}"]`)];
-    const first = mine.find((n) => n.classList.contains("is-film"));
+    const first = mine.find((n) => n.classList.contains("is-film") && !n.dataset.preview);
     if (first) mine.forEach((n) => { if (n !== first) n.remove(); });
     if (first && M.seconds != null) tiles.forEach((x) => { if (x.root === first) x.time(M.seconds); });
     status(shown.size ? "" : "Films still rendering", !!shown.size);
     prompts(slug, base);
   }
+
+  // ---------- instant MuJoCo preview: a scripted SO-101 demo of the sentence while Runway generates ----------
+  //   live: POST /api/preview renders it (src/understudy/preview.py, cached by plan); static: the nearest of the
+  //   pre-rendered films in previews/ by the same keyword rules. Scripted motion, never a learned policy.
+  const PREVIEW_CAP = "MuJoCo preview · scripted";
+  let pvManifest = null;
+  const pvKind = (s) => {
+    const has = (re) => re.test(s);
+    if (has(/\b(open|close|shut)\b/) && has(/\b(book|lid|laptop|cover|notebook|box)\b/)) return has(/\b(close|shut)\b/) ? "hinge-close" : "hinge-open";
+    if (has(/\b(tower|three|3 blocks|all (the )?blocks)\b/)) return "tower";
+    const movables = (s.match(/\b(block|cube|brick|ball|sphere|apple|marble)s?\b/g) || []).length;
+    const target = [["pick-bowl", /\bbowl\b/], ["pick-cup", /\b(cup|mug|glass)\b/], ["pick-plate", /\b(plate|dish|tray|saucer)\b/],
+      ["pick-box", /\b(box|bin|basket|container)\b/], ["pick-pad", /\b(square|pad|mat|target|tape|zone|circle)\b/]].find(([, re]) => has(re));
+    if ((has(/\b(stack|on top)\b/) || (movables >= 2 && has(/\bon(to)?\b/))) && !target) return "stack";
+    if (has(/\b(push|slide|shove|nudge|sweep|drag)\b/)) return "push-pad";
+    if (target) return target[0];
+    if (has(/\b(pick up|lift|grab|take|raise|hold)\b/) && !has(/\b(put|place|move)\b/)) return "lift";
+    return "pick-pad";
+  };
+  async function previewStatic(text) {
+    pvManifest ||= getJSON("previews/manifest.json").then((r) => (r.ok ? r.body.previews : []));
+    const list = await pvManifest, id = pvKind(String(text || "").toLowerCase());
+    const e = list.find((x) => x.id === id) || list[0];
+    return e ? { url: e.file, summary: `${e.summary} (nearest pre-rendered preview)` } : null;
+  }
+  async function previewFor(text) {
+    if (!state.backend) return previewStatic(text);
+    let r = await post("/api/preview", { prompt: text });
+    for (let i = 0; r.status === 202 && i < 40; i++) { await wait(1500); r = await getJSON(`/api/preview/${encodeURIComponent(r.body.id)}`); }
+    if (r.ok && r.body.url) return { url: r.body.url, summary: [r.body.summary, r.body.note].filter(Boolean).join(" · ") };
+    return previewStatic(text);
+  }
+  // show the preview in tile t unless a real film (Runway clip or SmolVLA film) got there first
+  const attachPreview = (t) => state.pv && state.pv.then((p) => { if (p && !t.real) t.film(p.url, true, PREVIEW_CAP, p.summary || "scripted demo"); });
 
   // ---------- Train ----------
   $("#composer").addEventListener("submit", async (ev) => {
@@ -474,7 +513,8 @@
     if (state.running) return;
     const text = textNow();
     state.running = true; $("#go").disabled = true;
-    try { await ready; await (state.backend ? live(text) : libraryMatch(text) ? replay(text) : cloud(text)); }
+    try { await ready;
+      state.pv = previewFor(text).catch(() => null); await (state.backend ? live(text) : libraryMatch(text) ? replay(text) : cloud(text)); }
     finally { state.running = false; $("#go").disabled = false; }
   });
 

@@ -9,6 +9,8 @@ streams its progress back as Server-Sent Events:
   POST /api/data    {slug}         track, gate, retarget, write the LeRobot dataset
   POST /api/vla     {slug, clips?} the fine-tuned SmolVLA runs each accepted scenario in MuJoCo, filmed for the
                                    tiles (media/vla/<clip>.mp4 + .json); needs UNDERSTUDY_VLA_CKPT
+  POST /api/preview {prompt}       instant scripted MuJoCo preview of any sentence (not a learned policy); 202 +
+                                   GET /api/preview/<id> when the render takes longer than ~20 s
 
 A sentence whose run already has footage gets NEW clips on POST /api/footage (the next ids after the highest one),
 never a regeneration of the clips it has (or of the ones cut from it).
@@ -949,25 +951,37 @@ def _cloud_task(prompt: str) -> str:
 def _cloud_route(budget: int) -> dict:
     usd = budget if budget in CLOUD_BUDGETS else 2
     ceiling = round(usd * 100 / CLIPS_PER_RUN)
-    return {"router": f"understudy-q{ceiling}", "budget": usd, "ceiling": ceiling,
-            "reasons": [f"best quality up to {ceiling} credits a clip"]}
+    return {
+        "router": f"understudy-q{ceiling}",
+        "budget": usd,
+        "ceiling": ceiling,
+        "reasons": [f"best quality up to {ceiling} credits a clip"],
+    }
 
 
 def _cloud_guard(cost: int) -> None:
     if runway.balance() - cost < runway.FLOOR_BALANCE:
-        raise HTTPException(402, "Not enough Runway credits above the floor for this clip.")
+        raise HTTPException(
+            402, "Not enough Runway credits above the floor for this clip."
+        )
 
 
 @app.post("/api/cloud/start")
 def cloud_start(body: CloudIn) -> dict:
     task = _cloud_task(body.prompt)
     _cloud_guard(5)
-    prompt = (f"Photorealistic photo, three-quarter view from slightly above, of a plain light wooden tabletop holding "
-              f"only the few simple objects needed to {task}. Nothing else is on the table. A person's right hand hovers "
-              f"just above the first object, fingers open, ready to grasp it; the forearm enters from the right edge of "
-              f"the frame. The whole hand and every object are fully in frame and unobstructed. Soft even daylight. "
-              f"Sharp focus, no text.")
-    t = runway._call("POST", "/text_to_image", {"model": "gen4_image", "promptText": prompt, "ratio": "1280:720"})
+    prompt = (
+        f"Photorealistic photo, three-quarter view from slightly above, of a plain light wooden tabletop holding "
+        f"only the few simple objects needed to {task}. Nothing else is on the table. A person's right hand hovers "
+        f"just above the first object, fingers open, ready to grasp it; the forearm enters from the right edge of "
+        f"the frame. The whole hand and every object are fully in frame and unobstructed. Soft even daylight. "
+        f"Sharp focus, no text."
+    )
+    t = runway._call(
+        "POST",
+        "/text_to_image",
+        {"model": "gen4_image", "promptText": prompt, "ratio": "1280:720"},
+    )
     return {"task": task, **_cloud_route(body.budget), "image_task": t["id"]}
 
 
@@ -976,7 +990,12 @@ def cloud_task(id: str) -> dict:
     if not re.fullmatch(r"[0-9a-f-]{36}", id):
         raise HTTPException(400, "bad task id")
     t = runway._call("GET", f"/tasks/{id}")
-    return {"status": t.get("status"), "progress": t.get("progress"), "output": t.get("output"), "failure": t.get("failure")}
+    return {
+        "status": t.get("status"),
+        "progress": t.get("progress"),
+        "output": t.get("output"),
+        "failure": t.get("failure"),
+    }
 
 
 @app.post("/api/cloud/video")
@@ -989,14 +1008,160 @@ def cloud_video(body: CloudIn) -> dict:
         raise HTTPException(409, "first frame is not ready")
     r = _cloud_route(body.budget)
     _cloud_guard(r["ceiling"])
-    prompt = (f"The right hand does this: {task}. One continuous smooth motion at natural speed, then the open hand "
-              f"moves back up and away. Static camera, locked off. Every object keeps its shape, size and count the "
-              f"whole time.")
-    t = runway._call("POST", "/generate/video", {"configId": r["router"], "input": {
-        "promptText": prompt, "aspectRatio": "16:9", "duration": 5,
-        "referenceImages": [{"uri": img["output"][0], "role": "first"}]}})
+    prompt = (
+        f"The right hand does this: {task}. One continuous smooth motion at natural speed, then the open hand "
+        f"moves back up and away. Static camera, locked off. Every object keeps its shape, size and count the "
+        f"whole time."
+    )
+    t = runway._call(
+        "POST",
+        "/generate/video",
+        {
+            "configId": r["router"],
+            "input": {
+                "promptText": prompt,
+                "aspectRatio": "16:9",
+                "duration": 5,
+                "referenceImages": [{"uri": img["output"][0], "role": "first"}],
+            },
+        },
+    )
     ro = t.get("routing") or {}
-    return {"video_task": t["id"], **r, "model": ro.get("model"), "credits": (ro.get("estimatedCost") or {}).get("credits")}
+    return {
+        "video_task": t["id"],
+        **r,
+        "model": ro.get("model"),
+        "credits": (ro.get("estimatedCost") or {}).get("credits"),
+    }
+
+
+# ---------- instant MuJoCo preview: a scripted SO-101 demo of any sentence (src/understudy/preview.py) ----------
+class PreviewIn(BaseModel):
+    prompt: str
+
+
+_PREVIEWS: dict[
+    str, dict
+] = {}  # plan key -> {"status": "rendering" | "failed", "error"?}
+_PV_LOCK = threading.Lock()
+PREVIEW_WAIT_S = 20.0
+
+
+def _preview_rec(key: str, plan: dict) -> dict:
+    from .preview import CAPTION, caption
+
+    return {
+        "id": key,
+        "status": "done",
+        "url": f"/runs/_previews/{key}.mp4",
+        "plan": plan,
+        "caption": CAPTION,
+        "summary": caption(plan),
+        "note": plan.get("note", ""),
+    }
+
+
+def _preview_render(key: str, plan: dict) -> None:
+    """Render in a child process at the lowest priority (nice 19, background QoS); the file lands atomically."""
+    from .preview import CACHE
+
+    CACHE.mkdir(parents=True, exist_ok=True)
+    plan_file = CACHE / f"{key}.plan.json"
+    plan_file.write_text(json.dumps(plan))
+    cmd = [
+        sys.executable,
+        "-m",
+        "understudy.preview",
+        "--plan",
+        str(plan_file),
+        "--out",
+        str(CACHE / f"{key}.mp4"),
+    ]
+    if sys.platform == "darwin":
+        cmd = ["nice", "-n", "19", "taskpolicy", "-b", *cmd]
+    try:
+        r = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            cwd=REPO,
+            env={**os.environ, "PYTHONPATH": str(REPO / "src")},
+        )
+        ok = r.returncode == 0 and (CACHE / f"{key}.mp4").is_file()
+        err = "" if ok else (r.stderr or r.stdout)[-400:]
+    except subprocess.TimeoutExpired:
+        ok, err = False, "render timed out"
+    with _PV_LOCK:
+        if ok:
+            _PREVIEWS.pop(key, None)
+        else:
+            _PREVIEWS[key] = {"status": "failed", "error": err}
+
+
+def _preview_status(key: str, plan: dict | None) -> dict:
+    from .preview import CACHE
+
+    mp4 = CACHE / f"{key}.mp4"
+    if mp4.is_file():
+        if plan is None:
+            meta = CACHE / f"{key}.json"
+            plan = (
+                json.loads(meta.read_text())["plan"]
+                if meta.is_file()
+                else {"family": "", "objects": [], "steps": []}
+            )
+        return _preview_rec(key, plan)
+    with _PV_LOCK:
+        st = _PREVIEWS.get(key)
+    if st is None:
+        raise HTTPException(404, "no such preview")
+    return {"id": key, **st}
+
+
+@app.post("/api/preview")
+def preview_post(body: PreviewIn):
+    """Sentence -> plan -> scripted MuJoCo film. Cached by plan (data/web-runs/_previews/<key>.mp4). Answers 200 with
+    the film when it is ready within ~20 s, else 202 {id}; poll GET /api/preview/<id>."""
+    from .preview import CACHE, plan_for, plan_key
+
+    text = body.prompt.strip()[:300]
+    if not text:
+        raise HTTPException(400, "empty prompt")
+    plan = plan_for(text)
+    key = plan_key(plan)
+    if (CACHE / f"{key}.mp4").is_file():
+        return {**_preview_rec(key, plan), "cached": True}
+    with _PV_LOCK:
+        st = _PREVIEWS.get(key)
+        if st is None or st["status"] == "failed":
+            _PREVIEWS[key] = {"status": "rendering"}
+            threading.Thread(
+                target=_preview_render, args=(key, plan), daemon=True
+            ).start()
+    t0 = time.time()
+    while time.time() - t0 < PREVIEW_WAIT_S:
+        if (CACHE / f"{key}.mp4").is_file():
+            return {
+                **_preview_rec(key, plan),
+                "cached": False,
+                "render_s": round(time.time() - t0, 1),
+            }
+        with _PV_LOCK:
+            st = _PREVIEWS.get(key)
+        if st and st["status"] == "failed":
+            return JSONResponse({"id": key, **st}, status_code=500)
+        time.sleep(0.25)
+    return JSONResponse(
+        {"id": key, "status": "rendering", "plan": plan}, status_code=202
+    )
+
+
+@app.get("/api/preview/{key}")
+def preview_get(key: str) -> dict:
+    if not re.fullmatch(r"[0-9a-f]{16}", key):
+        raise HTTPException(400, "bad preview id")
+    return _preview_status(key, None)
 
 
 @app.get("/")
