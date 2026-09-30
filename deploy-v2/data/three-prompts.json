@@ -21,8 +21,8 @@
  {
   "prompt": "stack the red block on the blue block",
   "slug": "stack-the-red-block-on-the-blue-block",
-  "router": "demo-cheap",
-  "model": "gen4_turbo",
+  "router": "demo-best",
+  "model": "seedance2_5",
   "accepted": [
    "s01"
   ],

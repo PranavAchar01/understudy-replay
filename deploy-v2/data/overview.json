@@ -1,88 +1,88 @@
 {
-  "put-the-red-block-in-the-bowl": {
-    "prompt": "put the red block in the bowl",
-    "route": {
-      "router": "Cheap",
-      "model": "gen4_turbo",
-      "credits_per_clip": 25
-    },
-    "demonstrations": {
-      "generated": 7,
-      "accepted": 4,
-      "rejected": "3 rejected: block duplicated",
-      "source": "Runway video, physics-filtered"
-    },
-    "dataset": {
-      "episodes": 74,
-      "frames": 25190,
-      "cameras": "front + wrist"
-    },
-    "training": {
-      "base": "SmolVLA",
-      "steps": 20000,
-      "gpu": "one RTX 5090",
-      "time": "48 min",
-      "cost": "under $1"
-    },
-    "result": {
-      "successes": 43,
-      "seeds": 50,
-      "note": "on unseen positions in simulation"
-    },
-    "download": {
-      "url": "https://github.com/PranavAchar01/understudy-replay/releases/download/vla-pick-20k/understudy-smolvla-pick-20k.zip",
-      "size": "907 MB"
-    },
-    "run_seconds": 1149
+ "put-the-red-block-in-the-bowl": {
+  "prompt": "put the red block in the bowl",
+  "route": {
+   "router": "Cheap",
+   "model": "gen4_turbo",
+   "credits_per_clip": 25
   },
-  "push-the-red-block-onto-the-blue-square": {
-    "prompt": "push the red block onto the blue square",
-    "route": {
-      "router": "Cheap",
-      "model": "gen4_turbo",
-      "credits_per_clip": 25,
-      "note": "one Runway reference clip"
-    },
-    "demonstrations": {
-      "episodes": 30,
-      "source": "scripted operator"
-    },
-    "dataset": {
-      "episodes": 30,
-      "cameras": "front + wrist"
-    },
-    "training": {
-      "base": "SmolVLA",
-      "steps": 3000,
-      "gpu": "RunPod"
-    },
-    "result": null,
-    "download": null,
-    "run_seconds": null
+  "demonstrations": {
+   "generated": 7,
+   "accepted": 4,
+   "rejected": "3 rejected: block duplicated",
+   "source": "Runway video, physics-filtered"
   },
-  "stack-the-red-block-on-the-blue-block": {
-    "prompt": "stack the red block on the blue block",
-    "route": {
-      "router": "Cheap",
-      "model": "gen4_turbo",
-      "credits_per_clip": 25,
-      "note": "one Runway reference clip"
-    },
-    "demonstrations": {
-      "episodes": 30,
-      "source": "scripted operator"
-    },
-    "dataset": {
-      "episodes": 30,
-      "cameras": "front + wrist"
-    },
-    "training": {
-      "base": "SmolVLA",
-      "steps": 2000,
-      "gpu": "RunPod"
-    },
-    "result": null,
-    "download": null,
-    "run_seconds": null
-  }
+  "dataset": {
+   "episodes": 74,
+   "frames": 25190,
+   "cameras": "front + wrist"
+  },
+  "training": {
+   "base": "SmolVLA",
+   "steps": 20000,
+   "gpu": "one RTX 5090",
+   "time": "48 min",
+   "cost": "under $1"
+  },
+  "result": {
+   "successes": 43,
+   "seeds": 50,
+   "note": "on unseen positions in simulation"
+  },
+  "download": {
+   "url": "https://github.com/PranavAchar01/understudy-replay/releases/download/vla-pick-20k/understudy-smolvla-pick-20k.zip",
+   "size": "907 MB"
+  },
+  "run_seconds": 1149
+ },
+ "push-the-red-block-onto-the-blue-square": {
+  "prompt": "push the red block onto the blue square",
+  "route": {
+   "router": "Cheap",
+   "model": "gen4_turbo",
+   "credits_per_clip": 25,
+   "note": "one Runway reference clip"
+  },
+  "demonstrations": {
+   "episodes": 30,
+   "source": "scripted operator"
+  },
+  "dataset": {
+   "episodes": 30,
+   "cameras": "front + wrist"
+  },
+  "training": {
+   "base": "SmolVLA",
+   "steps": 3000,
+   "gpu": "RunPod"
+  },
+  "result": null,
+  "download": null,
+  "run_seconds": null
+ },
+ "stack-the-red-block-on-the-blue-block": {
+  "prompt": "stack the red block on the blue block",
+  "route": {
+   "router": "Best",
+   "model": "seedance2_5",
+   "credits_per_clip": 150,
+   "note": "one real Runway reference clip, routed to Best for several steps (313 s)"
+  },
+  "demonstrations": {
+   "episodes": 30,
+   "source": "scripted operator"
+  },
+  "dataset": {
+   "episodes": 30,
+   "cameras": "front + wrist"
+  },
+  "training": {
+   "base": "SmolVLA",
+   "steps": 2000,
+   "gpu": "RunPod"
+  },
+  "result": null,
+  "download": null,
+  "run_seconds": null
+ }
 }
