@@ -100,6 +100,7 @@ const S = {
   jobStart: 0, stageStart: 0,
   gen: [], ready: new Set(), // clips this footage stage is making; clips whose Runway footage is in
   vla: {}, vlaState: null, vlaJob: null, // clip -> its SmolVLA film record (media/vla/<clip>.json)
+  router: "demo-cheap", routing: {}, // the Model Router the next footage goes through ("" = direct gen4_turbo); clip -> its pick
 };
 const media = (file) => `/runs/${S.slug}/${file}?v=${Date.now()}`;
 
@@ -136,8 +137,9 @@ async function checkPlan() {
     fitEl.className = "fit is-ok";
     genBtn.disabled = false;
     genBtn.textContent = have ? `Generate ${r.clips} more ${r.clips === 1 ? "scenario" : "scenarios"}` : "Generate Footage";
+    dryRun(t);
     const b = S.budget;
-    if (b && b.balance != null && r.cost != null) {
+    if (b && b.balance != null && r.cost != null && !S.router) {
       $("#budget").textContent = `${r.clips} ${have ? "new " : ""}clips  ·  ${r.cost} credits${r.cached_clips ? ` (${r.cached_clips} made earlier, from the cache)` : ""}  ·  balance ${b.balance}`;
     }
   } else {
@@ -166,7 +168,9 @@ genBtn.addEventListener("click", async () => {
 
 // one footage stage: a new run, or new scenarios added to a run that already has footage (never a regeneration)
 async function startFootage(task, clips) {
-  const r = await api("/api/footage", clips ? { task, clips } : { task });
+  const body = { task, ...(clips ? { clips } : {}), ...(S.router ? { router: S.router } : {}) };
+  const r = await api("/api/footage", body);
+  meterStart();
   if (r.existing && r.existing.length && S.slug !== r.slug) await reopen(r.slug); // draw the scenarios it has first
   S.slug = r.slug; S.task = task; S.phase = "footage";
   S.gen = r.clip_ids; S.credits = 0; S.charged = new Set();
@@ -245,7 +249,7 @@ function setSide(html) {
 
 function sideFootage() {
   setSide(`<p class="kicker">Step 1 · Runway API</p><h3>Generating the footage</h3>
-    <p>A person doing the task, filmed by Runway. <b>gen4_image</b> draws clip 1's first frame, <b>gen4_image_turbo</b> restyles it for every other clip (table, bowl, light), <b>gen4_turbo</b> animates each one for 5 s.</p>
+    <p>A person doing the task, filmed by Runway. <b>gen4_image</b> draws clip 1's first frame, <b>gen4_image_turbo</b> restyles it for every other clip (table, bowl, light), ${S.router ? `the <b>${esc(S.router)}</b> Model Router picks the video model for each 5 s clip (free dry run first, then live).` : "<b>gen4_turbo</b> animates each one for 5 s."}</p>
     <div class="progline"><span id="fp-text">0 of ${(S.gen.length || S.n)} clips ready</span><span id="fp-clock">0:00</span></div>
     <div class="prog"><i id="fp-bar"></i></div>
     <ol class="calls" id="calls"></ol>`);
@@ -254,6 +258,7 @@ const callRows = {};
 function onFootage(ev) {
   if (ev.type === "runway") {
     const key = `${ev.clip}-${ev.stage}`;
+    if (ev.routing) { ev.model = ev.routing.model || ev.model; routeChip(ev.clip, ev.routing, ev.status); }
     let li = callRows[key];
     if (!li) {
       li = el("li", "", `<span>${ev.clip}</span><span>${ev.model} · ${ev.stage === "frame" ? "first frame" : "5 s video"}</span><span class="st"></span><span class="cr"></span>`);
@@ -266,14 +271,18 @@ function onFootage(ev) {
     $(".st", li).textContent = ev.status === "CACHED" ? "cached" : ev.status === "SUCCEEDED" ? "done" : `${ev.status.toLowerCase()}${ev.status === "RUNNING" ? pct : ""}`;
     li.classList.toggle("is-done", ev.status === "SUCCEEDED");
     li.classList.toggle("is-cached", ev.status === "CACHED");
-    if (ev.status === "SUCCEEDED" && !S.charged.has(key)) { S.charged.add(key); S.credits += ev.cost; stat("credits", S.credits); $(".cr", li).textContent = `${ev.cost} cr`; }
+    if (ev.status === "SUCCEEDED" && !S.charged.has(key)) { S.charged.add(key); const c = ev.routing && ev.routing.realized_credits != null ? ev.routing.realized_credits : ev.cost; ev.cost = c; S.credits += c; meterCredits(c); stat("credits", S.credits); $(".cr", li).textContent = `${ev.cost} cr`; }
     if (ev.status === "CACHED") { $(".cr", li).textContent = "0 cr"; if (ev.stage === "video") S.cachedVid.add(ev.clip); }
     const stageLabel = ev.stage === "frame" ? "first frame" : "5 s video";
     tileStatus(ev.clip, ev.status === "CACHED" ? `${stageLabel} · from cache` : `${ev.model} · ${stageLabel} · ${ev.status.toLowerCase()}${ev.status === "RUNNING" ? pct : ""}`);
     const t = tile(ev.clip);
     if (t) widthTo($(".bar2", t), ev.stage === "frame" ? 5 + 20 * (ev.progress || 0) : 30 + 70 * (ev.progress || 0), 0.6);
     tileTag(ev.clip, ev.stage === "frame" ? "drawing first frame" : "animating");
+  } else if (ev.type === "routed") {
+    S.routing[ev.clip] = { ...(S.routing[ev.clip] || {}), ...ev };
+    routeChip(ev.clip, ev, "SUCCEEDED");
   } else if (ev.type === "clip_ready") {
+    if (S.routing[ev.clip]) showFootage(ev.clip);
     S.ready.add(ev.clip);
     tileTag(ev.clip, "");
     tileStatus(ev.clip, S.cachedVid.has(ev.clip) ? "Runway · 5 s · from cache" : "Runway · 5 s · ready");
@@ -284,6 +293,7 @@ function onFootage(ev) {
     stat("clips", `${S.ready.size}/${S.n}`);
     const ft = $("#fp-text"); if (ft) ft.textContent = `${ready} of ${gen.length} clips ready`;
     const fb = $("#fp-bar"); if (fb) widthTo(fb, (100 * ready) / gen.length);
+  } else if (ev.type === "job_end") { meterStop();
   } else if (ev.type === "footage_done") {
     setStep("footage", "done");
     if (S.startBalance != null && ev.balance != null) { S.credits = S.startBalance - ev.balance; stat("credits", S.credits); }
@@ -306,7 +316,7 @@ function sideData(balance, cached = 0) {
   $("#data-btn").addEventListener("click", startData);
 }
 async function startData() {
-  const b = $("#data-btn"); b.disabled = true;
+  const b = $("#data-btn"); b.disabled = true; meterStart();
   let r;
   try { r = await api("/api/data", { slug: S.slug }); } catch (e) { b.disabled = false; side.append(el("p", "", esc(e.message))); return; }
   dataPanel();
@@ -352,6 +362,8 @@ function onData(ev) {
     const t = tile(ev.clip);
     (ev.accepted ? S.accepted : S.rejected).push(ev.clip);
     stat("accepted", S.accepted.length); stat("rejected", S.rejected.length);
+    if (S.routing[ev.clip]) { S.routing[ev.clip].verdict = { accepted: ev.accepted, reason: ev.reason }; routeChip(ev.clip, S.routing[ev.clip], "SUCCEEDED"); }
+    meterPaint();
     if (!t) return;
     t.classList.add(ev.accepted ? "is-ok" : "is-no");
     tileTag(ev.clip, "");
@@ -379,6 +391,7 @@ function onData(ev) {
     stat("episodes", ev.episodes);
     sideDataset().then(() => refreshVla(true));
   } else if (ev.type === "error") feed(`<span class="no">${esc(ev.message)}</span>`);
+  else if (ev.type === "job_end") meterStop();
 }
 
 // "gate name: why it failed" -> the why, capitalised
@@ -430,8 +443,9 @@ async function sideDataset() {
     setSide(`<p class="kicker">Step 3 · LeRobot dataset</p><h3>The training data this run made</h3>
       <dl class="facts"><div><dd>${d.episodes}</dd><dt>episodes</dt></div><div><dd>${d.frames != null ? fmt(d.frames) : "-"}</dd><dt>frames</dt></div><div><dd>${esc(d.codebase_version || "v3.0")}</dd><dt>LeRobot format</dt></div></dl>
       <p>From the ${d.accepted.length} clips that passed the gates, each re-anchored to new cube spots and gated again. The dataset files are not in this copy; Generate Training Data writes them again.</p>
+      <div class="train-block" id="train-block"></div>
       <div class="vla-block" id="vla-block"></div>`);
-    renderVlaBlock();
+    renderVlaBlock(); renderTrain();
     return;
   }
   setSide(`<p class="kicker">Step 3 · LeRobot dataset</p><h3>Your training data is ready</h3>
@@ -445,9 +459,10 @@ async function sideDataset() {
 <span class="pr">$</span> lerobot-train --policy.path=lerobot/smolvla_base --dataset.repo_id=${esc(ds.repo_id)} --dataset.root=${esc(ds.name)}
 <span class="cm"># or the small MLP baseline</span>
 <span class="pr">$</span> bin/understudy train ${esc(S.slug)}</pre>
+    <div class="train-block" id="train-block"></div>
     <div class="vla-block" id="vla-block"></div>`);
   $("#dl").addEventListener("click", download);
-  renderVlaBlock();
+  renderVlaBlock(); renderTrain();
 }
 
 // ---------- step 4: the VLA itself, one MuJoCo film per scenario ----------
@@ -606,6 +621,7 @@ async function reopen(slug) {
     else if (stage === "data") { if (ev.type === "data_done") { S.dataset = ev; S.phase = "data_done"; setStep("data", "done"); stat("episodes", ev.episodes); } else onData(ev); }
   }
   INSTANT = false;
+  await loadRouting();
   if (S.phase === "data_done") await sideDataset();
   await refreshVla(false);
   S.reopened = true;
@@ -614,6 +630,166 @@ async function reopen(slug) {
   const want = new URLSearchParams(location.search).get("run");
   if (want) reopen(want);
 }
+
+// ---------- Model Router: pick, free dry run, per-tile routing ----------
+const ROUTER_NAME = { "demo-cheap": "Cheap", "demo-fast": "Fast", "demo-best": "Best", "": "Direct" };
+$$("#seg button").forEach((b) => b.addEventListener("click", () => {
+  S.router = b.dataset.r;
+  $$("#seg button").forEach((x) => x.setAttribute("aria-checked", String(x === b)));
+  paintPick();
+}));
+let drySeq = 0;
+async function dryRun(task) {
+  const seq = ++drySeq;
+  $("#pick").textContent = "Asking each router for its pick (dry run, free)...";
+  const r = await api("/api/router/dryrun", { task }).catch((e) => ({ ok: false, reason: e.message }));
+  if (seq !== drySeq) return;
+  S.dry = r.ok ? r : null;
+  if (!r.ok) { $("#pick").textContent = `Dry run unavailable: ${r.reason || ""}`; return; }
+  paintPick();
+}
+function paintPick() {
+  const el2 = $("#pick"), d = S.dry;
+  $$("#seg button").forEach((b) => {
+    const p = d && d.picks.find((x) => x.router === b.dataset.r);
+    const sm = $("small", b);
+    sm.textContent = b.dataset.r === "" ? "gen4_turbo · 25 cr" : p && p.model ? `${p.model} · ${p.estimated_credits} cr` : sm.textContent;
+  });
+  if (!d) return;
+  if (!S.router) { el2.innerHTML = `Direct: <b>gen4_turbo</b> for every clip, 25 credits a video plus 2 for its first frame. No routing.`; return; }
+  const p = d.picks.find((x) => x.router === S.router);
+  if (!p || p.error) { el2.textContent = p ? p.error : ""; return; }
+  el2.innerHTML = `Dry run for ${esc(d.clip)}: <b>${esc(ROUTER_NAME[S.router] || S.router)}</b> routes to <b>${esc(p.model)}</b> (${esc(p.provider)}) · about <b>${p.estimated_credits} credits</b> ($${(p.estimated_credits * 0.01).toFixed(2)}) a clip + 2 for its first frame · free, nothing spent yet`;
+  fadeIn(el2, 0.25, 3);
+}
+function routeChip(id, r, status) {
+  const t = tile(id); if (!t || !r) return;
+  let c = $(".route", t);
+  if (!c) { c = el("div", "route"); t.append(c); }
+  const cr = r.realized_credits != null ? `${r.realized_credits} cr` : r.estimated_credits != null ? `~${r.estimated_credits} cr` : "";
+  const sec = r.seconds != null ? `${Math.round(r.seconds)} s` : status && status !== "SUCCEEDED" && status !== "CACHED" ? String(status).toLowerCase() : "";
+  const v = r.verdict ? (r.verdict.accepted ? '<span class="ok">physics: accepted</span>' : `<span class="no" title="${esc(r.verdict.reason)}">physics: rejected</span>`) : '<span class="pend">physics: not judged yet</span>';
+  c.innerHTML = `<span class="rt">${esc(ROUTER_NAME[r.router] || r.router || "")}</span><span>${esc(r.model || "")}</span><span>${esc(cr)}</span><span>${esc(sec)}</span>${v}`;
+}
+function showFootage(id) {
+  const t = tile(id); if (!t || S.vla[id] || $(".media video", t)) return;
+  const v = el("video"); attachVideo(v, media(`clips/${id}.mp4`));
+  tileMedia(id, v);
+  const ch = $(".vla-chip", t); ch.hidden = false; ch.textContent = "Runway footage";
+}
+async function loadRouting() {
+  if (!S.slug) return;
+  const r = await api(`/api/runs/${encodeURIComponent(S.slug)}/routing`).catch(() => null);
+  if (!r) return;
+  let cr = 0;
+  for (const [id, rec] of Object.entries(r.clips)) {
+    if (!tile(id)) continue;
+    S.routing[id] = rec; routeChip(id, rec, "SUCCEEDED"); showFootage(id);
+    cr += rec.cached ? 0 : Number(rec.realized_credits || 0);
+  }
+  if (cr && !M.credits) { M.credits = cr; }
+  meterPaint();
+}
+
+// ---------- meter: credits, dollars, wall time, accepted demos, training ----------
+const M = { credits: 0, wall: 0, t0: 0, trainSec: 0, trainT0: 0, gpuUsd: null };
+function meterStart() { if (!M.t0) M.t0 = Date.now() / 1000; }
+function meterStop() { if (M.t0) { M.wall += Date.now() / 1000 - M.t0; M.t0 = 0; } meterPaint(); }
+function meterCredits(c) { M.credits += Number(c) || 0; meterPaint(); }
+const mm = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+function meterPaint() {
+  const set = (k, v) => { const d = $(`.meter [data-m="${k}"] dd`); if (d) d.textContent = v; };
+  const acc = S.accepted.length;
+  const wall = M.wall + (M.t0 ? Date.now() / 1000 - M.t0 : 0);
+  set("credits", fmt(Math.round(M.credits)));
+  set("usd", `$${(M.credits * 0.01).toFixed(2)}`);
+  set("wall", mm(wall));
+  set("accepted", acc);
+  set("cpa", acc && M.credits ? fmt(Math.round(M.credits / acc)) : "-");
+  const tr = M.trainSec + (M.trainT0 ? Date.now() / 1000 - M.trainT0 : 0);
+  if (tr || M.gpuUsd != null) {
+    $('.meter [data-m="train"]').hidden = false; $('.meter [data-m="gpu"]').hidden = false;
+    set("train", mm(tr)); set("gpu", M.gpuUsd != null ? `$${M.gpuUsd.toFixed(2)}` : "-");
+  }
+}
+setInterval(meterPaint, 1000);
+
+// ---------- step 3b: train the VLA on a rented GPU (the trainer script streams its progress) ----------
+async function renderTrain() {
+  const b = $("#train-block"); if (!b) return;
+  const st = await api("/api/trainer").catch(() => ({ connected: false }));
+  if (!st.connected) {
+    b.innerHTML = `<p class="kicker">Train VLA</p><p class="train-off">GPU trainer not connected</p>
+      <p class="train-sub">Expects <code>${esc(st.script || "~/helloworld/so101/train_vla.sh")}</code> (SmolVLA on a RunPod GPU).</p>`;
+    return;
+  }
+  b.innerHTML = `<p class="kicker">Train VLA · SmolVLA on a GPU</p>
+    <div class="more"><span>Steps</span><select id="train-steps" aria-label="Steps">${[1000, 3000, 6000, 20000].map((k) => `<option ${k === 3000 ? "selected" : ""}>${k}</option>`).join("")}</select>
+    <button type="button" class="ghost-btn" id="train-btn" ${st.running ? "disabled" : ""}>Train VLA</button><span class="more-cost" id="train-state"></span></div>
+    <div class="prog"><i id="train-bar"></i></div>
+    <pre class="term train-term" id="train-term" hidden></pre>`;
+  $("#train-btn").addEventListener("click", startTrain);
+  if (st.running) listen(st.running, onTrain);
+}
+async function startTrain() {
+  const btn = $("#train-btn"); btn.disabled = true;
+  let r;
+  try { r = await api("/api/train", { slug: S.slug, steps: Number($("#train-steps").value) }); }
+  catch (e) { $("#train-state").textContent = e.message; btn.disabled = false; return; }
+  M.trainT0 = Date.now() / 1000; M.gpuUsd = 0; meterPaint();
+  listen(r.job, onTrain);
+}
+function onTrain(ev) {
+  const term = $("#train-term");
+  if (ev.type === "train_line" || ev.type === "log") {
+    if (term) { term.hidden = false; term.textContent += (ev.line || "") + "\n"; term.scrollTop = term.scrollHeight; }
+    if (ev.step && ev.steps) { const bar = $("#train-bar"); if (bar) widthTo(bar, (100 * ev.step) / ev.steps, 0.4); $("#train-state").textContent = `step ${ev.step} of ${ev.steps}`; }
+    if (ev.usd != null) M.gpuUsd = ev.usd;
+    if (ev.done) $("#train-state").textContent = "trained";
+    if (ev.eval_ok != null) $("#train-state").textContent = `eval ${ev.eval_ok}/${ev.eval_n} in the bowl`;
+    if (!M.trainT0) M.trainT0 = Date.now() / 1000;
+  } else if (ev.type === "error") { $("#train-state").textContent = ev.message; }
+  else if (ev.type === "job_end") {
+    if (M.trainT0) { M.trainSec += Date.now() / 1000 - M.trainT0; M.trainT0 = 0; }
+    const btn = $("#train-btn"); if (btn) btn.disabled = false;
+  }
+  meterPaint();
+}
+
+// ---------- the router bench (data/web-runs/<slug>/router_bench.json) ----------
+async function openBench() {
+  const slug = S.slug || "put-the-red-block-in-the-bowl";
+  const b = await api(`/api/runs/${encodeURIComponent(slug)}/router_bench`).catch(() => null);
+  const box = $("#bench-view");
+  if (!b) { $("#bench-sub").textContent = "No router bench for this run yet. Run scripts/router_bench.py."; $("#bench-table").innerHTML = ""; $("#bench-clips").innerHTML = ""; }
+  else paintBench(b);
+  box.hidden = false; fadeIn($(".bench-card", box), 0.3, 12); tween(0.25, (p) => { box.style.opacity = p; });
+  if (b && !b.judged) S.benchTimer = setTimeout(() => { if (!box.hidden) openBench(); }, 8000);
+}
+function paintBench(b) {
+  const rows = b.table || [];
+  const judged = !!b.judged;
+  $("#bench-sub").innerHTML = `${esc(b.task)} · ${b.clips_per_router} clips per router, the same scenes for each (shared first frames and prompts); only the router differs. Every clip then goes through MediaPipe, the Claude audit, 21 gates and a MuJoCo replay.${judged ? "" : ' <b class="pend">Still running: numbers fill in as clips finish.</b>'}`;
+  const max = Math.max(1, ...rows.map((r) => r.accepted_per_1000_credits || 0));
+  const cell = (v, d = "-") => (v == null ? d : v);
+  $("#bench-table").innerHTML = `<table><thead><tr><th>Router</th><th>Model chosen</th><th>Clips</th><th>Physics-accepted</th><th>Rate</th><th>Credits</th><th>$</th><th>Credits / accepted</th><th>Accepted / 1,000 cr</th><th>Mean gen</th></tr></thead><tbody>${rows.map((r) => `<tr class="${r.winner ? "win" : ""}">
+    <td><b>${esc(ROUTER_NAME[r.router] || r.router)}</b><small>${esc(r.router)}${r.optimize_for ? ` · ${esc(r.optimize_for)}` : ""}</small></td>
+    <td>${esc((r.models || []).join(", ") || "-")}</td><td>${r.clips}</td><td>${r.judged ? r.accepted : "-"}</td>
+    <td>${r.acceptance_rate != null ? Math.round(r.acceptance_rate * 100) + "%" : "-"}</td>
+    <td>${fmt(r.credits)}</td><td>$${r.usd.toFixed(2)}</td><td>${cell(r.credits_per_accepted)}</td>
+    <td class="k"><span class="kbar"><i style="width:${(100 * (r.accepted_per_1000_credits || 0)) / max}%"></i></span>${cell(r.accepted_per_1000_credits)}${r.winner ? ' <span class="crown">best value</span>' : ""}</td>
+    <td>${r.mean_generation_s != null ? Math.round(r.mean_generation_s) + " s" : "-"}</td></tr>`).join("")}</tbody></table>`;
+  $("#bench-clips").innerHTML = (b.routers || []).map((r) => `<div class="bc-row"><span class="bc-r">${esc(ROUTER_NAME[r] || r)}</span>${b.clips.filter((c) => c.router === r).map((c) => {
+    const cls = c.accepted === true ? "ok" : c.accepted === false ? "no" : c.status === "SUCCEEDED" ? "pend" : c.status === "FAILED" || c.status === "SKIPPED_BUDGET" ? "no" : "run";
+    const tip = `${c.clip_id} · ${c.model || ""} · ${c.realized_credits != null ? c.realized_credits + " cr" : c.status}${c.seconds ? ` · ${Math.round(c.seconds)} s` : ""}${c.reason ? ` · ${c.reason}` : ""}`;
+    return `<span class="bc ${cls}" title="${esc(tip)}">${esc(c.clip_id)}</span>`;
+  }).join("")}</div>`).join("");
+  $("#bench-foot").textContent = `Budget ${fmt(b.budget)} credits, hard stop from dry-run estimates${b.credits_spent_balance != null ? ` · spent ${fmt(b.credits_spent_balance)} by the live balance` : ""} · updated ${b.updated || ""}`;
+}
+$("#bench-btn").addEventListener("click", openBench);
+function closeBench() { clearTimeout(S.benchTimer); const box = $("#bench-view"); fadeOut(box, 0.2, () => { box.hidden = true; box.style.opacity = 1; }); }
+$("#bench-close").addEventListener("click", closeBench);
+$("#bench-view").addEventListener("click", (e) => { if (e.target.id === "bench-view") closeBench(); });
 
 // ---------- film hooks (only used with ?film) ----------
 function moveCursor(x, y) {

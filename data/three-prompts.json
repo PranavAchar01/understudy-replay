@@ -1,0 +1,79 @@
+[
+ {
+  "prompt": "put the red block in the bowl",
+  "slug": "put-the-red-block-in-the-bowl",
+  "router": "direct (existing run, gen4_turbo)",
+  "model": [
+   "gen4_turbo"
+  ],
+  "credits": 0,
+  "clips": [
+   "v01",
+   "v03",
+   "v06",
+   "v07"
+  ],
+  "accepted": [
+   "v01",
+   "v03",
+   "v06",
+   "v07"
+  ],
+  "dataset_root": "/Users/pranavachar/helloworld/understudy/data/probes/aug25",
+  "episodes": 74,
+  "frames": 25190,
+  "status": "ready: the existing aug25 dataset (4 accepted clips x 25 re-anchored copies, front + wrist), reused read-only"
+ },
+ {
+  "prompt": "push the red block into the blue square",
+  "slug": "push-the-red-block-into-the-blue-square",
+  "task": "push",
+  "router": "demo-cheap",
+  "model": [
+   "gen4_turbo"
+  ],
+  "credits": 25,
+  "clips": [
+   "v01"
+  ],
+  "accepted": [],
+  "dataset_root": "data/probes/push30",
+  "episodes": 30,
+  "frames": 9721,
+  "eval": {
+   "successes": 3,
+   "seeds": 5
+  },
+  "tiles_dir": "/Users/pranavachar/helloworld/understudy-replay/data/web-runs/push-the-red-block-into-the-blue-square/media/vla",
+  "source": "expert",
+  "train_seconds": 1049.0,
+  "train_steps": 3000,
+  "status": "ready: SmolVLA 3/5 on unseen starts; demonstrations from the scripted expert (Runway clip v01 generated as reference footage, not used as training data)"
+ },
+ {
+  "prompt": "stack the red block on the blue block",
+  "slug": "stack-the-red-block-on-the-blue-block",
+  "task": "stack",
+  "router": "demo-cheap",
+  "model": [
+   "gen4_turbo"
+  ],
+  "credits": 25,
+  "clips": [
+   "v01"
+  ],
+  "accepted": [],
+  "dataset_root": "data/probes/stack30",
+  "episodes": 30,
+  "frames": 10540,
+  "eval": {
+   "successes": 0,
+   "seeds": 5
+  },
+  "tiles_dir": "/Users/pranavachar/helloworld/understudy-replay/data/web-runs/stack-the-red-block-on-the-blue-block/media/vla",
+  "source": "expert",
+  "train_seconds": 402.0,
+  "train_steps": 2000,
+  "status": "ready: SmolVLA 0/5 on unseen starts; demonstrations from the scripted expert (Runway clip v01 generated as reference footage, not used as training data)"
+ }
+]

@@ -1,0 +1,19 @@
+{
+  "clip_id": "v21",
+  "lighting": "cool overcast light, flat and even",
+  "table": "a black matte desk",
+  "bowl": "cream enamel",
+  "angle": "a front view, about 45 degrees down",
+  "image_prompt": "Photorealistic photo, a front view, about 45 degrees down, of a black matte desk with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow cream enamel bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. cool overcast light, flat and even. Sharp focus, no text.",
+  "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+  "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a black matte desk, a cream enamel bowl, cool overcast light, flat and even, seen from a front view, about 45 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text.",
+  "prompt_version": 1,
+  "fixes": [],
+  "image_model": "gen4_image_turbo",
+  "video_model": "seedance2_5",
+  "first_frame": "clips/v21.png",
+  "video": "clips/v21.mp4",
+  "variant": "v09",
+  "router": "demo-best",
+  "routing": "clips/v21.routing.json"
+}

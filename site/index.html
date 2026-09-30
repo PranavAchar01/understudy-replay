@@ -19,7 +19,17 @@
 
   <header class="bar">
     <span class="wordmark">Understudy</span>
-    <span class="bar-tag" id="bar-tag">Robot training data from one sentence</span>
+    <dl class="meter" id="meter" aria-label="Run meter">
+      <div data-m="credits"><dd>0</dd><dt>credits</dt></div>
+      <div data-m="usd"><dd>$0.00</dd><dt>Runway $</dt></div>
+      <div data-m="wall"><dd>0:00</dd><dt>wall time</dt></div>
+      <div data-m="accepted"><dd>0</dd><dt>physics-accepted</dt></div>
+      <div data-m="cpa"><dd>-</dd><dt>credits / accepted</dt></div>
+      <div data-m="train" hidden><dd>-</dd><dt>GPU training</dt></div>
+      <div data-m="gpu" hidden><dd>-</dd><dt>GPU $</dt></div>
+    </dl>
+    <span class="bar-right"><button type="button" class="bench-btn" id="bench-btn">Router bench</button>
+    <span class="bar-tag" id="bar-tag">Robot training data from one sentence</span></span>
   </header>
 
   <section class="compose" id="compose" aria-label="Compose">
@@ -28,6 +38,16 @@
         autocapitalize="off" autocorrect="off"></span></p>
     <p class="powered">powered by <span class="runway">Runway</span></p>
     <p class="fit" id="fit" role="status"></p>
+    <div class="router" id="router" aria-label="Runway Model Router">
+      <p class="router-h">Model Router <span>picks the video model per clip</span></p>
+      <div class="seg" id="seg" role="radiogroup">
+        <button type="button" role="radio" data-r="demo-cheap" aria-checked="true">Cheap<small>optimize for cost</small></button>
+        <button type="button" role="radio" data-r="demo-fast" aria-checked="false">Fast<small>optimize for latency</small></button>
+        <button type="button" role="radio" data-r="demo-best" aria-checked="false">Best<small>optimize for quality</small></button>
+        <button type="button" role="radio" data-r="" aria-checked="false">Direct<small>gen4_turbo, no router</small></button>
+      </div>
+      <p class="pick" id="pick">Type a task to see the router's pick (free dry run).</p>
+    </div>
     <button type="button" class="cta" id="gen" disabled>Generate Footage</button>
     <p class="budget" id="budget"></p>
   </section>
@@ -69,6 +89,18 @@
       <div class="vla-stage"><video id="vla-video" muted loop playsinline></video>
         <div class="vla-empty" id="vla-empty" hidden><div class="spin"></div><p id="vla-empty-t">VLA film rendering</p></div></div>
       <p class="vla-cap" id="vla-cap"></p>
+    </div>
+  </div>
+
+  <div class="bench-view" id="bench-view" hidden>
+    <div class="bench-card">
+      <button type="button" class="x" id="bench-close" aria-label="Close">&times;</button>
+      <p class="kicker">Model Router experiment</p>
+      <h3 id="bench-title">Which router buys the most usable robot demos?</h3>
+      <p class="bench-sub" id="bench-sub"></p>
+      <div class="bench-table" id="bench-table"></div>
+      <div class="bench-clips" id="bench-clips"></div>
+      <p class="bench-foot" id="bench-foot"></p>
     </div>
   </div>
 

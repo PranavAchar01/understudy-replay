@@ -1,0 +1,33 @@
+{
+  "router": "demo-fast",
+  "model": "seedance2_fast",
+  "provider": "bytedance",
+  "optimize_for": "latency",
+  "price_ceiling": null,
+  "estimated_credits": 145.0,
+  "dry_run": {
+    "model": "seedance2_fast",
+    "provider": "bytedance",
+    "configId": "demo-fast",
+    "resolvedSettings": {
+      "optimizeFor": "latency",
+      "priceCeiling": null
+    },
+    "resolvedInput": {
+      "duration": 5,
+      "ratio": "1280:720",
+      "resolution": "720p"
+    },
+    "estimatedCost": {
+      "credits": 145
+    }
+  },
+  "task_id": "cb30caed-f9e9-42a0-abb1-727db1776ca8",
+  "realized_credits": 145,
+  "live_estimated_credits": 145,
+  "capacity_fallback": null,
+  "balance_before": 49371,
+  "seconds": 154.5,
+  "status": "SUCCEEDED",
+  "cached": false
+}

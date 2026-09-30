@@ -320,6 +320,26 @@ def _join(parts: list[tuple[str, str]], fixes: list[Mismatch], target: str) -> s
     return " ".join(x for _, x in keep)
 
 
+def _placement(task: Task) -> tuple[str, str]:
+    """Where the sentence puts the object, as the v2 layout sentence and the carry phrase. The sentence's own words
+    ("near the back", "on the left") change the scene; without them the layout is the default one."""
+    t = task.text.lower()
+    o, k = task.obj, task.container
+    if re.search(r"\b(back|far side|far end|behind)\b", t):
+        return (
+            f"The {o} sits on the left near the back of the table, farther from the camera; the {k} sits on the "
+            f"right near the front, about 25 cm away.",
+            "carries it forward, toward the camera and to the right,",
+        )
+    if re.search(r"\bon the left\b|\bleft\b", t):
+        return (
+            f"The {o} sits at the far left of the table and the {k} on the right, about 25 cm apart, both at the "
+            "same distance from the camera.",
+            "carries it a long way to the right,",
+        )
+    return (f"The {o} sits on the left and the {k} on the right, about 20 cm apart.", "carries it to the right and")
+
+
 def _prompts_v2(
     task: Task,
     lighting: str,
@@ -338,10 +358,7 @@ def _prompts_v2(
     image = [
         ("scene", f"Photorealistic photo, {angle}, of {table}."),
         ("inventory", f"The scene holds exactly {n} things: {things}."),
-        (
-            "layout",
-            f"The {o} sits on the left and the {k} on the right, about 20 cm apart.",
-        ),
+        ("layout", _placement(task)[0]),
         ("empty", f"The {k} is empty."),
         ("only", f"The {c} {o} is the only {c} object in the picture."),
         (
@@ -363,7 +380,7 @@ def _prompts_v2(
             "motion",
             (
                 f"The right hand pinches the one {c} {o} between thumb and index finger, lifts it about 10 cm, "
-                f"carries it to the right and opens its fingers above the {k}; the {o} drops into the {k} and "
+                f"{_placement(task)[1]} opens its fingers above the {k}; the {o} drops into the {k} and "
                 "rests there, and the open hand moves back up."
             ),
         ),
@@ -377,7 +394,8 @@ def _prompts_v2(
             "scene",
             (
                 f"The same kind of shot as @base: one right hand about to pinch one small {c} {o} next to one "
-                f"{k}. Change the scene to {table}, a {bowl} {k}, {lighting}, seen from {angle}."
+                f"{k}. Change the scene to {table}, a {bowl} {k}, {lighting}, seen from {angle}. "
+                f"{_placement(task)[0]}"
             ),
         ),
         (

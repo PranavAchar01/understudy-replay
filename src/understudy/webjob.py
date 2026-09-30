@@ -30,6 +30,69 @@ def log(msg: str) -> None:
         print(msg, flush=True)
 
 
+def parse_train_line(line: str) -> dict:
+    """One trainer line -> fields. Tags: [gpu] pod lifecycle, [train] step k/n s/step cost $x | done checkpoint=,
+    [eval] k/n, [tiles] <dir>, [cost] total $x gpu_seconds=n."""
+    import re
+
+    ev: dict = {}
+    m = re.match(r"\s*\[(\w+)\]\s*(.*)", line)
+    if not m:
+        return ev
+    tag, rest = m[1], m[2]
+    ev["tag"] = tag
+    if (st := re.search(r"step\s+(\d+)\s*/\s*(\d+)", rest)) and tag == "train":
+        ev.update(step=int(st[1]), steps=int(st[2]))
+    if sp := re.search(r"([\d.]+)\s*s/step", rest):
+        ev["s_per_step"] = float(sp[1])
+    if c := re.search(r"(?:cost(?: so far)?|total)\s*\$([\d.]+)", rest):
+        ev["usd"] = float(c[1])
+    if r := re.search(r"\$([\d.]+)/h", rest):
+        ev["usd_per_hour"] = float(r[1])
+    if g := re.search(r"gpu_seconds=([\d.]+)", rest):
+        ev["gpu_seconds"] = float(g[1])
+    if tag == "train" and rest.startswith("done"):
+        ev["done"] = True
+        if ck := re.search(r"checkpoint=(\S+)", rest):
+            ev["checkpoint"] = ck[1]
+        if sec := re.search(r"seconds=([\d.]+)", rest):
+            ev["train_seconds"] = float(sec[1])
+    if tag == "eval" and (e := re.search(r"(\d+)\s*/\s*(\d+)", rest)):
+        ev.update(eval_ok=int(e[1]), eval_n=int(e[2]))
+    if tag == "tiles":
+        ev["tiles_dir"] = rest.strip()
+    if tag == "gpu" and (rent := re.search(r"rented (.+?) at", rest)):
+        ev["gpu"] = rent[1]
+    return ev
+
+
+def train_stage(args: dict) -> None:
+    """Run the GPU trainer script (~/helloworld/so101/train_vla.sh <dataset root> <steps>) and relay every line as
+    a train_line event with the parsed fields (parse_train_line)."""
+    import subprocess
+
+    script = Path(args["script"])
+    t0 = time.time()
+    emit({"type": "train_start", "script": str(script), "root": args["root"], "steps": int(args["steps"])})
+    p = subprocess.Popen(
+        ["/bin/bash", str(script), args["root"], str(int(args["steps"]))],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1,
+    )
+    assert p.stdout is not None
+    last: dict = {}
+    for line in p.stdout:
+        line = line.rstrip("\n")
+        if not line.strip():
+            continue
+        f = parse_train_line(line)
+        last.update({k: v for k, v in f.items() if k in ("usd", "checkpoint", "eval_ok", "eval_n", "tiles_dir", "gpu")})
+        emit({"type": "train_line", "line": line[:400], "seconds": round(time.time() - t0, 1), **f})
+    code = p.wait()
+    if code != 0:
+        raise RuntimeError(f"{script.name} exited {code}")
+    emit({"type": "train_end", "seconds": round(time.time() - t0, 1), **last})
+
+
 def main() -> None:
     stage, args = sys.argv[1], json.loads(sys.argv[2])
     from . import stages
@@ -48,7 +111,8 @@ def main() -> None:
                 verdicts = json.loads((run_dir / "data.json").read_text())["clips"]
                 fixes = refine_fixes(verdicts, task)
             recs = stages.footage(
-                task, run_dir, int(args["clips"]), emit=emit, fixes=fixes, start=int(args.get("start", 0))
+                task, run_dir, int(args["clips"]), emit=emit, fixes=fixes, start=int(args.get("start", 0)),
+                router=args.get("router") or None,
             )
             from . import runway
 
@@ -67,6 +131,8 @@ def main() -> None:
                 emit=emit,
                 log=log,
             )
+        elif stage == "train":  # the GPU trainer hook: ~/helloworld/so101/train_vla.sh <dataset root> <steps>
+            train_stage(args)
         elif stage == "vla":  # the fine-tuned SmolVLA runs each scenario in MuJoCo, filmed for the tiles
             from . import vla_tiles
 

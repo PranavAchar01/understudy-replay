@@ -1,0 +1,33 @@
+{
+  "router": "demo-cheap",
+  "model": "gen4_turbo",
+  "provider": "runway",
+  "optimize_for": "cost",
+  "price_ceiling": null,
+  "estimated_credits": 25.0,
+  "dry_run": {
+    "model": "gen4_turbo",
+    "provider": "runway",
+    "configId": "demo-cheap",
+    "resolvedSettings": {
+      "optimizeFor": "cost",
+      "priceCeiling": null
+    },
+    "resolvedInput": {
+      "duration": 5,
+      "ratio": "1280:720",
+      "resolution": "720p"
+    },
+    "estimatedCost": {
+      "credits": 25
+    }
+  },
+  "task_id": "87fcf370-bd2a-4f65-9219-4deb197953b2",
+  "realized_credits": 25,
+  "live_estimated_credits": 25,
+  "capacity_fallback": null,
+  "balance_before": 48756,
+  "seconds": 28.6,
+  "status": "SUCCEEDED",
+  "cached": false
+}

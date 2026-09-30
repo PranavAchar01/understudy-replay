@@ -1,0 +1,428 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{--ink0:#07090c;--ink1:#0d1014;--ink2:#14181e;--text:rgb(240,236,228);--t2:rgba(240,236,228,.64);--t3:rgba(240,236,228,.42);--hair:rgba(255,255,255,.1);--amber:222,172,82;--gold:#f1cf8a;--ok:#8fd3a6;--no:#ec8a7e;
+--serif:"Hedvig Letters Serif",Georgia,serif;--sans:Inter,system-ui,sans-serif;--mono:"JetBrains Mono",Menlo,monospace}
+*{box-sizing:border-box}html,body{margin:0;width:1280px;height:720px;overflow:hidden;-webkit-font-smoothing:antialiased;color:var(--text);font-family:var(--sans)}
+body{background:var(--ink0)}body.clear{background:transparent}
+.card{position:absolute;inset:0;display:none;padding:56px 96px 72px}.card.on{display:block}
+.bgimg{position:absolute;inset:0;background:url(work/img/hero-cine.jpg) 50% 45%/cover;z-index:-2}
+.shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(7,9,12,.55),rgba(7,9,12,.82))}
+.lab{font:500 13px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+.lab b{color:rgb(var(--amber));font-weight:500}
+h1{font:400 64px/1.08 var(--serif);letter-spacing:-.015em;margin:22px 0 0}
+h1 em{font-style:normal;color:var(--gold);display:block}
+h2{font:400 40px/1.12 var(--serif);letter-spacing:-.01em;margin:16px 0 0}
+h2 em{font-style:normal;color:var(--gold)}
+p.body{font:400 22px/1.5 var(--sans);color:var(--t2);max-width:900px;margin:26px 0 0}
+.card.on{display:flex;flex-direction:column;justify-content:center}.card.lay.on{display:block}.card.center.on{display:flex}.center{flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.foot{position:absolute;left:80px;right:80px;bottom:44px;font:400 13px/1.5 var(--mono);color:var(--t3);border-top:1px solid var(--hair);padding-top:14px}
+/* pipeline */
+.pipe{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:64px}
+.node{border:1px solid var(--hair);background:var(--ink2);border-radius:16px;padding:18px 16px;min-height:170px;position:relative}
+.node .n{font:500 12px/1 var(--mono);color:rgb(var(--amber));letter-spacing:.1em}
+.node .k{font:400 21px/1.2 var(--serif);margin-top:14px}
+.node .d{font:400 14px/1.4 var(--sans);color:var(--t2);margin-top:10px}
+.node.hid{opacity:0}
+.node:not(:last-child)::after{content:"";position:absolute;right:-12px;top:50%;width:10px;height:1px;background:rgba(var(--amber),.7)}
+.quote{margin-top:56px;font:400 30px/1.3 var(--serif);text-align:center}.quote em{font-style:normal;color:var(--gold)}
+/* table */
+table{border-collapse:collapse;margin-top:36px;width:100%}
+td,th{text-align:left;padding:16px 18px;border-bottom:1px solid var(--hair);font:400 20px/1.3 var(--sans)}
+th{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
+td.m{font:500 18px/1.3 var(--mono);color:var(--text)}td .v{color:var(--t3);font:400 15px var(--sans);margin-left:8px}
+.pill{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.07);font:500 17px/1 var(--sans)}
+.dot{width:8px;height:8px;border-radius:50%;background:rgb(var(--amber));box-shadow:0 0 8px rgba(var(--amber),.9)}
+.gold{color:var(--gold)}
+/* media layouts */
+.hdr{position:absolute;left:80px;top:40px;right:80px}.hdr h2{font-size:34px;margin-top:12px}
+.slot{position:absolute;border-radius:14px;background:#000;outline:1px solid var(--hair)}
+.tag{position:absolute;font:500 13px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--t2)}
+.tag.ok{color:var(--ok)}.tag.no{color:var(--no)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;position:absolute;left:80px;right:80px;top:470px}
+.stat{background:var(--ink2);border:1px solid var(--hair);border-radius:16px;padding:18px 18px}
+.stat .v{font:400 34px/1 var(--serif)}.stat .v.g{color:var(--gold)}.stat .l{font:400 14px/1.4 var(--sans);color:var(--t2);margin-top:10px}
+.shot{position:absolute;left:80px;right:80px;top:180px;border-radius:14px;overflow:hidden;border:1px solid var(--hair)}
+.shot img{display:block;width:100%}
+.shotcap{position:absolute;left:80px;top:420px;font:400 13px/1 var(--mono);color:var(--t3);letter-spacing:.06em}
+/* captions */
+.cap{position:absolute;left:40px;bottom:92px;max-width:1000px;display:flex;align-items:center;gap:16px;padding:14px 22px 14px 16px;border-radius:14px;background:rgba(10,12,16,.86);border:1px solid rgba(255,255,255,.12);box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.cap .t{flex:none;font:500 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#1a1408;background:var(--gold);padding:7px 10px;border-radius:8px}
+.cap .x{font:500 20px/1.35 var(--sans)}
+.cap .x i{font-style:normal;color:var(--gold)}
+.cap.top{top:30px;bottom:auto}
+.list{margin:34px 0 0;padding:0;list-style:none}.list li{font:400 24px/1.4 var(--sans);padding:14px 0;border-bottom:1px solid var(--hair);color:var(--text)}
+.list li span{color:var(--t3);font:500 13px var(--mono);letter-spacing:.1em;margin-right:18px}
+.big{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
+.big .stat{padding:26px 24px}.big .v{font-size:60px}
+.flow{display:flex;align-items:stretch;gap:14px;margin-top:44px}
+.flow .node{flex:1;min-height:var(--mh,150px)}
+.flow .node.warn{border-color:rgba(236,138,126,.5)}.flow .node.good{border-color:rgba(var(--amber),.6)}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px}
+.rm{font:500 18px/1.3 var(--mono);margin-top:14px}.rm span{font:400 14px var(--sans);color:var(--t3);margin-left:6px}.rc{font:400 16px/1.4 var(--sans);color:var(--t2);margin-top:6px}
+.code{background:#0b0e12;border:1px solid var(--hair);border-radius:14px;padding:16px 20px}.code .ch{font:500 12px/1 var(--mono);letter-spacing:.08em;color:var(--t3);text-transform:uppercase;margin-bottom:10px}
+.code pre{margin:0;font:400 14px/1.55 var(--mono);color:var(--t2)}.code k{color:#9ec3f0}.code s{text-decoration:none;color:#f1cf8a}.code n{color:#8fd3a6}
+.rr2{display:flex;gap:14px;align-items:baseline;padding:12px 0;border-bottom:1px solid var(--hair);font:400 17px/1.3 var(--sans);color:var(--t2)}.rr2 b{font:500 13px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:rgb(222,172,82);width:92px;flex:none}
+</style></head><body>
+
+<!-- ========== INTRO ========== -->
+<section class="card" id="i_problem">
+  <div class="lab">The problem</div>
+  <h1>Robots learn skills from demonstrations.<em>Someone has to record every one.</em></h1>
+  <p class="body">Labs pay people to perform chores on camera, one take at a time.</p>
+</section>
+<section class="card" id="i_who">
+  <div class="lab">Who it is for</div>
+  <h1>Students and people without a lab<em>can't collect that data.</em></h1>
+  <p class="body">No arm rig, no operators, no hours of recorded takes.</p>
+</section>
+<section class="card center" id="i_title">
+  <div class="bgimg"></div><div class="shade"></div>
+  <div class="lab" style="color:var(--gold)">Understudy</div>
+  <h1 style="font-size:72px">I don't have a robotics lab.<em>So Runway films the demos.</em></h1>
+  <p class="body">One sentence in. A trained robot policy out.</p>
+</section>
+<section class="card" id="i_pipe1"></section><section class="card" id="i_pipe2"></section><section class="card" id="i_pipe3"></section>
+<template id="pipe_t">
+  <div class="lab">How it works</div>
+  <h2>One sentence becomes a robot that can do it.</h2>
+  <div class="pipe">
+    <div class="node"><div class="n">01</div><div class="k">One sentence</div><div class="d">"put the red block in the bowl"</div></div>
+    <div class="node"><div class="n">02 · RUNWAY</div><div class="k">Video of a person doing it</div><div class="d">Model Router picks the model</div></div>
+    <div class="node"><div class="n">03 · MEDIAPIPE</div><div class="k">Hand tracking</div><div class="d">the hand, frame by frame</div></div>
+    <div class="node"><div class="n">04 · MUJOCO</div><div class="k">21 physics gates</div><div class="d">reject clips a robot should not learn from</div></div>
+    <div class="node"><div class="n">05 · SO-101</div><div class="k">Retarget to the arm</div><div class="d">becomes a LeRobot dataset</div></div>
+    <div class="node"><div class="n">06 · SMOLVLA</div><div class="k">Train and run</div><div class="d">fine-tuned on a rented GPU, runs in MuJoCo</div></div>
+  </div>
+  <div class="quote">Runway imagines the demonstration. <em>Physics decides if it counts.</em></div>
+</template>
+<section class="card" id="i_router">
+  <div class="lab">The engine · <b>Runway Model Router</b></div>
+  <h2>We state a preference. <em>The router picks the model.</em></h2>
+  <table>
+    <tr><th>Router</th><th>Model</th><th>Credits a clip</th><th>Time a clip</th></tr>
+    <tr><td><span class="pill"><span class="dot"></span>Cheap</span></td><td class="m">gen4_turbo<span class="v">Runway</span></td><td>25</td><td>~25 s</td></tr>
+    <tr><td><span class="pill"><span class="dot"></span>Fast</span></td><td class="m">seedance2_fast<span class="v">ByteDance</span></td><td>145</td><td>~146 s</td></tr>
+    <tr><td><span class="pill"><span class="dot"></span>Best</span></td><td class="m">seedance2_5<span class="v">ByteDance</span></td><td>150</td><td>~240 s</td></tr>
+  </table>
+  <p class="body" style="font-size:19px">Free dry runs show the pick and the cost before any credits are spent.</p>
+</section>
+
+<!-- ========== DEMO layouts (slots are filled with video by ffmpeg) ========== -->
+<section class="card lay" id="d_step1">
+  <div class="hdr"><div class="lab">Step 1 · <b>Runway</b></div><h2>Runway films a person doing the task.</h2></div>
+  <div class="slot" style="left:198px;top:170px;width:432px;height:243px"></div><div class="slot" style="left:650px;top:170px;width:432px;height:243px"></div>
+  <div class="slot" style="left:198px;top:433px;width:432px;height:243px"></div><div class="slot" style="left:650px;top:433px;width:432px;height:243px"></div>
+  <div class="tag" style="left:1100px;top:176px;width:160px;line-height:1.6">4 accepted clips<br>"put the red block<br>in the bowl"</div>
+</section>
+<section class="card lay" id="d_step2">
+  <div class="hdr"><div class="lab">Step 2 · <b>MediaPipe</b></div><h2>The hand is tracked, frame by frame.</h2></div>
+  <div class="slot" style="left:30px;top:190px;width:600px;height:338px"></div><div class="slot" style="left:650px;top:190px;width:600px;height:338px"></div>
+  <div class="tag" style="left:30px;top:546px">Runway clip</div><div class="tag" style="left:650px;top:546px">Hand tracking</div>
+</section>
+<section class="card lay" id="d_step3">
+  <div class="hdr"><div class="lab">Step 3 · <b>Physics</b></div><h2>21 gates in MuJoCo decide which clips count.</h2></div>
+  <div class="slot" style="left:30px;top:190px;width:600px;height:338px"></div><div class="slot" style="left:650px;top:190px;width:600px;height:338px"></div>
+  <div class="tag no" style="left:30px;top:546px">Rejected · the block duplicates</div><div class="tag ok" style="left:650px;top:546px">Accepted · passes the gates</div>
+</section>
+<section class="card lay" id="d_step4">
+  <div class="hdr"><div class="lab">Step 4 · <b>Retarget</b></div><h2>Accepted clips retarget onto the SO-101 arm.</h2></div>
+  <div class="slot" style="left:30px;top:190px;width:600px;height:338px"></div><div class="slot" style="left:650px;top:190px;width:600px;height:338px"></div>
+  <div class="tag" style="left:30px;top:546px">Accepted Runway clip</div><div class="tag" style="left:650px;top:546px">SO-101 in MuJoCo · into a LeRobot dataset</div>
+</section>
+<section class="card lay" id="d_step5">
+  <div class="hdr"><div class="lab">Step 5 · <b>Training</b></div><h2>SmolVLA is fine-tuned on a rented NVIDIA GPU.</h2></div>
+  <div class="shot" style="top:146px;left:120px;right:120px"><img src="work/img/runpod-crop2.png"></div>
+  <div class="shotcap" style="top:442px;left:120px">RUNPOD · TWO RUNS TRAINING AT ONCE · RTX 4090 $0.35/HR AND L40S $1.10/HR</div>
+  <div class="stats" style="top:478px">
+    <div class="stat"><div class="v g">9 min</div><div class="l">3,000 steps on one RTX 5090</div></div>
+    <div class="stat"><div class="v">4 h 36 min</div><div class="l">the same 3,000 steps on a MacBook</div></div>
+    <div class="stat"><div class="v g">48 min</div><div class="l">20,000 steps, the benchmark model</div></div>
+    <div class="stat"><div class="v">under ~$1</div><div class="l">GPU cost for a run</div></div>
+  </div>
+</section>
+<section class="card lay" id="d_step6">
+  <div class="hdr"><div class="lab">Result · <b>MuJoCo</b></div><h2>The trained SmolVLA puts the red block in the bowl.</h2></div>
+  <div class="slot" style="left:198px;top:170px;width:432px;height:243px"></div><div class="slot" style="left:650px;top:170px;width:432px;height:243px"></div>
+  <div class="slot" style="left:198px;top:433px;width:432px;height:243px"></div><div class="slot" style="left:650px;top:433px;width:432px;height:243px"></div>
+  <div class="tag" style="left:1100px;top:176px;width:160px;line-height:1.6">SmolVLA<br>20,000 steps<br>43 of 50<br>unseen positions</div>
+</section>
+
+<!-- ========== BENCHMARK ========== -->
+<section class="card" id="b_same">
+  <div class="lab">Benchmark · <b>method</b></div>
+  <h2>Only the data source changes.</h2>
+  <ul class="list">
+    <li><span>01</span>Same 74 start positions for the training demos</li>
+    <li><span>02</span>Same model, SmolVLA, trained with the same recipe</li>
+    <li><span>03</span>Same 50 unseen test positions</li>
+    <li><span>04</span>MuJoCo simulation, SO-101 arm, "put the red block in the bowl"</li>
+  </ul>
+</section>
+<section class="card" id="b_num">
+  <div class="lab">Benchmark · <b>results, in simulation</b></div>
+  <h2>Generated demos tie a perfect operator.</h2>
+  <div class="big">
+    <div class="stat"><div class="v g">43/50</div><div class="l">Runway-generated demos, physics-filtered (86%), 20,000 steps</div></div>
+    <div class="stat"><div class="v">44/50</div><div class="l">perfect scripted operator (88%), same steps</div></div>
+    <div class="stat"><div class="v">0/50</div><div class="l">SmolVLA before training</div></div>
+  </div>
+  <p class="body" style="font-size:19px">95% intervals overlap: a statistical tie. At 3,000 steps it is 34/50 vs 44/50. Generated data needs more training, not more people.</p>
+</section>
+<section class="card" id="b_honest">
+  <div class="lab">Benchmark · <b>honest caveats</b></div>
+  <h2>What this does and does not show.</h2>
+  <ul class="list" style="margin-top:24px">
+    <li style="font-size:21px"><span>SIM</span>All results are in MuJoCo simulation.</li>
+    <li style="font-size:21px"><span>BAR</span>The baseline knows the exact cube pose: stronger than human teleoperation.</li>
+    <li style="font-size:21px"><span>LOOP</span>Prompts refined with a PhyT2V loop (Xue et al., CVPR 2025), our physics gates as the critic.</li>
+    <li style="font-size:21px"><span>PRIOR</span>Inspired by NVIDIA DreamGen (2025), which generates video of the robot itself. Understudy generates people, with any Runway model, and filters with physics.</li>
+  </ul>
+</section>
+
+<!-- ========== ROUTING ========== -->
+<section class="card" id="r_table">
+  <div class="lab">Model routing · <b>Runway Model Router</b></div>
+  <h2>Three routers. <em>Every response reports the model and the realized cost.</em></h2>
+  <table>
+    <tr><th>Router</th><th>Model</th><th>Credits a clip</th><th>Time a clip</th><th>Used for</th></tr>
+    <tr><td><span class="pill"><span class="dot"></span>Cheap</span></td><td class="m">gen4_turbo<span class="v">Runway</span></td><td>25</td><td>~25 s</td><td>easy rigid pick and place</td></tr>
+    <tr><td><span class="pill"><span class="dot"></span>Fast</span></td><td class="m">seedance2_fast<span class="v">ByteDance</span></td><td>145</td><td>~146 s</td><td>live, on stage</td></tr>
+    <tr><td><span class="pill"><span class="dot"></span>Best</span></td><td class="m">seedance2_5<span class="v">ByteDance</span></td><td>150</td><td>~240 s</td><td>cloth, deformable, multi-step</td></tr>
+  </table>
+</section>
+<section class="card" id="r_dry">
+  <div class="lab">Model routing · <b>dry run first</b></div>
+  <h2>The task picks the router. <em>A free dry run shows the price.</em></h2>
+  <div class="flow">
+    <div class="node"><div class="n">01 · SENTENCE</div><div class="k">"put the red block in the bowl"</div><div class="d">one rigid object, one hand</div></div>
+    <div class="node"><div class="n">02 · DRY RUN</div><div class="k">Free</div><div class="d">no credits spent</div></div>
+    <div class="node good"><div class="n">03 · PICK</div><div class="k">Cheap · gen4_turbo</div><div class="d">Runway</div></div>
+    <div class="node"><div class="n">04 · COST</div><div class="k">25 credits a clip</div><div class="d">shown before generating</div></div>
+  </div>
+  <div class="flow" style="margin-top:16px">
+    <div class="node"><div class="n">01 · SENTENCE</div><div class="k">"fold the laundry"</div><div class="d">cloth is deformable</div></div>
+    <div class="node"><div class="n">02 · DRY RUN</div><div class="k">Free</div><div class="d">no credits spent</div></div>
+    <div class="node good"><div class="n">03 · PICK</div><div class="k">Best · seedance2_5</div><div class="d">ByteDance</div></div>
+    <div class="node"><div class="n">04 · COST</div><div class="k">150 credits a clip</div><div class="d">shown before generating</div></div>
+  </div>
+</section>
+<section class="card" id="r_esc">
+  <div class="lab">Model routing · <b>escalation</b></div>
+  <h2>Physics is the missing routing axis.</h2>
+  <div class="flow" style="margin-top:36px">
+    <div class="node"><div class="n">01 · CHEAP</div><div class="k">gen4_turbo clip</div><div class="d"><img src="work/img/v04.jpg" style="width:100%;border-radius:8px;margin-top:6px"></div></div>
+    <div class="node warn"><div class="n" style="color:var(--no)">02 · PHYSICS FAILS</div><div class="k">The block duplicates</div><div class="d">the gates reject the clip</div></div>
+    <div class="node"><div class="n">03 · REFINE (PHYT2V)</div><div class="k">"Exactly one red block exists in the whole video."</div><div class="d">positive phrasing, per Runway's Gen-4 guide</div></div>
+    <div class="node good"><div class="n">04 · ESCALATE</div><div class="k">Best · seedance2_5</div><div class="d">the router moves up a tier</div></div>
+  </div>
+  <p class="body" style="font-size:19px">Routers pick on price and speed. Our gates add whether the video obeys physics.</p>
+</section>
+<section class="card lay" id="r_bg">
+  <div class="lab">Model routing · <b>beyond video</b></div>
+  <h2>Even the site's background <em>was routed.</em></h2>
+  <div style="position:absolute;left:80px;top:230px;width:640px;height:360px;border-radius:14px;overflow:hidden;border:1px solid var(--hair);background:url(work/img/hero-cine.jpg) center/cover"></div>
+  <div style="position:absolute;left:760px;top:240px;right:80px">
+    <div class="lab">Quality router picked</div>
+    <div style="font:500 22px/1.3 var(--mono);margin-top:14px">gpt_image_2_5_sunburst</div>
+    <div style="color:var(--t2);font-size:18px;margin-top:6px">OpenAI</div>
+    <div class="lab" style="margin-top:36px">Cost</div>
+    <div style="font:400 44px/1 var(--serif);color:var(--gold);margin-top:12px">17 credits</div>
+  </div>
+</section>
+
+<!-- ========== CLOSE ========== -->
+<section class="card center" id="z_close">
+  <div class="bgimg"></div><div class="shade"></div>
+  <div class="lab" style="color:var(--gold)">Understudy</div>
+  <h1 style="font-size:60px">Runway imagines the demonstration.<em>Physics decides if it counts.</em></h1>
+  <p class="body" style="font:500 20px/1.8 var(--mono);color:var(--text)">github.com/PranavAchar01/understudy-replay<br><span style="color:var(--t2)">understudy-replay.vercel.app</span></p>
+</section>
+
+
+<!-- ========== v2: intro with b-roll ========== -->
+<section class="card lay" id="i_prob_ov" style="background:linear-gradient(90deg,rgba(7,9,12,.94) 0%,rgba(7,9,12,.75) 48%,rgba(7,9,12,0) 78%)">
+  <div style="position:absolute;left:96px;top:210px;width:640px">
+  <div class="lab">The problem</div>
+  <h1 style="font-size:56px">Robots learn skills from demonstrations.<em>Someone has to record every one.</em></h1></div>
+</section>
+<section class="card lay" id="i_pipev">
+  <div class="hdr" style="top:34px"><div class="lab">How it works</div><h2 style="font-size:32px">One sentence: <span class="gold">"put the red block in the bowl"</span></h2></div>
+  <div class="tag" style="left:40px;top:148px"><b style="color:rgb(222,172,82)">01 Runway</b> · a person does the task</div>
+  <div class="tag" style="left:444px;top:148px"><b style="color:rgb(222,172,82)">02 MediaPipe</b> · tracks the hand</div>
+  <div class="tag no" style="left:848px;top:148px"><b style="color:rgb(222,172,82)">03 Physics</b> · rejected: block duplicates</div>
+  <div class="tag" style="left:242px;top:430px"><b style="color:rgb(222,172,82)">04 SO-101</b> · retarget to the arm</div>
+  <div class="tag" style="left:646px;top:430px"><b style="color:rgb(222,172,82)">05 SmolVLA</b> · the trained policy</div>
+  <div class="slot" style="left:40px;top:170px;width:392px;height:220px"></div><div class="slot" style="left:444px;top:170px;width:392px;height:220px"></div><div class="slot" style="left:848px;top:170px;width:392px;height:220px"></div>
+  <div class="slot" style="left:242px;top:452px;width:392px;height:220px"></div><div class="slot" style="left:646px;top:452px;width:392px;height:220px"></div>
+</section>
+<section class="card lay" id="i_routerv">
+  <div class="hdr"><div class="lab">The engine · <b>Runway Model Router</b></div><h2>We state a preference. <em>The router picks the model.</em></h2></div>
+  <div class="slot" style="left:64px;top:200px;width:373px;height:210px"></div><div class="slot" style="left:453px;top:200px;width:373px;height:210px"></div><div class="slot" style="left:842px;top:200px;width:373px;height:210px"></div>
+  <div style="position:absolute;left:64px;top:430px;width:373px"><span class="pill"><span class="dot"></span>Cheap</span><div class="rm">gen4_turbo <span>Runway</span></div><div class="rc">25 credits · ~25 s a clip</div></div>
+  <div style="position:absolute;left:453px;top:430px;width:373px"><span class="pill"><span class="dot"></span>Fast</span><div class="rm">seedance2_fast <span>ByteDance</span></div><div class="rc">145 credits · ~146 s a clip</div></div>
+  <div style="position:absolute;left:842px;top:430px;width:373px"><span class="pill"><span class="dot"></span>Best</span><div class="rm">seedance2_5 <span>ByteDance</span></div><div class="rc">150 credits · ~240 s a clip</div></div>
+  <div class="foot">Real clips from each router. Free dry runs show the pick and the cost before any credits are spent.</div>
+</section>
+
+<!-- ========== v2: routing with screenshots ========== -->
+<section class="card lay" id="r_json">
+  <div class="hdr"><div class="lab">Model routing · <b>dry run, then generate</b></div><h2>The sentence picks the router. <em>The response names the model and the cost.</em></h2></div>
+  <div class="code" style="position:absolute;left:64px;top:190px;width:560px"><div class="ch">clips/v08.routing.json · excerpt</div><pre>{
+  <k>"router"</k>: <s>"demo-cheap"</s>,
+  <k>"model"</k>: <s>"gen4_turbo"</s>,
+  <k>"provider"</k>: <s>"runway"</s>,
+  <k>"optimize_for"</k>: <s>"cost"</s>,
+  <k>"dry_run"</k>: {
+    <k>"configId"</k>: <s>"demo-cheap"</s>,
+    <k>"resolvedInput"</k>: { <k>"duration"</k>: <n>5</n>, <k>"resolution"</k>: <s>"720p"</s> },
+    <k>"estimatedCost"</k>: { <k>"credits"</k>: <n>25</n> }
+  },
+  <k>"realized_credits"</k>: <n>25</n>,
+  <k>"seconds"</k>: <n>23.8</n>,
+  <k>"status"</k>: <s>"SUCCEEDED"</s>
+}</pre></div>
+  <div class="tag" style="left:660px;top:222px">On the site: the pill flips as you type</div>
+  <div class="slot" style="left:660px;top:250px;width:556px;height:113px;border-radius:10px"></div>
+  <div style="position:absolute;left:660px;top:400px;width:556px">
+    <div class="rr2"><b>Dry run</b><span>free: pick and cost before spending</span></div>
+    <div class="rr2"><b>Generate</b><span>the task runs on the picked model</span></div>
+    <div class="rr2"><b>Report</b><span>model and realized credits, every response</span></div>
+  </div>
+</section>
+<section class="card lay" id="r_out">
+  <div class="hdr"><div class="lab">Model routing · <b>real outputs</b></div><h2>What each router actually returned.</h2></div>
+  <div class="slot" style="left:64px;top:180px;width:373px;height:210px"></div><div class="slot" style="left:453px;top:180px;width:373px;height:210px"></div><div class="slot" style="left:842px;top:180px;width:373px;height:210px"></div>
+  <div style="position:absolute;left:64px;top:410px;width:373px"><span class="pill"><span class="dot"></span>Cheap</span><div class="rm">gen4_turbo <span>Runway</span></div><div class="rc">25 credits · 23.8 s</div></div>
+  <div style="position:absolute;left:453px;top:410px;width:373px"><span class="pill"><span class="dot"></span>Fast</span><div class="rm">seedance2_fast <span>ByteDance</span></div><div class="rc">145 credits · 138.9 s</div></div>
+  <div style="position:absolute;left:842px;top:410px;width:373px"><span class="pill"><span class="dot"></span>Best</span><div class="rm">seedance2_5 <span>ByteDance</span></div><div class="rc">150 credits · 206.9 s</div></div>
+  <div class="foot">Realized credits and seconds from each clip's routing.json.</div>
+</section>
+<section class="card lay" id="r_esc2">
+  <div class="hdr"><div class="lab">Model routing · <b>escalation</b></div><h2>Physics is the missing routing axis.</h2></div>
+  <div style="position:absolute;left:64px;top:190px;width:373px"><div class="tag no" style="position:static">01 · Cheap clip rejected</div>
+    <div style="margin-top:12px;width:373px;height:210px;border-radius:14px;background:url(work/img/v04.jpg) center/cover;border:1px solid rgba(236,138,126,.6)"></div>
+    <div class="rc" style="margin-top:12px">The gates catch it: the block duplicates.</div></div>
+  <div style="position:absolute;left:463px;top:190px;width:354px"><div class="tag" style="position:static">02 · Refine the prompt (PhyT2V)</div>
+    <div class="code" style="margin-top:12px;height:210px;display:flex;align-items:center"><pre style="white-space:pre-wrap;font-size:17px;color:#f1cf8a">"Exactly one red block exists in the whole video."</pre></div>
+    <div class="rc" style="margin-top:12px">Positive phrasing, per Runway's Gen-4 guide.</div></div>
+  <div style="position:absolute;left:842px;top:190px;width:373px"><div class="tag ok" style="position:static">03 · Escalate to Best</div></div>
+  <div class="slot" style="left:842px;top:214px;width:373px;height:210px"></div>
+  <div class="rc" style="position:absolute;left:842px;top:436px;width:373px">A seedance2_5 clip from the Best router.</div>
+  <div class="foot">Routers choose on cost, speed or quality. Our physics gates add a fourth axis: does the video obey physics.</div>
+</section>
+
+<!-- ========== v3: prompt methodology (bench) ========== -->
+<section class="card" id="b_prompt">
+  <div class="lab">Benchmark · <b>how the prompts are written</b></div>
+  <h2>Prompts follow PhyT2V <span style="color:var(--t3)">(CVPR 2025)</span>.</h2>
+  <div class="flow" style="margin-top:40px;--mh:110px">
+    <div class="node warn"><div class="n" style="color:var(--no)">01 · FIND</div><div class="k">Physics gates find the mismatch</div></div>
+    <div class="node"><div class="n">02 · RULE</div><div class="k">A corrective rule is added</div></div>
+    <div class="node good"><div class="n">03 · REGENERATE</div><div class="k">The clip is regenerated</div></div>
+  </div>
+  <p class="body" style="font-size:19px">Positive phrasing, per Runway's Gen-4 prompting guide.</p>
+</section>
+
+<!-- ========== v4: budget routing ========== -->
+<section class="card lay" id="r_routers">
+  <div class="hdr"><div class="lab">Model routing · <b>Runway Model Router</b></div><h2>Five quality routers, <em>each with its own price ceiling.</em></h2></div>
+  <div style="position:absolute;left:190px;top:168px;width:900px;border-radius:14px;overflow:hidden;border:1px solid var(--hair)">
+    <img src="work/img/runway-routers-crop.png" style="display:block;width:100%">
+    <div style="position:absolute;left:0;right:0;top:8.5%;height:45.5%;border:2px solid rgba(222,172,82,.85);border-radius:10px;box-shadow:0 0 0 9999px rgba(7,9,12,.28)"></div>
+  </div>
+  <div class="tag" style="left:1110px;top:190px;width:150px;line-height:1.7">understudy-q40<br>to q200<br><span style="color:var(--t3)">optimize for quality,<br>capped in credits<br>a clip</span></div>
+</section>
+<section class="card" id="r_budget">
+  <div class="lab">Model routing · <b>budget per run</b></div>
+  <h2>Pick a budget. <em>The router picks the best model under it.</em></h2>
+  <table style="margin-top:30px">
+    <tr><th>Budget / run</th><th>Max a clip</th><th>Router picks</th><th>Cost a run</th></tr>
+    <tr><td><span class="pill"><span class="dot"></span>$2</span></td><td>40 credits</td><td class="m">gen4_turbo<span class="v">25 cr</span></td><td>~$1.60</td></tr>
+    <tr><td><span class="pill"><span class="dot"></span>$4</span></td><td>80 credits</td><td class="m">gemini_omni_flash<span class="v">51 cr</span></td><td>~$2.90</td></tr>
+    <tr><td><span class="pill"><span class="dot"></span>$6</span></td><td>120 credits</td><td class="m">gemini_omni_flash<span class="v">51 cr</span></td><td>~$2.90</td></tr>
+    <tr><td><span class="pill"><span class="dot"></span>$8</span></td><td>160 credits</td><td class="m">gemini_omni_flash_1.1<span class="v">51 cr</span></td><td>~$2.90</td></tr>
+    <tr><td><span class="pill"><span class="dot"></span>$10</span></td><td>200 credits</td><td class="m">seedance2_5<span class="v">150 cr</span></td><td class="gold">~$7.85</td></tr>
+  </table>
+  <p class="body" style="font-size:18px;margin-top:18px">A 5-clip run. Ceiling = budget x 100 / 5 credits a clip. Real dry-run picks, free before any credits are spent.</p>
+</section>
+
+<!-- ========== v3: built for students (transparent overlays over b-roll) ========== -->
+<style>
+.scap{position:absolute;left:0;right:0;bottom:0;height:300px;background:linear-gradient(180deg,rgba(7,9,12,0),rgba(7,9,12,.78))}
+.scap .x{position:absolute;left:80px;right:80px;bottom:62px;font:400 42px/1.15 var(--serif);letter-spacing:-.01em;text-shadow:0 2px 24px rgba(0,0,0,.6)}
+.scap .x em{font-style:normal;color:var(--gold)}
+.slab{position:absolute;left:80px;top:56px;font:500 13px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);text-shadow:0 1px 10px rgba(0,0,0,.8)}
+.gen{position:absolute;right:28px;bottom:22px;font:400 11px/1 var(--mono);letter-spacing:.08em;color:rgba(240,236,228,.55)}
+</style>
+<section class="card lay" id="s1_ov"><div class="slab">Built for students</div><div class="scap"><div class="x">No lab. No teleop rig. <em>No team of operators.</em></div></div><div class="gen">generated with Runway</div></section>
+<section class="card lay" id="s2_ov"><div class="scap"><div class="x">A dorm room desk.</div></div><div class="gen">generated with Runway</div></section>
+<section class="card lay" id="s3_ov"><div class="scap"><div class="x">A community college bench.</div></div><div class="gen">generated with Runway</div></section>
+<section class="card lay" id="s4_ov"><div class="scap"><div class="x">One sentence <em>and a laptop.</em></div></div></section>
+<section class="card lay" id="s6_ov"><div class="scap"><div class="x">A hackathon table.</div></div><div class="gen">generated with Runway</div></section>
+<section class="card lay" id="s7_ov"><div class="slab">Understudy</div><div class="scap"><div class="x">Robot learning <em>for the rest of us.</em></div></div><div class="gen">generated with Runway</div></section>
+<section class="card lay" id="s_gpu">
+  <div class="hdr"><div class="lab">Built for students · <b>the GPU bill</b></div><h2>A rented GPU, <em>not a lab budget.</em></h2></div>
+  <div class="shot" style="top:170px;left:120px;right:120px"><img src="work/img/runpod-crop2.png"></div>
+  <div class="big" style="position:absolute;left:120px;right:120px;top:482px;margin:0">
+    <div class="stat"><div class="v g">under $1</div><div class="l">GPU cost for a training run</div></div>
+    <div class="stat"><div class="v">9 min</div><div class="l">3,000 steps on one RTX 5090</div></div>
+    <div class="stat"><div class="v">$0.35/hr</div><div class="l">an RTX 4090 on RunPod</div></div>
+  </div>
+</section>
+<style>
+.vs{position:absolute;top:150px;display:flex;flex-direction:column;gap:0;border-radius:18px;padding:18px 26px 8px}
+.vs.lab0{left:70px;width:560px;background:var(--ink1);border:1px solid var(--hair)}
+.vs.us{left:650px;width:560px;background:rgba(222,172,82,.07);border:1px solid rgba(222,172,82,.55)}
+.vs .hd{font:500 14px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--t2);padding-bottom:12px;border-bottom:1px solid var(--hair)}
+.vs.us .hd{color:var(--gold)}
+.vr{display:flex;align-items:center;gap:20px;padding:18px 0;border-bottom:1px solid var(--hair)}.vr:last-child{border-bottom:0}
+.vr .n{font:400 44px/1 var(--serif);width:190px;flex:none;white-space:nowrap}
+.vs.us .vr .n{color:var(--gold)}
+.vr .d{font:400 18px/1.3 var(--sans);color:var(--text)}
+.vr .d small{display:block;font:400 12px/1.4 var(--mono);letter-spacing:.06em;color:var(--t3);margin-top:4px}
+.vbot{position:absolute;left:70px;right:70px;top:612px;text-align:center;font:400 36px/1.1 var(--serif)}.vbot em{font-style:normal;color:var(--gold)}
+</style>
+<section class="card lay" id="s_cost">
+  <div class="hdr" style="top:44px"><div class="lab">Built for students · <b>the cost</b></div><h2>What one robot skill costs.</h2></div>
+  <div class="vs lab0"><div class="hd">A robotics lab</div>
+    <div class="vr"><div class="n">76,000</div><div class="d">demos by 50 people, 12 months<small>DROID, 2024</small></div></div>
+    <div class="vr"><div class="n">17 mo</div><div class="d">130,000 demos on 13 robots<small>RT-1, Google, 2022</small></div></div>
+    <div class="vr"><div class="n">$32,000</div><div class="d">for one two-arm robot rig<small>Mobile ALOHA, 2024</small></div></div>
+    <div class="vr"><div class="n">13</div><div class="d">institutions pooling their robots<small>DROID, 2024</small></div></div>
+  </div>
+  <div class="vs us"><div class="hd">Understudy</div>
+    <div class="vr"><div class="n">0</div><div class="d">demos recorded by a person</div></div>
+    <div class="vr"><div class="n">$2-$10</div><div class="d">Runway footage for a 5-clip run<small>real picks: $1.60 to $7.85</small></div></div>
+    <div class="vr"><div class="n">$0.55</div><div class="d">GPU: 20,000 steps in 48 min<small>RunPod RTX 5090, $0.69/hr</small></div></div>
+    <div class="vr"><div class="n">43/50</div><div class="d">vs 44/50 from perfect demos<small>in simulation</small></div></div>
+  </div>
+  <div class="vbot">One robot skill: <em>under $10, in under an hour.</em></div>
+</section>
+
+<!-- ========== CAPTIONS (transparent) ========== -->
+<section class="card" id="c_budget"><div class="cap"><span class="t">Budget / run</span><span class="x">Pick how much this run can spend: <i>$2</i> to <i>$10</i></span></div></section>
+<section class="card" id="c_dry"><div class="cap"><span class="t">Dry run</span><span class="x">The dry run is <i>free</i>: the price shows before you spend a credit</span></div></section>
+<section class="card" id="c_best"><div class="cap"><span class="t">Budget · $10</span><span class="x">$10 a run: the router moves up to <i>seedance2_5</i> · 150 credits a clip</span></div></section>
+<section class="card" id="c_cheap"><div class="cap"><span class="t">Budget · $2</span><span class="x">$2 a run: the router picks <i>gen4_turbo</i> · 25 credits a clip</span></div></section>
+<section class="card" id="c_train"><div class="cap"><span class="t">Train</span><span class="x">Pick a <i>GPU</i>, press Train: Runway generating, physics check, SmolVLA training <i>(recorded run)</i></span></div></section>
+<section class="card" id="c_stats"><div class="cap"><span class="t">Time</span><span class="x">Every run keeps its own <i>Time</i> on its tile</span></div></section>
+<section class="card" id="c_lib"><div class="cap"><span class="t">Library</span><span class="x">Pick and push are <i>trained SmolVLA films</i>. Stack and tower show the scripted demo; their VLAs need longer training.</span></div></section>
+<section class="card" id="c_film"><div class="cap"><span class="t">Overview</span><span class="x">Click a tile: <i>how this VLA was trained</i>, with Download VLA</span></div></section>
+<section class="card" id="c_gallery"><div class="cap"><span class="t">Gallery</span><span class="x">Every Runway video behind this robot, with its <i>route</i> and <i>physics verdict</i></span></div></section>
+<section class="card" id="c_push"><div class="cap"><span class="t">Budget</span><span class="x">The budget picks the route: <i>$2</i> · gen4_turbo</span></div></section>
+<section class="card" id="c_pushlib"><div class="cap"><span class="t">Library</span><span class="x">New prompt, <i>new robot on top</i>. Everything trained before stays.</span></div></section>
+<section class="card" id="c_bench"><div class="cap"><span class="t">In simulation</span><span class="x">Runway-generated demos <i>86%</i> vs a perfect operator <i>88%</i>: a statistical tie</span></div></section>
+
+<script>
+const t = document.getElementById("pipe_t").innerHTML;
+[1,2,3].forEach(k => { const s = document.getElementById("i_pipe"+k); s.innerHTML = t;
+  const n = s.querySelectorAll(".node"), show = k===1?2:k===2?4:6;
+  n.forEach((x,i)=>{ if(i>=show) x.classList.add("hid"); });
+  if(k<3) s.querySelector(".quote").style.opacity=0; });
+const id = new URLSearchParams(location.search).get("c");
+document.getElementById(id).classList.add("on");
+if (id.startsWith("c_") || id.endsWith("_ov")) document.body.classList.add("clear");
+</script>
+</body></html>

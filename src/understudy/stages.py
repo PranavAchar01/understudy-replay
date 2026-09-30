@@ -46,12 +46,14 @@ def cpu_name() -> str:
 
 
 def footage(
-    task: Task, run_dir: Path, n: int, emit=_noop, parallel: bool = True, fixes=None, start: int = 0
+    task: Task, run_dir: Path, n: int, emit=_noop, parallel: bool = True, fixes=None, start: int = 0,
+    router: str | None = None,
 ) -> list[dict]:
-    """start > 0: add n new clips to a run that already has footage (generate.next_index)."""
+    """start > 0: add n new clips to a run that already has footage (generate.next_index).
+    router: a Runway Model Router slug; the videos go through it instead of the fixed gen4_turbo."""
     from .generate import generate
 
-    return generate(task, run_dir, n, emit=emit, parallel=parallel, fixes=fixes, start=start)
+    return generate(task, run_dir, n, emit=emit, parallel=parallel, fixes=fixes, start=start, router=router)
 
 
 def training_data(

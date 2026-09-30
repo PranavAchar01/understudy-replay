@@ -1,0 +1,18 @@
+{
+  "clip_id": "v13",
+  "lighting": "soft natural daylight from a window on the left",
+  "table": "a matte white laminate desk",
+  "bowl": "sage green ceramic",
+  "angle": "a low front view from table height, about 25 degrees down",
+  "image_prompt": "Photorealistic photo, a low front view from table height, about 25 degrees down, of a matte white laminate desk with only two objects on it: exactly one small red wooden toy block (a 3 cm cube, all six sides equal) on the left, and one shallow sage green ceramic bowl on the right, about 20 cm apart. Nothing else is on the table. A person's right hand hovers just above the red block, thumb and index finger open, ready to pinch it; the forearm enters from the right edge of the frame. The whole hand, the block and the bowl are fully in frame and unobstructed. soft natural daylight from a window on the left. Sharp focus, no text.",
+  "video_prompt": "The right hand pinches the red block between thumb and index finger, lifts it about 10 cm, carries it to the right and releases it into the bowl, then the open hand moves back up and away. One continuous smooth motion at natural speed. Static camera, locked off. The block stays one solid red cube the whole time and the bowl does not move.",
+  "restyle_prompt": "The same kind of shot as @base: a right hand about to pinch a small red block next to a bowl. Change the scene to a matte white laminate desk, a sage green ceramic bowl, soft natural daylight from a window on the left, seen from a low front view from table height, about 25 degrees down. Keep the whole hand, the block and the bowl fully in frame. Photorealistic, no text.",
+  "prompt_version": 1,
+  "fixes": [],
+  "image_model": "gen4_image_turbo",
+  "video_model": "gen4_turbo",
+  "first_frame": "clips/v13.png",
+  "video": "clips/v13.mp4",
+  "router": "demo-cheap",
+  "routing": "clips/v13.routing.json"
+}

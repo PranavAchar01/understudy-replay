@@ -150,8 +150,14 @@ def run_episode(
     rng: np.random.Generator,
     on_frame: Callable[[np.ndarray, np.ndarray], None] | None = None,
     max_seconds: float = 20.0,
+    release_z: float = RELEASE_Z,
+    success_fn: Callable | None = None,
+    correct_slip: bool = False,
+    carry_speed: float = TRANSIT_SPEED,
 ) -> EpisodeResult:
-    """on_frame(state_rad[6], action_rad[6]) at 30 fps, as in expert.run_episode."""
+    """on_frame(state_rad[6], action_rad[6]) at 30 fps, as in expert.run_episode. release_z: cube centre height
+    when the jaws open over the target (stack_expert raises it onto the base block); success_fn replaces the
+    in-bowl rule."""
     cube_xy, yaw = sample_start(rng, spot)
     scene.reset(HOME, GRIPPER_CLOSED, cube_xy, yaw)
     ik = GraspIK(scene)
@@ -220,9 +226,17 @@ def run_episode(
     goto(carry, LIFT_SPEED, settle=0.1)
     lifted = bool(scene.cube_pos()[2] > CUBE_HALF + 0.02)
     over = site_for_cube([*TARGET_XY, CARRY_Z], ik.heading, CENTRE_GRASP)
-    goto(over, TRANSIT_SPEED, settle=0.15)
+    goto(over, carry_speed, settle=0.15)
+    if correct_slip:  # closed loop on the held cube itself: nudge the jaws until the cube is over the target
+        for _ in range(4):
+            err = TARGET_XY - scene.cube_pos()[:2]
+            if np.linalg.norm(err) < 0.002:
+                break
+            goto(ee_cmd + np.array([*err, 0.0]), APPROACH_SPEED, settle=0.15)
+    aim_site = ee_cmd.copy()
+    aim_site[2] += release_z - CARRY_Z
     goto(
-        site_for_cube([*TARGET_XY, RELEASE_Z], ik.heading, CENTRE_GRASP),
+        aim_site,
         LIFT_SPEED,
         settle=0.1,
     )
@@ -233,7 +247,7 @@ def run_episode(
 
     end = scene.cube_pos()
     return EpisodeResult(
-        success=success(end),
+        success=(success_fn or success)(end),
         frames=frames,
         cube_start=np.array([*cube_xy, yaw]),
         cube_end=end,

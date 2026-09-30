@@ -34,3 +34,8 @@ data/probes/*
 !data/probes/bench/
 data/router-dryruns.json.bak
 gpu/runs/
+
+# video build scratch (large) and the unmasked router screenshot (has an email)
+film-demo/work/
+film-demo/assets/runway-routers.webp
+data/logs/

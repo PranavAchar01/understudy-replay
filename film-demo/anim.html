@@ -1,0 +1,70 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{--ink0:#07090c;--ink2:#14181e;--text:rgb(240,236,228);--t2:rgba(240,236,228,.64);--t3:rgba(240,236,228,.42);--hair:rgba(255,255,255,.1);--amber:222,172,82;--gold:#f1cf8a;
+--serif:"Hedvig Letters Serif",Georgia,serif;--sans:Inter,system-ui,sans-serif;--mono:"JetBrains Mono",Menlo,monospace}
+*{box-sizing:border-box}html,body{margin:0;width:1280px;height:720px;overflow:hidden;background:var(--ink0);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+.scene{position:absolute;inset:0;display:none}.scene.on{display:block}
+.row{position:absolute;left:0;display:flex;gap:22px;will-change:transform}
+.hl{flex:none;width:520px}
+.hl .img{width:520px;height:217px;border-radius:10px;background-size:100% auto;background-repeat:no-repeat;border:1px solid var(--hair);box-shadow:0 12px 40px rgba(0,0,0,.6)}
+.hl .src{margin-top:10px;font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--t2)}
+.hl .src b{color:var(--gold);font-weight:500}
+.band{position:absolute;left:0;right:0;bottom:0;height:176px;background:linear-gradient(180deg,rgba(7,9,12,0),rgba(7,9,12,.94) 22%,#07090c);padding:34px 96px 0}
+.lab{font:500 13px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+.lab b{color:rgb(var(--amber));font-weight:500}
+h2{font:400 40px/1.14 var(--serif);margin:12px 0 0;letter-spacing:-.01em}h2 em{font-style:normal;color:var(--gold);display:block}
+.docs{position:absolute;left:64px;top:150px;width:700px;height:500px;border-radius:14px;overflow:hidden;border:1px solid var(--hair);box-shadow:0 20px 60px rgba(0,0,0,.6);background:#fff}
+.docs .bar{height:30px;background:#1b1f26;display:flex;align-items:center;gap:7px;padding:0 12px;font:400 12px var(--mono);color:var(--t2)}
+.docs .bar i{width:10px;height:10px;border-radius:50%;background:#3a3f48;display:block}
+.docs .pg{position:absolute;left:0;top:30px;width:700px;height:438px;background:url(work/img/docs.png) -40px -20px/1000px auto no-repeat;will-change:transform;transform-origin:30% 20%}
+.side{position:absolute;left:810px;top:170px;right:64px}
+.rr{margin-top:22px;padding:14px 16px;border:1px solid var(--hair);border-radius:14px;background:var(--ink2)}
+.rr .k{font:500 17px/1 var(--sans);display:flex;align-items:center;gap:8px}.dot{width:8px;height:8px;border-radius:50%;background:rgb(var(--amber));box-shadow:0 0 8px rgba(var(--amber),.9)}
+.rr .m{font:500 14px/1.4 var(--mono);color:var(--t2);margin-top:8px}
+</style></head><body>
+
+<section class="scene" id="heads">
+  <div class="row" id="r1" style="top:34px"></div>
+  <div class="row" id="r2" style="top:318px"></div>
+  <div class="band"><div class="lab">The data problem</div>
+    <h2>Labs pay people to record chores on camera.<em>Students without a lab can't collect that data.</em></h2></div>
+</section>
+
+<section class="scene" id="docs">
+  <div style="position:absolute;left:64px;top:52px"><div class="lab">Model routing · <b>Runway Model Routers</b></div>
+  <h2 style="font-size:36px">Point at a preference, <em style="display:inline">not a model.</em></h2></div>
+  <div class="docs"><div class="bar"><i></i><i></i><i></i><span style="margin-left:10px">docs.dev.runwayml.com/model-routers</span></div><div class="pg" id="pg"></div></div>
+  <div class="side"><div class="lab">Our three routers</div>
+    <div class="rr"><div class="k"><span class="dot"></span>Cheap · optimize for cost</div><div class="m">demo-cheap</div></div>
+    <div class="rr"><div class="k"><span class="dot"></span>Fast · optimize for latency</div><div class="m">demo-fast</div></div>
+    <div class="rr"><div class="k"><span class="dot"></span>Best · optimize for quality</div><div class="m">demo-best</div></div>
+  </div>
+</section>
+
+<script>
+// y0: crop top in source px (1600 wide); frame is 2.4:1
+const H = [
+  ["s1","IEEE Spectrum","28 May 2024",0],["s2","Google DeepMind","3 Oct 2023",0],["s3","Business Insider","2 Nov 2025",175],
+  ["s4","Figure","25 Aug 2026",200],["s5","TechCrunch","5 Jan 2026",333],["s6","Apple ML Research","Jul 2025",0]];
+const card = ([s,o,d,y]) => `<div class="hl"><div class="img" style="background-image:url(work/img/${s}.png);background-position:0 ${-(y/1600)*520}px"></div><div class="src"><b>${o}</b> · ${d}</div></div>`;
+document.getElementById("r1").innerHTML = [H[0],H[2],H[3],H[0]].map(card).join("");
+document.getElementById("r2").innerHTML = [H[4],H[1],H[5],H[4]].map(card).join("");
+const scene = new URLSearchParams(location.search).get("s");
+document.getElementById(scene).classList.add("on");
+const ease = (x) => x * x * (3 - 2 * x);
+window.DURATION = { heads: 8.5, docs: 5.5 }[scene];
+window.seek = (t) => {
+  const f = Math.min(1, Math.max(0, t / window.DURATION));
+  if (scene === "heads") {
+    document.getElementById("r1").style.transform = `translate3d(${20 - 300 * f}px,0,0)`;
+    document.getElementById("r2").style.transform = `translate3d(${-600 + 300 * f}px,0,0)`;
+  } else {
+    const e = ease(f);
+    document.getElementById("pg").style.transform = `translate3d(0,${-60 * e}px,0) scale(${1 + 0.05 * e})`;
+  }
+};
+window.seek(0);
+</script>
+</body></html>

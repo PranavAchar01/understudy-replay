@@ -64,7 +64,10 @@ def main() -> None:
     ap.add_argument("--cameras", default="front")
     ap.add_argument("--seed", type=int, default=2026)
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--clip-ids", default="", help="only these accepted clips (comma separated), e.g. one router's")
+    ap.add_argument("--repo-id", default="local/understudy_aug")
     a = ap.parse_args()
+    only = set(filter(None, a.clip_ids.split(",")))
 
     scene = load(task="pick")
     rng = np.random.default_rng(a.seed)
@@ -72,7 +75,7 @@ def main() -> None:
     accepted = sorted(
         p
         for p in (a.run_dir / "results").glob("*.json")
-        if json.loads(p.read_text())["accepted"]
+        if json.loads(p.read_text())["accepted"] and (not only or p.stem in only)
     )
     episodes, stats, t0 = [], {}, time.time()
     for p in accepted:
@@ -129,7 +132,7 @@ def main() -> None:
         scene,
         episodes,
         a.out,
-        "local/understudy_aug",
+        a.repo_id,
         task,
         cameras=cams,
         on_episode=lambda i, n, o, f: (

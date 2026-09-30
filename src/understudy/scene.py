@@ -67,6 +67,12 @@ def _look_at(pos, target, up=(0.0, 0.0, 1.0)):
     return np.concatenate([right, cam_up])
 
 
+BASE_HALF = 0.022  # stack task: a flat blue block, 4.4 x 4.4 cm, 2 cm tall, centred on TARGET_XY
+BASE_HALF_Z = 0.01  # (the arm carries the cube's bottom ~3.5 cm up, so a taller block would be swept)
+BASE_MASS = 0.15
+TOWER_XY = np.array([0.20, 0.0])  # tower task: a thinner blue slab here (the arm reaches higher closer in)
+TOWER_BASE_HALF_Z = 0.005
+
 BOWL_R = 0.05  # pick task: bowl inner radius, centred on TARGET_XY
 BOWL_WALL_H = 0.025
 BOWL_WALL_T = 0.006
@@ -117,9 +123,10 @@ def _pad_frames(kp: float, kv: float):
 
 
 def build_spec(kp: float = KP, kv: float = KV, task: str = "push") -> mujoco.MjSpec:
-    """task "push": the taped square. task "pick": a bowl at the square's place, plus jaw pads for grasping."""
-    assert task in ("push", "pick"), task
-    pads = _pad_frames(kp, kv) if task == "pick" else None
+    """task "push": the taped square. task "pick": a bowl at the square's place, plus jaw pads for grasping.
+    task "stack": no bowl; a free flat blue block (4.4 x 4.4 x 2 cm) at the square's place, plus the same jaw pads."""
+    assert task in ("push", "pick", "stack", "tower"), task
+    pads = _pad_frames(kp, kv) if task in ("pick", "stack", "tower") else None
     spec = mujoco.MjSpec.from_file(str(MJCF))
     spec.option.timestep = TIMESTEP
     spec.option.integrator = mujoco.mjtIntegrator.mjINT_IMPLICITFAST
@@ -205,7 +212,7 @@ def build_spec(kp: float = KP, kv: float = KV, task: str = "push") -> mujoco.MjS
                 conaffinity=0,
                 group=1,
             )
-    else:
+    elif task == "pick":
         # a shallow round bowl: a thin base disc and a ring of wall segments, fixed to the table
         spec.add_material(name="bowl_mat", rgba=[0.95, 0.95, 0.92, 1.0])
         bowl = world.add_body(name="bowl", pos=[tx, ty, 0.0])
@@ -228,10 +235,36 @@ def build_spec(kp: float = KP, kv: float = KV, task: str = "push") -> mujoco.MjS
                 quat=[np.cos(a / 2), 0, 0, np.sin(a / 2)],
                 material="bowl_mat",
             )
+    if task in ("stack", "tower"):
+        # the base block: free, heavier than the cube, added before the cube so the cube stays the last free joint
+        spec.add_material(name="base_mat", rgba=[0.15, 0.35, 0.85, 1.0])
+        bx, by, bz = (TOWER_XY[0], TOWER_XY[1], TOWER_BASE_HALF_Z) if task == "tower" else (tx, ty, BASE_HALF_Z)
+        base = world.add_body(name="base_block", pos=[bx, by, bz])
+        base.add_freejoint(name="base_block_free")
+        base.add_geom(
+            name="base_geom",
+            type=mujoco.mjtGeom.mjGEOM_BOX,
+            size=[BASE_HALF, BASE_HALF, bz],
+            mass=BASE_MASS,
+            material="base_mat",
+            friction=[0.8, 0.005, 0.0001],
+            condim=4,
+            contype=CUBE_BIT,  # touches the table, the arm links, the pads and the cube, not the jaw hull meshes
+            conaffinity=CUBE_BIT,
+        )
+    if task == "tower":
+        # the second cube (green), before the red cube so the red cube stays the last free joint
+        spec.add_material(name="cube2_mat", rgba=[0.15, 0.70, 0.25, 1.0])
+        c2 = world.add_body(name="cube2", pos=[0.15, -0.10, CUBE_HALF])
+        c2.add_freejoint(name="cube2_free")
+        c2.add_geom(name="cube2_geom", type=mujoco.mjtGeom.mjGEOM_BOX, size=[CUBE_HALF] * 3, mass=CUBE_MASS,
+                    material="cube2_mat", friction=[0.6, 0.005, 0.0001], condim=4, contype=CUBE_BIT,
+                    conaffinity=CUBE_BIT, solref=GRASP_SOLREF, solimp=GRASP_SOLIMP)
+    if task in ("pick", "stack", "tower"):
         # the jaw meshes keep colliding with the table and bowl but not with the cube; the pads do the grasping;
         # every other colliding geom (table, bowl, floor, the other arm links) also touches the cube
         for g in spec.geoms:
-            if not g.contype:
+            if not g.contype or g.name in ("base_geom", "cube2_geom"):
                 continue
             if g.parent.name in ("gripper", "moving_jaw_so101_v1"):
                 g.contype, g.conaffinity = MESH_BIT, MESH_BIT
@@ -271,7 +304,7 @@ def build_spec(kp: float = KP, kv: float = KV, task: str = "push") -> mujoco.MjS
                 "solref": GRASP_SOLREF,
                 "solimp": GRASP_SOLIMP,
             }
-            if task == "pick"
+            if task in ("pick", "stack", "tower")
             else {}
         ),
     )

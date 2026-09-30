@@ -1,0 +1,33 @@
+{
+  "router": "demo-best",
+  "model": "seedance2_5",
+  "provider": "bytedance",
+  "optimize_for": "quality",
+  "price_ceiling": null,
+  "estimated_credits": 150.0,
+  "dry_run": {
+    "model": "seedance2_5",
+    "provider": "bytedance",
+    "configId": "demo-best",
+    "resolvedSettings": {
+      "optimizeFor": "quality",
+      "priceCeiling": null
+    },
+    "resolvedInput": {
+      "duration": 5,
+      "ratio": "1280:720",
+      "resolution": "720p"
+    },
+    "estimatedCost": {
+      "credits": 150
+    }
+  },
+  "task_id": "98c03af7-3c07-4745-9fad-f094413b8b21",
+  "realized_credits": 150,
+  "live_estimated_credits": 150,
+  "capacity_fallback": null,
+  "balance_before": 48906,
+  "seconds": 170.6,
+  "status": "SUCCEEDED",
+  "cached": false
+}
