@@ -11,9 +11,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="site.css?v=4">
-  <script src="route.js?v=3" defer></script>
-  <script src="site.js?v=4" defer></script>
+  <link rel="stylesheet" href="site.css?v=6">
+  <script src="route.js?v=6" defer></script>
+  <script src="site.js?v=6" defer></script>
 </head>
 <body>
   <main class="page">
@@ -31,7 +31,7 @@
 
       <form class="composer" id="composer" autocomplete="off">
         <div class="bar">
-          <div class="route-pill is-empty" id="route-pill" role="status" aria-live="polite" title="Picked from your sentence by the Runway Model Router rubric">
+          <div class="route-pill is-empty" id="route-pill" role="status" aria-live="polite" title="Your budget picks the Runway Model Router: best quality under a price ceiling">
             <span class="robot-dot"></span><span id="route-label"></span>
           </div>
           <label class="sr-only" for="prompt">What should the robot learn?</label>
@@ -46,7 +46,10 @@
           <span class="gpu-hint" id="gpu-hint" aria-live="polite"></span>
           </div>
 
-          <button type="button" class="live" id="live" aria-pressed="false" title="On stage: route for lowest latency">Live</button>
+          <div class="gpu" title="What one run (5 Runway clips) may cost. Every option is a quality-optimized Model Router with that price ceiling.">
+            <span class="gpu-label" id="budget-label">Budget / run</span>
+            <div class="gpu-seg" id="budget-seg" role="radiogroup" aria-labelledby="budget-label"></div>
+          </div>
         </div>
         <div class="key-row" id="key-row" hidden>
           <label class="gpu-label" for="rw-key">Runway API key</label>

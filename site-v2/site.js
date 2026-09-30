@@ -14,6 +14,12 @@
     "demo-cheap": { model: "gen4_turbo", provider: "runway", credits: 25 },
     "demo-fast": { model: "seedance2_fast", provider: "bytedance", credits: 145 },
     "demo-best": { model: "seedance2_5", provider: "bytedance", credits: 150 },
+    // quality routers with a price ceiling (Runway dry runs, 2026-09-30)
+    "understudy-q40": { model: "gen4_turbo", provider: "runway", credits: 25 },
+    "understudy-q80": { model: "gemini_omni_flash", provider: "google", credits: 51 },
+    "understudy-q120": { model: "gemini_omni_flash", provider: "google", credits: 51 },
+    "understudy-q160": { model: "gemini_omni_flash_1.1", provider: "google", credits: 51 },
+    "understudy-q200": { model: "seedance2_5", provider: "bytedance", credits: 150 },
   };
 
   const input = $("#prompt");
@@ -54,17 +60,17 @@
     $("#route-label").textContent = name;
     line.classList.toggle("is-no", !!note);
     line.innerHTML = note ? esc(note)
-      : `Routed to <b>${esc(name)}</b>: ${esc((r.reasons || []).join(", "))} · ${esc(dry.model)} · ${esc(dry.credits)} credits a clip`;
+      : `<b>${esc(name)}</b> a run: ${esc((r.reasons || []).join(", "))} · picks <b>${esc(dry.model)}</b> at ${esc(dry.credits)} credits · ${Route.CLIPS} clips ≈ $${((dry.credits * Route.CLIPS + 35) / 100).toFixed(2)}`;
   }
   async function route() {
     const seq = ++routeSeq;
     if (!input.value.trim()) { pill.classList.add("is-empty"); line.textContent = ""; state.route = null; return; }
     pill.classList.remove("is-empty");
     const text = textNow();
-    const local = Route.decide(text, { live: state.live });
+    const local = Route.decide(text, { budget: Route.budget });
     paintRoute(local, state.dry[local.router] || DRY_FALLBACK[local.router]);
     await ready;
-    if (!state.backend) return;
+    if (!state.backend || true) return; // the budget picks the router; the dry-run table above is the live pick
     const r = await post("/api/route", { task: text, live: state.live });
     if (seq !== routeSeq || !r.ok || !r.body.router) return;
     const d = r.body.dryRun || r.body.dry_run || {};
@@ -74,7 +80,15 @@
   }
   const routeSoon = () => { clearTimeout(routeTimer); routeTimer = setTimeout(route, 250); };
   input.addEventListener("input", routeSoon);
-  liveBtn.addEventListener("click", () => { state.live = !state.live; liveBtn.setAttribute("aria-pressed", String(state.live)); route(); });
+  // budget picker: what one run may spend on Runway ($2 to $10); every option is a quality router with that ceiling
+  const budSeg = $("#budget-seg");
+  for (const b of Route.BUDGETS) {
+    const btn = el("button", null, `$${b}`); btn.type = "button"; btn.setAttribute("role", "radio");
+    btn.addEventListener("click", () => { Route.budget = b; paintBudget(); route(); });
+    budSeg.append(btn);
+  }
+  function paintBudget() { [...budSeg.children].forEach((n, i) => { const on = Route.BUDGETS[i] === Route.budget; n.classList.toggle("on", on); n.setAttribute("aria-checked", String(on)); }); }
+  paintBudget();
   document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => { input.value = c.dataset.text; input.focus(); route(); }));
   route();
 
@@ -332,7 +346,7 @@
       line.classList.add("is-no"); line.textContent = "New prompts run on your own Runway credits: paste your Runway API key below. The four examples play without one.";
       return;
     }
-    const s = await cpost("/api/cloud/start", { prompt: text });
+    const s = await cpost("/api/cloud/start", { prompt: text, budget: Route.budget });
     if (!s.ok) { if (s.status === 401) keyRow.classList.add("need"); line.classList.add("is-no"); line.textContent = (s.body && s.body.error) || "Live generation is unavailable right now."; return; }
     const { task, router, reasons, image_task } = s.body;
     const dry = state.dry[router] || DRY_FALLBACK[router];
@@ -348,7 +362,7 @@
       t.set("gen", "first frame · gen4_image");
       const frame = await poll(image_task, (b) => t.set("gen", `first frame${pct(b)}`));
       $("video", t.root).poster = frame;
-      const v = await cpost("/api/cloud/video", { prompt: task, image_task });
+      const v = await cpost("/api/cloud/video", { prompt: task, image_task, budget: Route.budget });
       if (!v.ok) throw new Error((v.body && v.body.error) || "The router refused this clip.");
       const model = v.body.model || dry.model;
       status(`Runway generating · ${model} · ${v.body.credits ?? dry.credits} credits`);
@@ -374,7 +388,7 @@
   const short = (s, n = 42) => (String(s).length > n ? String(s).slice(0, n - 1) + "…" : String(s));
 
   async function live(text) {
-    const rt = state.route || Route.decide(text, { live: state.live });
+    const rt = state.route || Route.decide(text, { budget: Route.budget });
     const f = await post("/api/footage", { task: text, router: rt.router });
     if (!f.ok) { paintRoute(rt, rt.dry || DRY_FALLBACK[rt.router], why(f, f.status === 409 ? "A stage is still running." : "The server refused this task.")); return; }
     const { slug, clip_ids: ids = [], existing = [] } = f.body;

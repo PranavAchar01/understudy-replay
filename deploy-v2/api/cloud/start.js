@@ -7,5 +7,5 @@ module.exports = (req, res) => send(res, async () => {
   const task = clean((req.body || {}).prompt);
   limit(req);
   const t = await runway(key, "POST", "/text_to_image", { model: "gen4_image", promptText: imagePrompt(task), ratio: "1280:720" });
-  return { task, ...decide(task), image_task: t.id };
+  return { task, ...decide(task, (req.body || {}).budget), image_task: t.id };
 });

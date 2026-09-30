@@ -26,36 +26,24 @@ async function runway(key, method, path, body) {
   return j;
 }
 
-// the same rubric as route.js: hard cues go to Best, everything else to Cheap (Fast is live-stage only)
-const BEST = [
-  [/\b(cloth|laundry|towel|shirt|sock|sheet|napkin|fabric|fold|folding|crumple|rope|cable|string|wire|bag|dough|paper)\b/, "deformable object"],
-  [/\b(pour|pouring|liquid|water|juice|coffee|milk|spill|wipe|splash)\b/, "liquids move on their own"],
-  [/\b(two hands|both hands|bimanual|two arms|both arms|handover)\b/, "needs two hands"],
-  [/\b(then|after that|stack|tower|sort|arrange|every|all the|each|assemble|build)\b/, "several steps"],
-  [/\b(insert|thread|peg|plug|screw|needle|precise|precisely|carefully|tiny|align)\b/, "needs precision"],
-];
-function decide(text) {
-  const t = text.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
-  const reasons = BEST.filter(([re]) => re.test(t)).map(([, why]) => why);
-  return reasons.length ? { router: "demo-best", reasons } : { router: "demo-cheap", reasons: ["one rigid object, one hand"] };
+// budget routing (same as route.js): a run is 5 clips; every budget is a quality-optimized Model Router whose price
+// ceiling is (budget / 5 clips) credits a clip, created on the visitor's account the first time it is used
+const BUDGETS = [2, 4, 6, 8, 10], CLIPS = 5;
+function decide(_task, budget) {
+  const usd = BUDGETS.includes(Number(budget)) ? Number(budget) : 2;
+  const ceiling = Math.round((usd * 100) / CLIPS);
+  return { router: `understudy-q${ceiling}`, budget: usd, ceiling, reasons: [`best quality up to ${ceiling} credits a clip`] };
 }
-
-// the visitor's account gets the same two Model Routers the first time it is used (Cheap = cost, Best = quality)
-const ROUTERS = {
-  "demo-cheap": { slug: "understudy-cheap", optimizeFor: "cost" },
-  "demo-best": { slug: "understudy-best", optimizeFor: "quality" },
-};
-async function ensureRouter(key, router) {
-  const want = ROUTERS[router];
+async function ensureRouter(key, router, ceiling) {
   const have = await runway(key, "GET", "/routers");
-  if ((have.data || []).some((r) => r.slug === want.slug || r.name === want.slug)) return want.slug;
+  if ((have.data || []).some((r) => r.slug === router)) return router;
   const made = await runway(key, "POST", "/routers", {
-    slug: want.slug,
-    name: want.slug,
-    description: `Understudy robot demonstrations, optimize for ${want.optimizeFor}`,
-    settings: { schemaVersion: 1, models: { mode: "allow_new_except", ids: [] }, optimizeFor: want.optimizeFor, fallback: { onCapacity: true } },
+    slug: router,
+    name: router,
+    description: `Understudy demonstrations: best quality at up to ${ceiling} credits a clip`,
+    settings: { schemaVersion: 1, models: { mode: "allow_new_except", ids: [] }, optimizeFor: "quality", maxCreditsPerGeneration: { video: ceiling }, fallback: { onCapacity: true } },
   });
-  return made.slug || made.name || want.slug;
+  return made.slug || router;
 }
 
 function clean(prompt) {
