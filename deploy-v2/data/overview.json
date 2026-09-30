@@ -123,10 +123,9 @@
       "note": "on unseen starts in simulation"
     },
     "download": {
-      "url": "https://github.com/PranavAchar01/understudy-replay/releases/download/vla-pick-20k/understudy-smolvla-pick-20k.zip",
+      "url": "https://github.com/PranavAchar01/understudy-replay/releases/download/vla-tower-14k/understudy-smolvla-tower-14k.zip",
       "size": "907 MB"
     },
-    "download_note": "Pick-and-place model for now; this task's own VLA replaces it when training finishes",
     "run_seconds": 2022
   }
 }
