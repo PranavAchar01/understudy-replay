@@ -223,3 +223,5 @@ body.is-locked { overflow: hidden; }
 .grid.one .tile:not(.is-hero) { display: none; }
 #grid { grid-template-columns: minmax(0, 760px); justify-content: center; }
 #grid .tile { aspect-ratio: 16 / 9; }
+#prompts .grid { grid-template-columns: minmax(0, 760px); justify-content: center; }
+#prompts .grid .tile { aspect-ratio: 16 / 9; }

@@ -1,0 +1,31 @@
+[
+ {
+  "prompt": "put the red block in the bowl",
+  "slug": "put-the-red-block-in-the-bowl",
+  "router": "demo-cheap",
+  "model": "gen4_turbo",
+  "accepted": [
+   "v01"
+  ]
+ },
+ {
+  "prompt": "push the red block onto the blue square",
+  "slug": "push-the-red-block-onto-the-blue-square",
+  "router": "demo-cheap",
+  "model": "gen4_turbo",
+  "accepted": [
+   "p01"
+  ],
+  "tiles_dir": "media/vla"
+ },
+ {
+  "prompt": "stack the red block on the blue block",
+  "slug": "stack-the-red-block-on-the-blue-block",
+  "router": "demo-cheap",
+  "model": "gen4_turbo",
+  "accepted": [
+   "s01"
+  ],
+  "tiles_dir": "media/vla"
+ }
+]
