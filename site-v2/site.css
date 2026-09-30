@@ -54,8 +54,8 @@ body.is-locked { overflow: hidden; }
 }
 .hero-media { position: absolute; inset: 0; z-index: -3; overflow: hidden; background: var(--ink-1); }
 .hero-img {
-  position: absolute; inset: 0; image-rendering: pixelated;
-  background: url("media/hero-dither.png") 55% 62% / cover no-repeat;
+  position: absolute; inset: 0;
+  background: url("media/hero-cine.jpg") 50% 45% / cover no-repeat;
   animation: drift 40s ease-in-out infinite alternate;
 }
 @keyframes drift { from { transform: scale(1); } to { transform: scale(1.035); } }
