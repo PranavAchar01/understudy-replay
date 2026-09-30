@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Understudy</title>
+  <meta name="description" content="Robot training from a sentence. Runway films the demos, MuJoCo checks the physics, SmolVLA learns the task.">
+  <meta name="theme-color" content="#07090c">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2307090c'/%3E%3Crect x='14' y='30' width='16' height='16' fill='%23ba483a'/%3E%3Crect x='34' y='18' width='16' height='28' fill='%23c4963e'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="site.css?v=1">
+  <script src="route.js?v=1" defer></script>
+  <script src="site.js?v=1" defer></script>
+</head>
+<body>
+  <main class="page">
+    <section class="hero" id="hero">
+      <div class="hero-media" aria-hidden="true"><div class="hero-img"></div></div>
+      <div class="hero-scrim" aria-hidden="true"></div>
+      <header class="hero-bar">
+        <span class="wordmark">Understudy</span>
+        <span class="hero-tag">Robot training from a sentence</span>
+      </header>
+
+      <div class="hero-copy">
+        <h1 class="title">I don't have a robotics lab.<br><em>So Runway films the demos.</em></h1>
+      </div>
+
+      <form class="composer" id="composer" autocomplete="off">
+        <div class="bar">
+          <div class="route-pill" id="route-pill" role="status" aria-live="polite" title="Picked from your sentence by the Runway Model Router rubric">
+            <span class="robot-dot"></span><span id="route-label">Cheap</span>
+          </div>
+          <label class="sr-only" for="prompt">What should the robot learn?</label>
+          <input class="prompt" id="prompt" type="text" maxlength="160" spellcheck="false" placeholder="put the red block in the bowl">
+          <button type="submit" class="cta" id="go">Train</button>
+        </div>
+        <div class="route-row">
+          <p class="route-line" id="route-line"></p>
+          <button type="button" class="live" id="live" aria-pressed="false" title="On stage: route for lowest latency">Live</button>
+        </div>
+        <div class="chips" id="chips">
+          <button type="button" class="chip" data-text="put the red block in the bowl">put the red block in the bowl</button>
+          <button type="button" class="chip" data-text="push the red block onto the blue square">push the red block onto the blue square</button>
+          <button type="button" class="chip" data-text="stack the red block on the blue block">stack the red block on the blue block</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="fleet" id="fleet" hidden aria-label="Training run">
+      <header class="fleet-head">
+        <div class="run-title"><span class="route-pill sm" id="run-pill"><span class="robot-dot"></span><span></span></span><h2 id="run-task"></h2></div>
+        <p id="run-status"><i></i><span></span></p>
+      </header>
+      <div class="stats" id="stats">
+        <div data-m="credits"><b>0</b><span>Credits spent</span></div>
+        <div data-m="time"><b>0:00</b><span>Time</span></div>
+        <div data-m="accepted"><b>0</b><span>Physics-accepted demos</span></div>
+        <div data-m="cpa"><b>-</b><span>Cost per usable demo</span></div>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div id="prompts"></div>
+    </section>
+  </main>
+
+  <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="SmolVLA film">
+    <div class="sheet-backdrop" id="sheet-backdrop"></div>
+    <div class="sheet-panel">
+      <video id="sheet-video" muted loop playsinline autoplay></video>
+      <button type="button" class="close" id="sheet-close" aria-label="Close">
+        <svg viewBox="0 0 14 14" aria-hidden="true"><path d="m2 2 10 10M12 2 2 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <footer class="foot"><p>Runway Model Router · MuJoCo physics · SO-101 · SmolVLA · simulated</p></footer>
+  <div class="grain" aria-hidden="true"></div>
+</body>
+</html>

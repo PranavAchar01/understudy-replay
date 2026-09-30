@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Understudy Benchmark</title>
+<meta name="description" content="Same model, same task, same test: a VLA trained on Runway-generated demonstrations matches one trained on perfect demonstrations.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ink-0: #07090c; --ink-1: #0d1014; --ink-2: #14181e;
+    --white: 240, 236, 228; --text: rgb(var(--white));
+    --text-2: rgba(var(--white), 0.62); --text-3: rgba(var(--white), 0.4);
+    --hair: rgba(255, 255, 255, 0.1); --amber: 222, 172, 82;
+    --accent: rgb(var(--amber)); --accent-hi: #f1cf8a; --info: #9fb8e6;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { background: var(--ink-0); color: var(--text); }
+  body { font: 400 16px/1.5 Inter, system-ui, sans-serif; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+  .slide { width: min(1200px, 100%); aspect-ratio: 16 / 9; background: var(--ink-1); border: 1px solid var(--hair);
+    border-radius: 28px; padding: clamp(20px, 4vw, 56px); display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(14px, 2.4vw, 36px); grid-template-rows: 1fr auto;
+    position: relative; overflow: hidden; }
+  .tag { font: 500 12px/1 "JetBrains Mono", monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+  h1 { font-family: "Hedvig Letters Serif", Georgia, serif; font-weight: 400; font-size: clamp(28px, 4.2vw, 56px); line-height: 1.05; margin: 14px 0 12px; letter-spacing: -.01em; }
+  h1 em { font-style: normal; color: var(--accent-hi); }
+  .sub { color: var(--text-2); font-size: clamp(13px, 1.35vw, 17px); max-width: 34em; }
+  .bars { margin-top: clamp(16px, 3vw, 36px); display: grid; gap: 14px; }
+  .row { display: grid; grid-template-columns: 9.5em 1fr 4.2em; align-items: center; gap: 14px; }
+  .row .name { font-size: clamp(12px, 1.2vw, 15px); color: var(--text-2); }
+  .row .name b { display: block; color: var(--text); font-weight: 600; }
+  .track { position: relative; height: 34px; background: var(--ink-2); border-radius: 10px; border: 1px solid var(--hair); }
+  .fill { position: absolute; inset: 0 auto 0 0; border-radius: 9px; }
+  .fill.gen { background: linear-gradient(90deg, rgba(var(--amber), .55), var(--accent)); }
+  .fill.ref { background: linear-gradient(90deg, rgba(159, 184, 230, .35), var(--info)); }
+  .ci { position: absolute; top: 50%; height: 2px; background: rgba(var(--white), .75); transform: translateY(-50%); }
+  .ci::before, .ci::after { content: ""; position: absolute; top: -6px; width: 2px; height: 14px; background: rgba(var(--white), .75); }
+  .ci::before { left: 0; } .ci::after { right: 0; }
+  .score { font-family: "Hedvig Letters Serif", Georgia, serif; font-size: clamp(20px, 2.4vw, 32px); text-align: right; }
+  .note { margin-top: 14px; font-size: clamp(11px, 1.05vw, 13px); color: var(--text-3); }
+  .right { display: grid; grid-template-rows: auto 1fr auto; gap: 14px; min-height: 0; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-height: 0; }
+  figure { margin: 0; display: grid; grid-template-rows: 1fr auto; gap: 6px; min-height: 0; }
+  video { width: 100%; height: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 14px; border: 1px solid var(--hair); background: #000; min-height: 0; }
+  figcaption { font-size: 11px; color: var(--text-3); }
+  figcaption b { display: block; color: var(--text); font-weight: 600; font-size: 13px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stat { background: var(--ink-2); border: 1px solid var(--hair); border-radius: 14px; padding: 12px 14px; }
+  .stat .v { font-family: "Hedvig Letters Serif", Georgia, serif; font-size: clamp(18px, 2vw, 26px); }
+  .stat .k { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  .foot { grid-column: 1 / -1; align-self: end; border-top: 1px solid var(--hair); padding-top: 12px;
+    display: flex; justify-content: space-between; gap: 16px; font-size: 11px; color: var(--text-3); }
+  @media (max-width: 760px) {
+    .slide { aspect-ratio: auto; grid-template-columns: 1fr; grid-template-rows: auto; }
+    .row { grid-template-columns: 7.5em 1fr 3.6em; }
+    .foot { flex-direction: column; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+<main class="slide">
+  <section>
+    <div class="tag">Understudy · benchmark</div>
+    <h1>AI-generated demos train a robot<br><em>as well as perfect ones.</em></h1>
+    <p class="sub">Same model (SmolVLA), same task, same 50 unseen cube positions, same training. The only thing we changed is where the demonstrations came from.</p>
+
+    <div class="bars" aria-label="Success rate, 20,000 training steps">
+      <div class="row">
+        <div class="name"><b>Runway-generated</b>video of people, physics-filtered</div>
+        <div class="track"><div class="fill gen" style="width:86%"></div><div class="ci" style="left:73.8%;width:19.2%"></div></div>
+        <div class="score">86%</div>
+      </div>
+      <div class="row">
+        <div class="name"><b>Perfect operator</b>scripted expert demos</div>
+        <div class="track"><div class="fill ref" style="width:88%"></div><div class="ci" style="left:76.2%;width:18.2%"></div></div>
+        <div class="score">88%</div>
+      </div>
+    </div>
+    <p class="note">43/50 vs 44/50 at 20,000 steps. Error bars are 95% intervals; they overlap, so the two are statistically tied. At 3,000 steps it is 34/50 vs 44/50: generated data needs more training, not more people.</p>
+  </section>
+
+  <section class="right">
+    <div class="tag">Same unseen position, side by side</div>
+    <div class="pair">
+      <figure><video src="media/vla.mp4" autoplay muted loop playsinline></video><figcaption><b>Our VLA</b>trained on Runway demos</figcaption></figure>
+      <figure><video src="media/expert.mp4" autoplay muted loop playsinline></video><figcaption><b>Benchmark</b>perfect-operator demo</figcaption></figure>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v">0</div><div class="k">demos recorded by a person</div></div>
+      <div class="stat"><div class="v">48 min</div><div class="k">training, one NVIDIA GPU</div></div>
+      <div class="stat"><div class="v">0/50</div><div class="k">same model, untrained</div></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>MuJoCo simulation, SO-101 arm, task "put the red block in the bowl". 74 demonstrations per arm from the same start positions.</span>
+    <span>Baseline knows the exact cube pose, so it is stronger than human teleoperation.</span>
+  </div>
+</main>
+</body>
+</html>
