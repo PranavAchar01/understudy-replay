@@ -45,17 +45,26 @@ from .plan import Infeasible, parse_task
 
 REPO = runway.REPO
 # the Replay-style site (deploy-v2, built by site-v2/build-deploy.sh); UNDERSTUDY_SITE=site serves the older page
-SITE = REPO / os.environ.get("UNDERSTUDY_SITE", "deploy-v2" if (REPO / "deploy-v2" / "index.html").is_file() else "site")
+SITE = REPO / os.environ.get(
+    "UNDERSTUDY_SITE",
+    "deploy-v2" if (REPO / "deploy-v2" / "index.html").is_file() else "site",
+)
 RUNS = REPO / "data" / "web-runs"
 RUNS.mkdir(parents=True, exist_ok=True)
 CLIPS = int(os.environ.get("UNDERSTUDY_CLIPS", "5"))
 LOW_PRIORITY = os.environ.get("UNDERSTUDY_LOW_PRIORITY", "1") == "1"
-MAX_SCENARIOS = int(os.environ.get("UNDERSTUDY_MAX_SCENARIOS", "7"))  # default size of a run when adding clips
-VLA_CKPT = os.environ.get("UNDERSTUDY_VLA_CKPT", "")  # SmolVLA checkpoint dir for the "vla" stage
+MAX_SCENARIOS = int(
+    os.environ.get("UNDERSTUDY_MAX_SCENARIOS", "7")
+)  # default size of a run when adding clips
+VLA_CKPT = os.environ.get(
+    "UNDERSTUDY_VLA_CKPT", ""
+)  # SmolVLA checkpoint dir for the "vla" stage
 VLA_DEVICE = os.environ.get("UNDERSTUDY_VLA_DEVICE", "auto")
 VLA_CAMERAS = os.environ.get("UNDERSTUDY_VLA_CAMERAS", "front")
 _HOME_LOCK = Path.home() / "helloworld" / ".heavy-lock"
-HEAVY_LOCK = os.environ.get("UNDERSTUDY_HEAVY_LOCK", str(_HOME_LOCK) if _HOME_LOCK.parent.is_dir() else "")
+HEAVY_LOCK = os.environ.get(
+    "UNDERSTUDY_HEAVY_LOCK", str(_HOME_LOCK) if _HOME_LOCK.parent.is_dir() else ""
+)
 if HEAVY_LOCK == "0":
     HEAVY_LOCK = ""
 
@@ -80,7 +89,10 @@ class Job:
         )
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
         cmd = [sys.executable, "-u", "-m", "understudy.webjob", stage, json.dumps(args)]
-        if LOW_PRIORITY and stage not in ("footage", "train"):  # train is remote GPU work: no background QoS
+        if LOW_PRIORITY and stage not in (
+            "footage",
+            "train",
+        ):  # train is remote GPU work: no background QoS
             cmd = ["nice", "-n", "19", "taskpolicy", "-b", *cmd]
         elif LOW_PRIORITY:
             cmd = ["nice", "-n", "19", *cmd]
@@ -130,7 +142,9 @@ def _busy(stage: str = "") -> Job | None:
     """The running job that blocks a new one of this stage. Training runs on a rented GPU, so it only blocks
     another training job, and local stages never wait for it."""
     if stage == "train":
-        return next((j for j in JOBS.values() if not j.done and j.stage == "train"), None)
+        return next(
+            (j for j in JOBS.values() if not j.done and j.stage == "train"), None
+        )
     return next((j for j in JOBS.values() if not j.done and j.stage != "train"), None)
 
 
@@ -146,10 +160,16 @@ def _start(stage: str, run_slug: str, args: dict) -> dict:
 class TaskIn(BaseModel):
     task: str
     clips: int | None = None
-    refine: bool = False  # rewrite the prompts from this run's last rejections (PhyT2V Step 3)
-    router: str | None = None  # a Model Router slug; omitted = chosen from the task text (route.py); "direct" = gen4_turbo
+    refine: bool = (
+        False  # rewrite the prompts from this run's last rejections (PhyT2V Step 3)
+    )
+    router: str | None = (
+        None  # a Model Router slug; omitted = chosen from the task text (route.py); "direct" = gen4_turbo
+    )
     live: bool = False  # a live/urgent request: an easy task routes to demo-fast instead of demo-cheap
-    max_credits: float | None = None  # refuse before spending if the dry-run estimate for all clips is above this
+    max_credits: float | None = (
+        None  # refuse before spending if the dry-run estimate for all clips is above this
+    )
 
 
 class SlugIn(BaseModel):
@@ -202,8 +222,22 @@ def plan(body: TaskIn) -> dict:
     have = existing_clips(RUNS / s) if (RUNS / s / "clips" / "v01.png").exists() else []
     if have:  # this sentence already has footage: the button adds new scenarios to it
         n = _add_count(s, body.clips)
-        return {"ok": True, "task": t.text, "slug": s, "clips": n, "existing": have, **estimate_more(t, RUNS / s, n)}
-    return {"ok": True, "task": t.text, "slug": s, "clips": CLIPS, "existing": [], **estimate(t, CLIPS)}
+        return {
+            "ok": True,
+            "task": t.text,
+            "slug": s,
+            "clips": n,
+            "existing": have,
+            **estimate_more(t, RUNS / s, n),
+        }
+    return {
+        "ok": True,
+        "task": t.text,
+        "slug": s,
+        "clips": CLIPS,
+        "existing": [],
+        **estimate(t, CLIPS),
+    }
 
 
 @app.post("/api/footage")
@@ -212,15 +246,23 @@ def footage(body: TaskIn) -> dict:
     try:
         t = parse_task(text)
     except Infeasible as e:
-        return JSONResponse({"ok": False, "reason": str(e)}, status_code=422)
+        # outside the pick-and-place pipeline: the page falls back to a live Runway clip (/api/cloud/*)
+        return JSONResponse(
+            {"ok": False, "reason": str(e), "infeasible": True}, status_code=422
+        )
     s = slug(t.text)
     start = next_index(RUNS / s) if (RUNS / s / "clips" / "v01.png").exists() else 0
     n = _add_count(s, body.clips) if start else max(1, min(int(body.clips or CLIPS), 8))
     if body.refine and not (RUNS / s / "data.json").exists():
-        return JSONResponse({"ok": False, "reason": "no gate verdicts to refine from yet"}, status_code=422)
+        return JSONResponse(
+            {"ok": False, "reason": "no gate verdicts to refine from yet"},
+            status_code=422,
+        )
     _save_task(s, t.text)
     if body.router and not re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", body.router):
-        return JSONResponse({"ok": False, "reason": "not a router slug"}, status_code=422)
+        return JSONResponse(
+            {"ok": False, "reason": "not a router slug"}, status_code=422
+        )
     decision = None
     if body.router is None:
         from .route import choose
@@ -234,22 +276,55 @@ def footage(body: TaskIn) -> dict:
         from .generate import base_frame
         from .plan import variants
 
-        frame = base_frame(RUNS / s) if start else base_frame(RUNS / "put-the-red-block-in-the-bowl")
+        frame = (
+            base_frame(RUNS / s)
+            if start
+            else base_frame(RUNS / "put-the-red-block-in-the-bowl")
+        )
         try:
-            d = runway.router_dry_run(runway.router_body(router, variants(t, start + 1)[start].video_prompt, frame))
+            d = runway.router_dry_run(
+                runway.router_body(
+                    router, variants(t, start + 1)[start].video_prompt, frame
+                )
+            )
             per = float((d.get("estimatedCost") or {}).get("credits") or 0)
-            estimate = {"model": d.get("model"), "per_clip_video": per,
-                        "total": per * n + (2 * n if start else 5 + 2 * (n - 1))}
+            estimate = {
+                "model": d.get("model"),
+                "per_clip_video": per,
+                "total": per * n + (2 * n if start else 5 + 2 * (n - 1)),
+            }
         except Exception as e:
             estimate = {"error": str(e)[:200]}
-    if body.max_credits is not None and (estimate is None or "total" not in estimate or estimate["total"] > body.max_credits):
-        return JSONResponse({"ok": False, "reason": f"estimate {estimate} is over max_credits {body.max_credits}",
-                             "estimate": estimate}, status_code=422)
-    args = {"task": t.text, "run_dir": str(RUNS / s), "clips": n, "refine": body.refine, "start": start,
-            "router": router}
+    if body.max_credits is not None and (
+        estimate is None
+        or "total" not in estimate
+        or estimate["total"] > body.max_credits
+    ):
+        return JSONResponse(
+            {
+                "ok": False,
+                "reason": f"estimate {estimate} is over max_credits {body.max_credits}",
+                "estimate": estimate,
+            },
+            status_code=422,
+        )
+    args = {
+        "task": t.text,
+        "run_dir": str(RUNS / s),
+        "clips": n,
+        "refine": body.refine,
+        "start": start,
+        "router": router,
+    }
     ids = [f"v{i + 1:02d}" for i in range(start, start + n)]
-    return _start("footage", s, args) | {"clips": n, "clip_ids": ids, "existing": existing_clips(RUNS / s) if start else [],
-                                         "router": router, "route": decision, "estimate": estimate}
+    return _start("footage", s, args) | {
+        "clips": n,
+        "clip_ids": ids,
+        "existing": existing_clips(RUNS / s) if start else [],
+        "router": router,
+        "route": decision,
+        "estimate": estimate,
+    }
 
 
 def _run_task(s: str) -> str:
@@ -271,9 +346,20 @@ def _vla_state(run_slug: str) -> dict:
     from .vla_tiles import accepted_clips, films
 
     d = RUNS / run_slug
-    acc = accepted_clips(d) if (d / "data.json").exists() or (d / "train.json").exists() else []
+    acc = (
+        accepted_clips(d)
+        if (d / "data.json").exists() or (d / "train.json").exists()
+        else []
+    )
     have = films(d / "media" / "vla")
-    job = next((j for j in JOBS.values() if j.stage == "vla" and j.slug == run_slug and not j.done), None)
+    job = next(
+        (
+            j
+            for j in JOBS.values()
+            if j.stage == "vla" and j.slug == run_slug and not j.done
+        ),
+        None,
+    )
     return {
         "accepted": acc,
         "films": {c: have[c] for c in acc if c in have},
@@ -295,16 +381,34 @@ def vla_state(run_slug: str) -> dict:
 
 @app.post("/api/vla")
 def vla(body: VlaIn) -> dict:
-    if not re.fullmatch(r"[a-z0-9-]+", body.slug) or not (RUNS / body.slug / "task.txt").exists():
+    if (
+        not re.fullmatch(r"[a-z0-9-]+", body.slug)
+        or not (RUNS / body.slug / "task.txt").exists()
+    ):
         raise HTTPException(404, "no such run")
     if not VLA_CKPT:
-        return JSONResponse({"ok": False, "reason": "no SmolVLA checkpoint on this server (set UNDERSTUDY_VLA_CKPT)"}, status_code=422)
+        return JSONResponse(
+            {
+                "ok": False,
+                "reason": "no SmolVLA checkpoint on this server (set UNDERSTUDY_VLA_CKPT)",
+            },
+            status_code=422,
+        )
     st = _vla_state(body.slug)
     clips = [c for c in (body.clips or st["missing"]) if c in st["accepted"]]
     if not clips:
-        return JSONResponse({"ok": False, "reason": "every accepted scenario already has its film"}, status_code=422)
-    args = {"run_dir": str(RUNS / body.slug), "ckpt": VLA_CKPT, "clips": clips, "device": VLA_DEVICE,
-            "cameras": VLA_CAMERAS, "heavy_lock": HEAVY_LOCK}
+        return JSONResponse(
+            {"ok": False, "reason": "every accepted scenario already has its film"},
+            status_code=422,
+        )
+    args = {
+        "run_dir": str(RUNS / body.slug),
+        "ckpt": VLA_CKPT,
+        "clips": clips,
+        "device": VLA_DEVICE,
+        "cameras": VLA_CAMERAS,
+        "heavy_lock": HEAVY_LOCK,
+    }
     return _start("vla", body.slug, args) | {"clips": clips}
 
 
@@ -320,7 +424,10 @@ def dataset_zip(run_slug: str) -> FileResponse:
         raise HTTPException(404, "no dataset for this run yet")
     name = "understudy_" + run_slug.replace("-", "_")
     out = RUNS / run_slug / f"{name}.zip"
-    if not out.exists() or out.stat().st_mtime < (root / "understudy_episodes.json").stat().st_mtime:
+    if (
+        not out.exists()
+        or out.stat().st_mtime < (root / "understudy_episodes.json").stat().st_mtime
+    ):
         tmp = out.with_suffix(".part")
         with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as z:
             for f in sorted(root.rglob("*")):
@@ -339,16 +446,27 @@ def dataset_info(run_slug: str) -> dict:
     if not (root / "meta" / "info.json").exists():
         raise HTTPException(404, "no dataset for this run yet")
     info = json.loads((root / "meta" / "info.json").read_text())
-    size = sum(f.stat().st_size for f in root.rglob("*") if f.is_file() and "images" not in f.relative_to(root).parts)
+    size = sum(
+        f.stat().st_size
+        for f in root.rglob("*")
+        if f.is_file() and "images" not in f.relative_to(root).parts
+    )
     return {
         "name": "understudy_" + run_slug.replace("-", "_"),
-        "repo_id": json.loads((root / "understudy_episodes.json").read_text())["info"]["repo_id"],
+        "repo_id": json.loads((root / "understudy_episodes.json").read_text())["info"][
+            "repo_id"
+        ],
         "episodes": info["total_episodes"],
         "frames": info["total_frames"],
         "fps": info["fps"],
         "codebase_version": info["codebase_version"],
         "robot_type": info.get("robot_type"),
-        "features": [k for k in info["features"] if k not in ("timestamp", "frame_index", "episode_index", "index", "task_index")],
+        "features": [
+            k
+            for k in info["features"]
+            if k
+            not in ("timestamp", "frame_index", "episode_index", "index", "task_index")
+        ],
         "mb": round(size / 1e6, 1),
     }
 
@@ -357,7 +475,10 @@ def dataset_info(run_slug: str) -> dict:
 def refine(run_slug: str) -> dict:
     """The prompt fixes the next take of this run would use: each rejection reason read as a mismatch and turned
     into a corrective rule (plan.refine_fixes, after PhyT2V). Text only: nothing is generated, no credits."""
-    if not re.fullmatch(r"[a-z0-9-]+", run_slug) or not (RUNS / run_slug / "data.json").exists():
+    if (
+        not re.fullmatch(r"[a-z0-9-]+", run_slug)
+        or not (RUNS / run_slug / "data.json").exists()
+    ):
         raise HTTPException(404, "no gate verdicts for this run")
     from .generate import estimate
     from .plan import mismatches, refine_fixes
@@ -393,7 +514,9 @@ def run_events(run_slug: str) -> list[dict]:
 
     def finished(p: Path) -> list[dict]:
         evs = [json.loads(line) for line in p.read_text().splitlines() if line.strip()]
-        return evs if any(e.get("type") == "job_end" and e.get("ok") for e in evs) else []
+        return (
+            evs if any(e.get("type") == "job_end" and e.get("ok") for e in evs) else []
+        )
 
     # every finished footage stage (clips can be added to a run), then the latest finished data stage
     foot = [finished(p) for p in sorted(jobs.glob("*-footage-*.jsonl"))]
@@ -402,10 +525,16 @@ def run_events(run_slug: str) -> list[dict]:
         return [{"type": "run", "slug": run_slug, "task": ""}]
     for evs in foot:
         out += [{**e, "stage": "footage"} for e in evs]
-    data = [evs for evs in (finished(p) for p in sorted(jobs.glob("*-data-*.jsonl"))) if evs]
+    data = [
+        evs for evs in (finished(p) for p in sorted(jobs.glob("*-data-*.jsonl"))) if evs
+    ]
     if data:
         out += [{**e, "stage": "data"} for e in data[-1] if e.get("type") != "log"]
-    task = (RUNS / run_slug / "task.txt").read_text().strip() if (RUNS / run_slug / "task.txt").exists() else ""
+    task = (
+        (RUNS / run_slug / "task.txt").read_text().strip()
+        if (RUNS / run_slug / "task.txt").exists()
+        else ""
+    )
     return [{"type": "run", "slug": run_slug, "task": task}] + out
 
 
@@ -455,8 +584,12 @@ def list_routers() -> dict:
             "slug": r["slug"],
             "description": r.get("description"),
             "optimize_for": (r.get("settings") or {}).get("optimizeFor"),
-            "max_credits": ((r.get("settings") or {}).get("maxCreditsPerGeneration") or {}).get("video"),
-            "fallback": ((r.get("settings") or {}).get("fallback") or {}).get("onCapacity"),
+            "max_credits": (
+                (r.get("settings") or {}).get("maxCreditsPerGeneration") or {}
+            ).get("video"),
+            "fallback": ((r.get("settings") or {}).get("fallback") or {}).get(
+                "onCapacity"
+            ),
         }
         for r in rs
     ]
@@ -496,25 +629,41 @@ def router_dryrun(body: DryIn) -> dict:
             d = runway.router_dry_run(b)
             cr = (d.get("estimatedCost") or {}).get("credits")
             return {
-                "router": r, "model": d.get("model"), "provider": d.get("provider"),
+                "router": r,
+                "model": d.get("model"),
+                "provider": d.get("provider"),
                 "optimize_for": (d.get("resolvedSettings") or {}).get("optimizeFor"),
                 "price_ceiling": (d.get("resolvedSettings") or {}).get("priceCeiling"),
-                "resolved": d.get("resolvedInput"), "estimated_credits": cr,
+                "resolved": d.get("resolvedInput"),
+                "estimated_credits": cr,
                 "usd": round(cr * USD_PER_CREDIT, 2) if cr is not None else None,
             }
         except Exception as e:
             return {"router": r, "error": str(e)[:240]}
 
-    names = [r for r in (body.routers or list(DEMO_ROUTERS)) if re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", r)]
+    names = [
+        r
+        for r in (body.routers or list(DEMO_ROUTERS))
+        if re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", r)
+    ]
     with ThreadPoolExecutor(max_workers=max(1, len(names))) as pool:
         picks = list(pool.map(pick, names))
-    return {"ok": True, "task": t.text, "slug": s, "clip": v.clip_id, "picks": picks,
-            "seconds": round(time.time() - t0, 2), "free": True}
+    return {
+        "ok": True,
+        "task": t.text,
+        "slug": s,
+        "clip": v.clip_id,
+        "picks": picks,
+        "seconds": round(time.time() - t0, 2),
+        "free": True,
+    }
 
 
 class RouteIn(BaseModel):
     task: str
-    claude: bool = False  # refine the rubric with the headless Claude CLI (falls back after 10 s)
+    claude: bool = (
+        False  # refine the rubric with the headless Claude CLI (falls back after 10 s)
+    )
     live: bool = False  # live/urgent: an easy task routes to demo-fast
 
 
@@ -535,7 +684,11 @@ def route_task(body: RouteIn) -> dict:
     s = slug(t.text if t else text)
     have = (RUNS / s / "clips" / "v01.png").exists()
     dec = choose(t.text if t else text, live=body.live, use_claude=body.claude)
-    frame = base_frame(RUNS / s) if have else base_frame(RUNS / "put-the-red-block-in-the-bowl")
+    frame = (
+        base_frame(RUNS / s)
+        if have
+        else base_frame(RUNS / "put-the-red-block-in-the-bowl")
+    )
     prompt = text
     if t:
         i = next_index(RUNS / s) if have else 0
@@ -543,15 +696,26 @@ def route_task(body: RouteIn) -> dict:
     dry = None
     try:
         d = runway.router_dry_run(runway.router_body(dec["router"], prompt, frame))
-        dry = {"model": d.get("model"), "provider": d.get("provider"),
-               "credits": (d.get("estimatedCost") or {}).get("credits"),
-               "optimize_for": (d.get("resolvedSettings") or {}).get("optimizeFor"),
-               "resolved": d.get("resolvedInput")}
+        dry = {
+            "model": d.get("model"),
+            "provider": d.get("provider"),
+            "credits": (d.get("estimatedCost") or {}).get("credits"),
+            "optimize_for": (d.get("resolvedSettings") or {}).get("optimizeFor"),
+            "resolved": d.get("resolvedInput"),
+        }
     except Exception as e:
         dry = {"error": str(e)[:240]}
-    return {"task": text, "slug": s, "router": dec["router"], "reasons": dec["reasons"], "source": dec["source"],
-            "feasible": feasible, "infeasible_reason": reason, "dryRun": dry,
-            "first_frame": f"/runs/{s if have else 'put-the-red-block-in-the-bowl'}/clips/v01.png"}
+    return {
+        "task": text,
+        "slug": s,
+        "router": dec["router"],
+        "reasons": dec["reasons"],
+        "source": dec["source"],
+        "feasible": feasible,
+        "infeasible_reason": reason,
+        "dryRun": dry,
+        "first_frame": f"/runs/{s if have else 'put-the-red-block-in-the-bowl'}/clips/v01.png",
+    }
 
 
 @app.get("/api/runs/{run_slug}/routing")
@@ -570,18 +734,49 @@ def run_routing(run_slug: str) -> dict:
         if res.exists():
             rj = json.loads(res.read_text())
             verdict = {"accepted": rj["accepted"], "reason": rj["reason"]}
-        clips[cid] = {k: r.get(k) for k in ("router", "model", "provider", "optimize_for", "estimated_credits",
-                                            "realized_credits", "seconds", "cached")} | {"verdict": verdict}
+        clips[cid] = {
+            k: r.get(k)
+            for k in (
+                "router",
+                "model",
+                "provider",
+                "optimize_for",
+                "estimated_credits",
+                "realized_credits",
+                "seconds",
+                "cached",
+            )
+        } | {"verdict": verdict}
     return {"clips": clips}
 
 
 @app.get("/api/runs/{run_slug}/router_bench")
 def router_bench(run_slug: str) -> dict:
-    if not re.fullmatch(r"[a-z0-9-]+", run_slug) or not (RUNS / run_slug / "router_bench.json").exists():
+    if (
+        not re.fullmatch(r"[a-z0-9-]+", run_slug)
+        or not (RUNS / run_slug / "router_bench.json").exists()
+    ):
         raise HTTPException(404, "no router bench for this run")
     b = json.loads((RUNS / run_slug / "router_bench.json").read_text())
-    return {k: b.get(k) for k in ("slug", "task", "routers", "clips_per_router", "budget", "started", "generated",
-                                  "judged", "updated", "credits_spent_balance", "method", "table", "clips", "frames")}
+    return {
+        k: b.get(k)
+        for k in (
+            "slug",
+            "task",
+            "routers",
+            "clips_per_router",
+            "budget",
+            "started",
+            "generated",
+            "judged",
+            "updated",
+            "credits_spent_balance",
+            "method",
+            "table",
+            "clips",
+            "frames",
+        )
+    }
 
 
 @app.get("/api/runs/{run_slug}/tiles")
@@ -600,42 +795,76 @@ def run_tiles(run_slug: str) -> dict:
         routing = None
         if rt.exists():
             r = json.loads(rt.read_text())
-            routing = {k: r.get(k) for k in ("router", "model", "provider", "optimize_for", "estimated_credits",
-                                             "realized_credits", "seconds", "cached")}
+            routing = {
+                k: r.get(k)
+                for k in (
+                    "router",
+                    "model",
+                    "provider",
+                    "optimize_for",
+                    "estimated_credits",
+                    "realized_credits",
+                    "seconds",
+                    "cached",
+                )
+            }
         res = d / "results" / f"{cid}.json"
         verdict = None
         if res.exists():
             rj = json.loads(res.read_text())
-            verdict = {"accepted": rj["accepted"], "reason": rj["reason"],
-                       "gates_total": len(rj["gates"]),
-                       "gates_passed": sum(1 for g in rj["gates"] if g["passed"] is True)}
+            verdict = {
+                "accepted": rj["accepted"],
+                "reason": rj["reason"],
+                "gates_total": len(rj["gates"]),
+                "gates_passed": sum(1 for g in rj["gates"] if g["passed"] is True),
+            }
         vj = d / "media" / "vla" / f"{cid}.json"
         vla_film = None
         if vj.exists() and (d / "media" / "vla" / f"{cid}.mp4").exists():
-            vla_film = json.loads(vj.read_text()) | {"video": base + f"media/vla/{cid}.mp4"}
-        tiles.append({
-            "clip": cid,
-            "footage": base + f"clips/{cid}.mp4" if (d / "clips" / f"{cid}.mp4").exists() else None,
-            "first_frame": base + f"clips/{cid}.png" if (d / "clips" / f"{cid}.png").exists() else None,
-            "video_model": meta.get("video_model"),
-            "variant": meta.get("variant", cid),
-            "routing": routing,
-            "verdict": verdict,
-            "vla": vla_film,
-            "skeleton": base + f"media/{cid}_skeleton.mp4" if (d / "media" / f"{cid}_skeleton.mp4").exists() else None,
-        })
-    routed = [t["routing"] for t in tiles if t["routing"] and not t["routing"].get("cached")]
+            vla_film = json.loads(vj.read_text()) | {
+                "video": base + f"media/vla/{cid}.mp4"
+            }
+        tiles.append(
+            {
+                "clip": cid,
+                "footage": base + f"clips/{cid}.mp4"
+                if (d / "clips" / f"{cid}.mp4").exists()
+                else None,
+                "first_frame": base + f"clips/{cid}.png"
+                if (d / "clips" / f"{cid}.png").exists()
+                else None,
+                "video_model": meta.get("video_model"),
+                "variant": meta.get("variant", cid),
+                "routing": routing,
+                "verdict": verdict,
+                "vla": vla_film,
+                "skeleton": base + f"media/{cid}_skeleton.mp4"
+                if (d / "media" / f"{cid}_skeleton.mp4").exists()
+                else None,
+            }
+        )
+    routed = [
+        t["routing"] for t in tiles if t["routing"] and not t["routing"].get("cached")
+    ]
     credits = sum(float(r.get("realized_credits") or 0) for r in routed)
     acc = sum(1 for t in tiles if t["verdict"] and t["verdict"]["accepted"])
     return {
         "slug": run_slug,
-        "task": (d / "task.txt").read_text().strip() if (d / "task.txt").exists() else "",
+        "task": (d / "task.txt").read_text().strip()
+        if (d / "task.txt").exists()
+        else "",
         "tiles": tiles,
         "totals": {
-            "clips": len(tiles), "accepted": acc,
-            "routed_credits": credits, "routed_usd": round(credits * USD_PER_CREDIT, 2),
-            "routed_seconds": round(sum(float(r.get("seconds") or 0) for r in routed), 1),
-            "credits_per_accepted": round(credits / acc, 1) if acc and credits else None,
+            "clips": len(tiles),
+            "accepted": acc,
+            "routed_credits": credits,
+            "routed_usd": round(credits * USD_PER_CREDIT, 2),
+            "routed_seconds": round(
+                sum(float(r.get("seconds") or 0) for r in routed), 1
+            ),
+            "credits_per_accepted": round(credits / acc, 1)
+            if acc and credits
+            else None,
         },
     }
 
@@ -643,13 +872,19 @@ def run_tiles(run_slug: str) -> dict:
 class TrainIn(BaseModel):
     slug: str
     steps: int = 3000
-    dataset: str | None = None  # a LeRobot dataset root under data/ (default: the run's lerobot/)
+    dataset: str | None = (
+        None  # a LeRobot dataset root under data/ (default: the run's lerobot/)
+    )
 
 
 @app.get("/api/trainer")
 def trainer() -> dict:
     job = next((j for j in JOBS.values() if j.stage == "train" and not j.done), None)
-    return {"connected": TRAINER.is_file(), "script": str(TRAINER), "running": job.id if job else None}
+    return {
+        "connected": TRAINER.is_file(),
+        "script": str(TRAINER),
+        "running": job.id if job else None,
+    }
 
 
 @app.post("/api/train")
@@ -658,17 +893,30 @@ def train(body: TrainIn) -> dict:
     if not re.fullmatch(r"[a-z0-9-]+", body.slug) or not (RUNS / body.slug).is_dir():
         raise HTTPException(404, "no such run")
     if not TRAINER.is_file():
-        return JSONResponse({"ok": False, "reason": "GPU trainer not connected"}, status_code=422)
+        return JSONResponse(
+            {"ok": False, "reason": "GPU trainer not connected"}, status_code=422
+        )
     root = RUNS / body.slug / "lerobot"
     if body.dataset:
         root = (REPO / body.dataset).resolve()
         if not root.is_relative_to((REPO / "data").resolve()):
             raise HTTPException(422, "dataset must be under data/")
     if not (root / "meta" / "info.json").exists():
-        return JSONResponse({"ok": False, "reason": "no LeRobot dataset for this run yet"}, status_code=422)
+        return JSONResponse(
+            {"ok": False, "reason": "no LeRobot dataset for this run yet"},
+            status_code=422,
+        )
     steps = max(100, min(int(body.steps), 100_000))
-    return _start("train", body.slug, {"script": str(TRAINER), "root": str(root), "steps": steps,
-                                       "run_dir": str(RUNS / body.slug)})
+    return _start(
+        "train",
+        body.slug,
+        {
+            "script": str(TRAINER),
+            "root": str(root),
+            "steps": steps,
+            "run_dir": str(RUNS / body.slug),
+        },
+    )
 
 
 def _save_task(s: str, text: str) -> None:
@@ -676,6 +924,79 @@ def _save_task(s: str, text: str) -> None:
     d = RUNS / s
     d.mkdir(parents=True, exist_ok=True)
     (d / "task.txt").write_text(text + "\n")
+
+
+# ---------- any sentence: a live Runway clip through the budget router (same as the hosted site's api/cloud) ----------
+# The full pipeline (tracking, gates, retarget, dataset, SmolVLA) covers pick-and-place; every other sentence still gets
+# its demonstration video: a gen4_image first frame, animated by the quality router for the chosen budget.
+CLOUD_BUDGETS = (2, 4, 6, 8, 10)
+CLIPS_PER_RUN = 5
+
+
+class CloudIn(BaseModel):
+    prompt: str
+    budget: int = 2
+    image_task: str | None = None
+
+
+def _cloud_task(prompt: str) -> str:
+    p = re.sub(r"\s+", " ", prompt).strip().rstrip(".!")
+    if not (6 <= len(p) <= 140) or not re.fullmatch(r"[a-zA-Z0-9 ,'-]+", p):
+        raise HTTPException(400, "Use a short plain sentence (6 to 140 letters).")
+    return p
+
+
+def _cloud_route(budget: int) -> dict:
+    usd = budget if budget in CLOUD_BUDGETS else 2
+    ceiling = round(usd * 100 / CLIPS_PER_RUN)
+    return {"router": f"understudy-q{ceiling}", "budget": usd, "ceiling": ceiling,
+            "reasons": [f"best quality up to {ceiling} credits a clip"]}
+
+
+def _cloud_guard(cost: int) -> None:
+    if runway.balance() - cost < runway.FLOOR_BALANCE:
+        raise HTTPException(402, "Not enough Runway credits above the floor for this clip.")
+
+
+@app.post("/api/cloud/start")
+def cloud_start(body: CloudIn) -> dict:
+    task = _cloud_task(body.prompt)
+    _cloud_guard(5)
+    prompt = (f"Photorealistic photo, three-quarter view from slightly above, of a plain light wooden tabletop holding "
+              f"only the few simple objects needed to {task}. Nothing else is on the table. A person's right hand hovers "
+              f"just above the first object, fingers open, ready to grasp it; the forearm enters from the right edge of "
+              f"the frame. The whole hand and every object are fully in frame and unobstructed. Soft even daylight. "
+              f"Sharp focus, no text.")
+    t = runway._call("POST", "/text_to_image", {"model": "gen4_image", "promptText": prompt, "ratio": "1280:720"})
+    return {"task": task, **_cloud_route(body.budget), "image_task": t["id"]}
+
+
+@app.get("/api/cloud/task")
+def cloud_task(id: str) -> dict:
+    if not re.fullmatch(r"[0-9a-f-]{36}", id):
+        raise HTTPException(400, "bad task id")
+    t = runway._call("GET", f"/tasks/{id}")
+    return {"status": t.get("status"), "progress": t.get("progress"), "output": t.get("output"), "failure": t.get("failure")}
+
+
+@app.post("/api/cloud/video")
+def cloud_video(body: CloudIn) -> dict:
+    task = _cloud_task(body.prompt)
+    if not body.image_task or not re.fullmatch(r"[0-9a-f-]{36}", body.image_task):
+        raise HTTPException(400, "bad image task")
+    img = runway._call("GET", f"/tasks/{body.image_task}")
+    if img.get("status") != "SUCCEEDED" or not img.get("output"):
+        raise HTTPException(409, "first frame is not ready")
+    r = _cloud_route(body.budget)
+    _cloud_guard(r["ceiling"])
+    prompt = (f"The right hand does this: {task}. One continuous smooth motion at natural speed, then the open hand "
+              f"moves back up and away. Static camera, locked off. Every object keeps its shape, size and count the "
+              f"whole time.")
+    t = runway._call("POST", "/generate/video", {"configId": r["router"], "input": {
+        "promptText": prompt, "aspectRatio": "16:9", "duration": 5,
+        "referenceImages": [{"uri": img["output"][0], "role": "first"}]}})
+    ro = t.get("routing") or {}
+    return {"video_task": t["id"], **r, "model": ro.get("model"), "credits": (ro.get("estimatedCost") or {}).get("credits")}
 
 
 @app.get("/")

@@ -348,7 +348,7 @@
     throw new Error("Runway is taking too long; try again.");
   }
   async function cloud(text) {
-    if (!keyIn.value.trim()) {
+    if (!state.backend && !keyIn.value.trim()) {
       keyRow.classList.add("need"); keyIn.focus();
       line.classList.add("is-no"); line.textContent = "New prompts run on your own Runway credits: paste your Runway API key below. The four examples play without one.";
       return;
@@ -379,7 +379,7 @@
       t.time((performance.now() - t0) / 1000);
       M.seconds = (performance.now() - t0) / 1000; paintTime();
       status("", true); line.classList.remove("is-no");
-      line.textContent = "Live Runway clip, generated just now. The physics check, retargeting and SmolVLA training run in the full pipeline on a GPU (see the repo).";
+      line.textContent = state.backend ? "Live Runway clip, generated just now. The physics gates, retargeting and SmolVLA training cover pick-and-place tasks today, so this task gets its demonstration video." : "Live Runway clip, generated just now. The physics check, retargeting and SmolVLA training run in the full pipeline on a GPU (see the repo).";
     } catch (e) {
       t.set("no", String(e.message || e)); status("", true); line.classList.add("is-no"); line.textContent = String(e.message || e);
     } finally { clearInterval(clock); }
@@ -398,6 +398,7 @@
   async function live(text) {
     const rt = state.route || Route.decide(text, { budget: Route.budget });
     const f = await post("/api/footage", { task: text, router: rt.router });
+    if (!f.ok && f.body && f.body.infeasible) return cloud(text); // outside pick-and-place: a live Runway clip instead
     if (!f.ok) { paintRoute(rt, rt.dry || DRY_FALLBACK[rt.router], why(f, f.status === 409 ? "A stage is still running." : "The server refused this task.")); return; }
     const { slug, clip_ids: ids = [], existing = [] } = f.body;
     const name = Route.NAME[rt.router] || rt.router;
