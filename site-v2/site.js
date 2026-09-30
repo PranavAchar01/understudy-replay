@@ -139,7 +139,7 @@
     if (m.slug) root.dataset.slug = m.slug;
     root.innerHTML = `<span class="tile-id"><span class="route-pill xs">${pillHTML(m.router)}</span><span class="tile-title">${esc(m.title || id)}</span></span><video muted loop playsinline preload="metadata"></video>
       <div class="tile-state"><span class="status wait"><i></i><span>Queued</span></span><small></small></div>
-      <span class="tile-cap"></span><span class="tile-run" hidden></span>`;
+      <span class="tile-cap"></span><span class="tile-time" hidden></span><span class="tile-run" hidden></span>`;
     const older = meta ? null : [...grid.children].find((c) => c.dataset.run !== String(RUN));
     if (older) grid.insertBefore(root, older); else grid.append(root);
     const t = {
@@ -149,6 +149,7 @@
         const s = $(".status", root); s.className = `status ${cls}`; $("span", s).textContent = label;
         $("small", root).textContent = note; root.classList.toggle("is-no", k === "no"); return t;
       },
+      time(sec) { if (sec == null || !isFinite(sec)) return t; const b = $(".tile-time", root); b.textContent = clock(sec); b.title = "Time for this run"; b.hidden = false; return t; },
       film(src, success = true, cap = null) {
         const v = $("video", root); t.src = src;
         v.onerror = () => { root.classList.remove("is-film"); t.set("film", "film not found"); };
@@ -174,6 +175,7 @@
   //   the film's own JSON (<clip>.json) overrides eval {successes, seeds} and download when present
   const sheet = $("#sheet"), sv = $("#sheet-video"), steps = $("#ov-steps"), dl = $("#ov-dl");
   let overview = null, ovSeq = 0;
+  const minutes = (txt) => { const m = String(txt || "").match(/([\d.]+)\s*min/); return m ? Number(m[1]) * 60 : null; };
   const loadOverview = () => (overview ||= getJSON(`data/overview.json?t=${Date.now()}`).then((r) => (r.ok ? r.body : {})));
   const num = (n) => (n == null || n === "" ? "" : typeof n === "number" ? fmt(n) : esc(n));
   const join = (...xs) => xs.filter((x) => x != null && x !== "").join(" · ");
@@ -276,6 +278,7 @@
       if (!ids.length) continue;
       const id = String(ids[0]).replace(/\.mp4$/, ""), url = `${base}/${e.slug}/${dir}/${id}.mp4`;
       const t = tile(id, $("#grid"), `lib:${e.slug}`, { title: e.prompt || e.slug, router: e.router, slug: e.slug }).film(url, true, " ");
+      loadOverview().then((o) => { const v = o[e.slug] || {}; t.time(v.run_seconds ?? minutes((v.training || {}).time)); });
       getJSON(url.replace(/\.mp4$/, ".json")).then((j) => {
         const c = $(".tile-cap", t.root);
         // a preview film is the scripted operator doing the task, not a trained VLA: say so
@@ -317,6 +320,7 @@
     await wait_(Math.max(0, T - (performance.now() - t0) - 600));
     if (hero) t.film(`${filmDir}/${hero.film}`, hero.success !== false);
     M.seconds = R.seconds; paintTime(); state.runTimes[R.slug] = R.seconds;
+    t.time(lib ? null : R.seconds);
     status("", true);
     prompts(R.slug, "runs");
   }
@@ -372,6 +376,7 @@
       t.set("gen", `${model} video`);
       const url = await poll(v.body.video_task, (b) => t.set("gen", `${model}${pct(b)}`));
       t.film(url, true, `Runway · ${model} · live`);
+      t.time((performance.now() - t0) / 1000);
       M.seconds = (performance.now() - t0) / 1000; paintTime();
       status("", true); line.classList.remove("is-no");
       line.textContent = "Live Runway clip, generated just now. The physics check, retargeting and SmolVLA training run in the full pipeline on a GPU (see the repo).";
@@ -457,6 +462,7 @@
     const mine = [...document.querySelectorAll(`#grid .tile[data-run="${RUN}"]`)];
     const first = mine.find((n) => n.classList.contains("is-film"));
     if (first) mine.forEach((n) => { if (n !== first) n.remove(); });
+    if (first && M.seconds != null) tiles.forEach((x) => { if (x.root === first) x.time(M.seconds); });
     status(shown.size ? "" : "Films still rendering", !!shown.size);
     prompts(slug, base);
   }
