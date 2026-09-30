@@ -282,7 +282,7 @@
       getJSON(url.replace(/\.mp4$/, ".json")).then((j) => {
         const c = $(".tile-cap", t.root);
         // a preview film is the scripted operator doing the task, not a trained VLA: say so
-        if (j.ok && j.body.source === "preview") { c.textContent = "Scripted demo · VLA not ready yet"; return; }
+        if (j.ok && j.body.source === "preview") { c.textContent = "Training still in progress"; return; }
         if (!j.ok || j.body.success == null) { c.textContent = "SmolVLA"; return; }
         c.textContent = `SmolVLA · ${j.body.success ? "success" : "missed"}`; c.classList.toggle("miss", !j.body.success);
       });
