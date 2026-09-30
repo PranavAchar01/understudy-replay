@@ -112,14 +112,21 @@
     },
     "training": {
       "base": "SmolVLA",
-      "steps": 2000,
-      "gpu": "RunPod"
+      "steps": 14000,
+      "gpu": "L40S (RunPod)",
+      "time": "33.7 min",
+      "cost": "$0.73"
     },
-    "result": null,
+    "result": {
+      "successes": 1,
+      "seeds": 5,
+      "note": "on unseen starts in simulation"
+    },
     "download": {
       "url": "https://github.com/PranavAchar01/understudy-replay/releases/download/vla-pick-20k/understudy-smolvla-pick-20k.zip",
       "size": "907 MB"
     },
-    "download_note": "Pick-and-place model for now; this task's own VLA replaces it when training finishes"
+    "download_note": "Pick-and-place model for now; this task's own VLA replaces it when training finishes",
+    "run_seconds": 2022
   }
 }
