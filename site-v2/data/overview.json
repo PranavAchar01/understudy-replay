@@ -85,5 +85,29 @@
   "result": null,
   "download": null,
   "run_seconds": null
+ },
+ "stack-three-blocks-into-a-tower": {
+  "prompt": "stack three blocks into a tower",
+  "route": {
+   "router": "Best",
+   "model": "gemini_omni_flash_1.1",
+   "credits_per_clip": 51,
+   "note": "one real Runway reference clip, routed to Best for several placements"
+  },
+  "demonstrations": {
+   "episodes": 25,
+   "source": "scripted operator"
+  },
+  "dataset": {
+   "episodes": 25,
+   "cameras": "front + wrist"
+  },
+  "training": {
+   "base": "SmolVLA",
+   "steps": 2000,
+   "gpu": "RunPod"
+  },
+  "result": null,
+  "download": null
  }
 }
