@@ -91,17 +91,22 @@
   // ---------- run head + tiles ----------
   const status = (t, done = false) => { const p = $("#run-status"); p.classList.toggle("done", done); $("span", p).textContent = t; };
   const tiles = new Map();
+  let RUN = 0, CUR = { title: "", router: "", slug: "" };
   const STATE = {
     queued: ["wait", "Queued"], gen: ["", "Runway generating"], physics: ["", "Physics check"],
     ok: ["ok", "Accepted"], no: ["no", "Rejected"], train: ["", "SmolVLA training"], film: ["", "SmolVLA filming"],
   };
-  function tile(id, grid = $("#grid"), key = id) {
+  function tile(id, grid = $("#grid"), key = `${RUN}:${id}`, meta = null) {
     if (tiles.has(key)) return tiles.get(key);
     const root = el("article", "tile");
-    root.innerHTML = `<span class="tile-id">${esc(id)}</span><video muted loop playsinline preload="metadata"></video>
+    const m = meta || CUR;
+    root.dataset.run = meta ? "lib" : String(RUN);
+    if (m.slug) root.dataset.slug = m.slug;
+    root.innerHTML = `<span class="tile-id"><span class="route-pill xs">${pillHTML(m.router)}</span><span class="tile-title">${esc(m.title || id)}</span></span><video muted loop playsinline preload="metadata"></video>
       <div class="tile-state"><span class="status wait"><i></i><span>Queued</span></span><small></small></div>
       <span class="tile-cap"></span>`;
-    grid.append(root);
+    const older = meta ? null : [...grid.children].find((c) => c.dataset.run !== String(RUN));
+    if (older) grid.insertBefore(root, older); else grid.append(root);
     const t = {
       root, src: null,
       set(k, note = "") {
@@ -124,7 +129,7 @@
   }
   const pillHTML = (router) => `<span class="robot-dot"></span><span>${esc(Route.NAME[router] || router || "")}</span>`;
   function startRun(task, head, router) {
-    tiles.clear(); $("#grid").innerHTML = ""; $("#grid").classList.remove("one"); $("#prompts").innerHTML = "";
+    RUN++; CUR = { title: task, router, slug: "" };
     $("#fleet").hidden = false; $("#run-task").textContent = task; $("#run-pill").innerHTML = pillHTML(router); status(head); meterReset();
     requestAnimationFrame(() => window.scrollTo({ top: $("#fleet").getBoundingClientRect().top + scrollY - 12, behavior: "smooth" }));
   }
@@ -150,30 +155,21 @@
   const count = (x) => (Array.isArray(x) ? x.length : x);
   async function prompts(mainSlug, base) {
     const rows = await manifest();
-    const box = $("#prompts"); box.innerHTML = "";
-    for (const [n, e] of rows.entries()) {
-      if (!e || !e.slug) continue;
-      if (e.slug === mainSlug) { const sc = score(e.eval); if (sc) $("#run-status span").innerHTML += ` · ${sc}`; continue; }
-      const row = el("section", "prow");
-      const meta = [e.model, e.credits != null ? `${fmt(e.credits)} cr` : "", e.seconds ? clock(e.seconds) : "",
-        e.clips != null && e.accepted != null ? `${count(e.accepted)}/${count(e.clips)} accepted` : "", score(e.eval)].filter(Boolean).join(" · ");
-      row.innerHTML = `<header class="prow-head"><div class="run-title"><span class="route-pill sm">${pillHTML(e.router)}</span><h3>${esc(e.prompt || e.slug)}</h3></div>
-        <p class="prow-meta">${meta}</p></header><div class="grid"></div>`;
-      box.append(row);
+    for (const e of rows) {
+      if (!e || !e.slug || document.querySelector(`#grid .tile[data-slug="${e.slug}"]`)) continue;
       const dir = String(e.tiles_dir || "media/vla").replace(/^.*\/web-runs\/[^/]+\//, "").replace(/^\/+|\/+$/g, "");
       let ids = Array.isArray(e.accepted) ? e.accepted : Array.isArray(e.films) ? e.films : [];
       if (!ids.length && state.backend) { const v = await getJSON(`/api/runs/${e.slug}/vla`); if (v.ok) ids = Object.keys(v.body.films || {}); }
-      if (!ids.length) { row.append(el("p", "prow-empty", "SmolVLA films rendering")); continue; }
-      for (const raw of ids.slice(0, 1)) {
-        const id = String(raw).replace(/\.mp4$/, ""), url = `${base}/${e.slug}/${dir}/${id}.mp4`;
-        const t = tile(id, $(".grid", row), `${n}:${id}`).film(url, true, "SmolVLA");
-        getJSON(url.replace(/\.mp4$/, ".json")).then((j) => {
-          if (!j.ok || j.body.success == null) return;
-          const c = $(".tile-cap", t.root); c.textContent = `SmolVLA · ${j.body.success ? "in the bowl" : "missed"}`; c.classList.toggle("miss", !j.body.success);
-        });
-      }
+      if (!ids.length) continue;
+      const id = String(ids[0]).replace(/\.mp4$/, ""), url = `${base}/${e.slug}/${dir}/${id}.mp4`;
+      const t = tile(id, $("#grid"), `lib:${e.slug}`, { title: e.prompt || e.slug, router: e.router, slug: e.slug }).film(url, true, "SmolVLA");
+      getJSON(url.replace(/\.mp4$/, ".json")).then((j) => {
+        if (!j.ok || j.body.success == null) return;
+        const c = $(".tile-cap", t.root); c.textContent = `SmolVLA · ${j.body.success ? "success" : "missed"}`; c.classList.toggle("miss", !j.body.success);
+      });
     }
   }
+
 
   // ---------- static: replay the recorded run ----------
   async function replay(_text, fast = false) {
@@ -181,9 +177,16 @@
     const wait_ = (ms) => (fast ? Promise.resolve() : wait(ms));
     if (!R) { line.classList.add("is-no"); line.textContent = "No recorded run on this page."; return; }
     const tag = `Recorded run · ${R.model} · no credits spent`;
-    startRun(R.task, tag, R.router);
-    const filmDir = `runs/${R.slug}/media/vla`;
-    const hero = R.clips.find((c) => c.accepted && c.film && c.success !== false) || R.clips.find((c) => c.film);
+    // static site: a typed push / stack prompt replays that recorded example; anything else replays the pick run
+    const typed = String(_text || "").toLowerCase();
+    const want = /\bpush|shove|slide\b/.test(typed) ? "push" : /\bstack|tower|on top\b/.test(typed) ? "stack" : null;
+    const lib = want && !fast ? (await manifest()).find((e) => e && e.slug && e.slug.startsWith(want)) : null;
+    startRun(lib ? lib.prompt : R.task, tag, lib ? lib.router : R.router);
+    const filmDir = lib ? `runs/${lib.slug}/${lib.tiles_dir || "media/vla"}` : `runs/${R.slug}/media/vla`;
+    const hero = lib ? { id: lib.accepted[0], film: `${lib.accepted[0]}.mp4`, success: true }
+      : R.clips.find((c) => c.accepted && c.film && c.success !== false) || R.clips.find((c) => c.film);
+    CUR.slug = lib ? lib.slug : R.slug;
+    document.querySelectorAll(`#grid .tile[data-slug="${CUR.slug}"]`).forEach((n) => n.remove());
     const t = tile(hero ? hero.id : "demo");
     const T = fast ? 0 : 9000, t0 = performance.now();
     M.t0 = 0; M.seconds = 0; clearInterval(M.timer);
@@ -282,8 +285,9 @@
       }
       if (shown.size < accepted.length) await wait(5000);
     }
-    const first = [...document.querySelectorAll("#grid .tile.is-film")][0];
-    if (first) { first.classList.add("is-hero"); $("#grid").classList.add("one"); }
+    const mine = [...document.querySelectorAll(`#grid .tile[data-run="${RUN}"]`)];
+    const first = mine.find((n) => n.classList.contains("is-film"));
+    if (first) mine.forEach((n) => { if (n !== first) n.remove(); });
     status(shown.size ? "Done" : "Films still rendering", !!shown.size);
     prompts(slug, base);
   }
