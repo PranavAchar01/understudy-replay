@@ -58,8 +58,12 @@
    "time": "17.5 min"
   },
   "result": "3/5 on unseen starts in simulation",
-  "download": null,
-  "run_seconds": null
+  "download": {
+   "url": "https://github.com/PranavAchar01/understudy-replay/releases/download/vla-pick-20k/understudy-smolvla-pick-20k.zip",
+   "size": "907 MB"
+  },
+  "run_seconds": null,
+  "download_note": "Pick-and-place model for now; this task's own VLA replaces it when training finishes"
  },
  "stack-the-red-block-on-the-blue-block": {
   "prompt": "stack the red block on the blue block",
@@ -83,8 +87,12 @@
    "gpu": "RunPod"
   },
   "result": null,
-  "download": null,
-  "run_seconds": null
+  "download": {
+   "url": "https://github.com/PranavAchar01/understudy-replay/releases/download/vla-pick-20k/understudy-smolvla-pick-20k.zip",
+   "size": "907 MB"
+  },
+  "run_seconds": null,
+  "download_note": "Pick-and-place model for now; this task's own VLA replaces it when training finishes"
  },
  "stack-three-blocks-into-a-tower": {
   "prompt": "stack three blocks into a tower",
@@ -108,6 +116,10 @@
    "gpu": "RunPod"
   },
   "result": null,
-  "download": null
+  "download": {
+   "url": "https://github.com/PranavAchar01/understudy-replay/releases/download/vla-pick-20k/understudy-smolvla-pick-20k.zip",
+   "size": "907 MB"
+  },
+  "download_note": "Pick-and-place model for now; this task's own VLA replaces it when training finishes"
  }
 }
