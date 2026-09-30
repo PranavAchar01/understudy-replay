@@ -9,6 +9,7 @@ run="$repo/data/web-runs/$slug"
 
 mkdir -p "$out/runs/$slug/media/vla" "$out/data" "$out/media"
 cp "$here/index.html" "$here/site.css" "$here/site.js" "$here/route.js" "$out/"
+rm -rf "$out/api" && cp -R "$here/api" "$out/api"   # live Runway generation (Vercel functions; key in the RUNWAY_API_KEY env var)
 cp "$here/media/hero-cine.jpg" "$out/media/"
 cp "$here/data/recorded.json" "$here/data/overview.json" "$out/data/"
 cp "$repo/data/router-dryruns.json" "$out/data/router-dryruns.json"
@@ -36,6 +37,9 @@ for e in (man if isinstance(man, list) else man.get("prompts", [])):
             shutil.copy(f, dst / slug / d / f.name)
 EOF
 fi
+
+# every Runway clip per task (web-compressed) + data/gallery.json for the overview gallery
+python3 "$repo/scripts/gallery_build.py"
 
 cat > "$out/vercel.json" <<'EOF'
 { "cleanUrls": false, "headers": [{ "source": "/runs/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }] }] }
