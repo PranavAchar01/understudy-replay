@@ -322,7 +322,9 @@ body.is-locked { overflow: hidden; }
 .key-input { width: min(320px, 100%); background: var(--ink-2); color: var(--text); border: 1px solid var(--hair); border-radius: var(--r-ctl);
   padding: 8px 12px; font: 400 13px/1.2 var(--mono); outline: none; }
 .key-input:focus { border-color: rgba(var(--amber), 0.6); }
-.key-row.need .key-input { border-color: var(--no); }
+.key-row.need .key-input { border-color: var(--no); box-shadow: 0 0 0 3px rgba(236, 138, 126, 0.18); }
+.key-need { display: none; }
+.key-row.need .key-need { display: block; width: 100%; text-align: center; font: 500 12px/1.4 var(--sans); color: var(--no); }
 .key-hint { font-size: 12px; color: var(--text-3); max-width: 46em; text-align: center; }
 .key-hint a { color: var(--accent-hi); }
 
@@ -333,3 +335,13 @@ body.is-locked { overflow: hidden; }
   background: rgba(7, 9, 12, 0.66); border: 1px solid var(--hair); border-radius: 999px; padding: 6px 10px; backdrop-filter: blur(8px); }
 .tile-time::after { content: " Time"; color: var(--text-3); }
 .tile-time[hidden] { display: none; }
+
+/* a new prompt's one tile: its Runway clips play in turn with the status pill top right, then the MuJoCo preview */
+.tile.is-film.is-clips .tile-state { opacity: 1; inset: 8px 8px auto auto; padding: 0; display: block; }
+.tile.is-clips .tile-state small { display: none; }
+.tile.is-clips .tile-state .status { background: rgba(7, 9, 12, 0.72); }
+.tile.is-film.is-preview.has-clips { cursor: pointer; }
+.tile-cap { max-width: calc(100% - 20px); line-height: 1.3; }
+.tile:has(.tile-time:not([hidden])) .tile-cap { max-width: calc(100% - 108px); }
+.tile.is-preview .tile-id, .tile.is-clips .tile-id { max-width: calc(100% - 170px); }
+.tile.is-preview .tile-title, .tile.is-clips .tile-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; min-width: 0; }

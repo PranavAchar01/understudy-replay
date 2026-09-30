@@ -935,10 +935,22 @@ CLOUD_BUDGETS = (2, 4, 6, 8, 10)
 CLIPS_PER_RUN = 5
 
 
+# a run makes 3 demonstration clips; each variant restyles the scene (like plan.py's variation axes) so they differ
+CLOUD_SCENES = (
+    ("a plain light oak wooden tabletop", "Soft natural daylight from a window on the left",
+     "three-quarter view from slightly above"),
+    ("a matte white laminate desk", "Warm late-afternoon sunlight with long soft shadows",
+     "front view from slightly to the left, about 35 degrees down"),
+    ("a dark walnut table", "Bright even studio light",
+     "low front view from table height, about 25 degrees down"),
+)
+
+
 class CloudIn(BaseModel):
     prompt: str
     budget: int = 2
     image_task: str | None = None
+    variant: int = 0
 
 
 def _cloud_task(prompt: str) -> str:
@@ -969,20 +981,27 @@ def _cloud_guard(cost: int) -> None:
 @app.post("/api/cloud/start")
 def cloud_start(body: CloudIn) -> dict:
     task = _cloud_task(body.prompt)
+    if not 0 <= body.variant < len(CLOUD_SCENES):
+        raise HTTPException(400, f"variant must be 0 to {len(CLOUD_SCENES) - 1}")
     _cloud_guard(5)
+    table, light, angle = CLOUD_SCENES[body.variant]
     prompt = (
-        f"Photorealistic photo, three-quarter view from slightly above, of a plain light wooden tabletop holding "
-        f"only the few simple objects needed to {task}. Nothing else is on the table. A person's right hand hovers "
-        f"just above the first object, fingers open, ready to grasp it; the forearm enters from the right edge of "
-        f"the frame. The whole hand and every object are fully in frame and unobstructed. Soft even daylight. "
-        f"Sharp focus, no text."
+        f"Photorealistic photo, {angle}, of {table} holding only the few simple objects needed to {task}. "
+        f"Nothing else is on the table. A person's right hand hovers just above the first object, fingers open, "
+        f"ready to grasp it; the forearm enters from the right edge of the frame. The whole hand and every object "
+        f"are fully in frame and unobstructed. {light}. Sharp focus, no text."
     )
     t = runway._call(
         "POST",
         "/text_to_image",
         {"model": "gen4_image", "promptText": prompt, "ratio": "1280:720"},
     )
-    return {"task": task, **_cloud_route(body.budget), "image_task": t["id"]}
+    return {
+        "task": task,
+        **_cloud_route(body.budget),
+        "variant": body.variant,
+        "image_task": t["id"],
+    }
 
 
 @app.get("/api/cloud/task")

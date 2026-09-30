@@ -54,12 +54,26 @@ function clean(prompt) {
   return p;
 }
 
-// PhyT2V-style positive phrasing, generalized from plan.py's v1 prompts
-const imagePrompt = (task) =>
-  `Photorealistic photo, three-quarter view from slightly above, of a plain light wooden tabletop holding only the few ` +
-  `simple objects needed to ${task}. Nothing else is on the table. A person's right hand hovers just above the first ` +
-  `object, fingers open, ready to grasp it; the forearm enters from the right edge of the frame. The whole hand and ` +
-  `every object are fully in frame and unobstructed. Soft even daylight. Sharp focus, no text.`;
+// PhyT2V-style positive phrasing, generalized from plan.py's v1 prompts. A run makes 3 demonstration clips; each
+// variant restyles the scene (table, light, camera angle, like plan.py's variation axes) so the clips differ.
+const SCENES = [
+  { table: "a plain light oak wooden tabletop", light: "Soft natural daylight from a window on the left", angle: "three-quarter view from slightly above" },
+  { table: "a matte white laminate desk", light: "Warm late-afternoon sunlight with long soft shadows", angle: "front view from slightly to the left, about 35 degrees down" },
+  { table: "a dark walnut table", light: "Bright even studio light", angle: "low front view from table height, about 25 degrees down" },
+];
+function variantOf(v) {
+  if (v == null || v === "") return 0;
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < 0 || n >= SCENES.length) throw fail(`variant must be 0 to ${SCENES.length - 1}`, 400);
+  return n;
+}
+const imagePrompt = (task, variant = 0) => {
+  const s = SCENES[variant] || SCENES[0];
+  return `Photorealistic photo, ${s.angle}, of ${s.table} holding only the few simple objects needed to ${task}. ` +
+    `Nothing else is on the table. A person's right hand hovers just above the first object, fingers open, ready to ` +
+    `grasp it; the forearm enters from the right edge of the frame. The whole hand and every object are fully in ` +
+    `frame and unobstructed. ${s.light}. Sharp focus, no text.`;
+};
 const videoPrompt = (task) =>
   `The right hand does this: ${task}. One continuous smooth motion at natural speed, then the open hand moves back up ` +
   `and away. Static camera, locked off. Every object keeps its shape, size and count the whole time.`;
@@ -78,4 +92,4 @@ function send(res, fn) {
   return fn().then((b) => res.status(200).json(b)).catch((e) => res.status(e.code || 500).json({ error: e.message }));
 }
 
-module.exports = { keyOf, runway, decide, ensureRouter, clean, imagePrompt, videoPrompt, limit, isId, send };
+module.exports = { keyOf, runway, decide, ensureRouter, clean, imagePrompt, variantOf, SCENES, videoPrompt, limit, isId, send };

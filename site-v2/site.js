@@ -10,6 +10,11 @@
   const fmt = (n) => Math.round(n).toLocaleString("en-US");
   const clock = (s) => { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60); return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}:${String(s % 60).padStart(2, "0")}`; };
   const qs = new URLSearchParams(location.search);
+  // a new prompt (not a library example) loads for at least this long, and until its Runway clips settle, before any
+  // MuJoCo preview appears
+  const MIN_LOAD_MS = 30000;
+  const FOOTAGE = 3; // Runway demonstration clips generated for every new prompt before its preview
+  const FRAME_CREDITS = 5; // gen4_image first frame, 720p
   const DRY_FALLBACK = {
     "demo-cheap": { model: "gen4_turbo", provider: "runway", credits: 25 },
     "demo-fast": { model: "seedance2_fast", provider: "bytedance", credits: 145 },
@@ -60,7 +65,7 @@
     $("#route-label").textContent = name;
     line.classList.toggle("is-no", !!note);
     line.innerHTML = note ? esc(note)
-      : `<b>${esc(name)}</b> a run: ${esc((r.reasons || []).join(", "))} · picks <b>${esc(dry.model)}</b> at ${esc(dry.credits)} credits · ${Route.CLIPS} clips ≈ $${((dry.credits * Route.CLIPS + 35) / 100).toFixed(2)}`;
+      : `<b>${esc(name)}</b> a run: ${esc((r.reasons || []).join(", "))} · picks <b>${esc(dry.model)}</b> at ${esc(dry.credits)} credits · ${FOOTAGE} clips ≈ $${(((dry.credits + FRAME_CREDITS) * FOOTAGE) / 100).toFixed(2)}`;
   }
   async function route() {
     const seq = ++routeSeq;
@@ -129,7 +134,7 @@
   let RUN = 0, CUR = { title: "", router: "", slug: "" };
   const STATE = {
     queued: ["wait", "Queued"], gen: ["", "Runway generating"], physics: ["", "Physics check"], pv: ["ok", "Scripted preview"],
-    ok: ["ok", "Accepted"], no: ["no", "Rejected"], train: ["", "SmolVLA training"], film: ["", "SmolVLA filming"],
+    ok: ["ok", "Accepted"], no: ["no", "Rejected"], fail: ["no", "Runway failed"], train: ["", "SmolVLA training"], film: ["", "SmolVLA filming"],
   };
   function tile(id, grid = $("#grid"), key = `${RUN}:${id}`, meta = null) {
     if (tiles.has(key)) return tiles.get(key);
@@ -144,16 +149,17 @@
     if (older) grid.insertBefore(root, older); else grid.append(root);
     const t = {
       root, src: null,
-      set(k, note = "") {
-        const [cls, label] = STATE[k];
+      set(k, note = "", text = null) {
+        const [cls, label0] = STATE[k], label = text || label0;
         if (k === "no" && t.sim) { t.unpreview(); root.classList.remove("is-film"); }
         const s = $(".status", root); s.className = `status ${cls}`; $("span", s).textContent = label;
-        $("small", root).textContent = note; root.classList.toggle("is-no", k === "no"); return t;
+        $("small", root).textContent = note; root.classList.toggle("is-no", k === "no" || k === "fail"); return t;
       },
       time(sec) { if (sec == null || !isFinite(sec)) return t; const b = $(".tile-time", root); b.textContent = clock(sec); b.title = "Time for this run"; b.hidden = false; return t; },
-      film(src, success = true, cap = null) {
+      film(src, success = true, cap = null, cycling = false) {
         const v = $("video", root); t.src = src; t.real = true;
         t.unpreview();
+        if (!cycling) { v.onended = null; root.classList.remove("is-clips"); }
         v.onerror = () => { root.classList.remove("is-film"); t.set("film", "film not found"); };
         v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true;
         v.src = src; v.play().catch(() => {}); v.oncanplay = () => { if (v.paused) v.play().catch(() => {}); };
@@ -161,23 +167,48 @@
         c.title = "";
         root.classList.add("is-film"); return t;
       },
+      // a new prompt's Runway clips (t.runway[i] = {url, model, k}) play in this one tile in turn: 1 -> 2 -> 3 -> 1
+      playlist() {
+        const list = () => t.runway.filter(Boolean);
+        if (!list().length || t.sim) return t;
+        const v = $("video", root);
+        const show = () => {
+          const l = list(), it = l[t.pl % l.length];
+          if (t.src === it.url && v.src) { v.currentTime = 0; v.play().catch(() => {}); return; }
+          t.film(it.url, true, `Runway · ${it.model} · clip ${it.k}/${t.runwayN}`, true); v.loop = false;
+        };
+        root.classList.add("is-clips", "has-clips");
+        v.onended = () => { t.pl = (t.pl + 1) % list().length; show(); };
+        if (t.pl == null) { t.pl = 0; show(); }
+        return t;
+      },
       // the live in-browser MuJoCo preview (preview.js): scripted motion, never a learned policy
       preview(sim) {
+        const v = $("video", root); v.onended = null; v.pause(); root.classList.remove("is-clips");
         t.sim = sim; root.dataset.preview = "1"; root.classList.add("is-film", "is-preview");
         root.insertBefore(sim.canvas, $(".tile-state", root));
         const c = $(".tile-cap", root); c.textContent = PREVIEW_CAP; c.classList.remove("miss");
         c.title = `Scripted motion, not a learned policy: ${sim.summary}${sim.note ? ` (${sim.note})` : ""}`;
         root.title = c.title;
-        sim.ready.catch(() => { if (t.sim === sim) { t.unpreview(); root.classList.remove("is-film"); t.set(t.real ? "film" : "queued", "preview unavailable in this browser"); } });
+        sim.ready.catch(() => {
+          if (t.sim !== sim) return;
+          t.unpreview();
+          if (t.runway && t.runway.some(Boolean)) { t.pl = null; t.playlist(); t.set("pv", "", "Preview unavailable"); return; }
+          root.classList.remove("is-film"); t.set(t.real ? "film" : "queued", "preview unavailable in this browser");
+        });
         return t;
       },
+      cap(text, miss = false) { const c = $(".tile-cap", root); c.textContent = text; c.classList.toggle("miss", miss); return t; },
       unpreview() {
         if (!t.sim) return;
         t.sim.stop(); t.sim = null; delete root.dataset.preview; root.classList.remove("is-preview"); root.removeAttribute("title");
       },
     };
     t.key = key;
-    root.addEventListener("click", () => { if (root.classList.contains("is-film") && !root.dataset.live && !root.dataset.preview) openOverview(root.dataset.slug, t.src, m); });
+    root.addEventListener("click", () => {
+      if (root.classList.contains("is-film") && !root.dataset.live && !root.dataset.preview) openOverview(root.dataset.slug, t.src, m);
+      else if (t.runway && t.runway.some(Boolean)) openClips(t, m); // a new prompt's Runway clips, in the overview gallery
+    });
     tiles.set(key, t);
     return t;
   }
@@ -259,7 +290,7 @@
   jump.addEventListener("click", (e) => { e.preventDefault(); gal.scrollIntoView({ behavior: "smooth", block: "start" }); });
 
   async function openOverview(slug, src, meta) {
-    const seq = ++ovSeq;
+    const seq = ++ovSeq; dl.hidden = false;
     sv.src = src; sheet.hidden = false; document.body.classList.add("is-locked"); sv.play().catch(() => {});
     sheet.scrollTop = 0; $(".sheet-panel.ov").scrollTop = 0;
     loadGallery().then((g) => { if (seq === ovSeq) renderGallery(g[slug]); });
@@ -269,6 +300,17 @@
     renderOverview(o, meta, null);
     const j = await getJSON(String(src).replace(/\.mp4(\?.*)?$/, ".json"));
     if (seq === ovSeq && j.ok && (j.body.eval || j.body.download)) renderOverview(o, meta, j.body);
+  }
+  function openClips(t, meta) {
+    ++ovSeq;
+    const cl = t.runway.filter(Boolean), router = Route.NAME[meta.router] || meta.router || "";
+    sv.src = cl[0].url; sheet.hidden = false; document.body.classList.add("is-locked"); sv.play().catch(() => {});
+    sheet.scrollTop = 0; $(".sheet-panel.ov").scrollTop = 0;
+    const models = [...new Set(cl.map((c) => c.model).filter(Boolean))].join(", ");
+    steps.innerHTML = `<li><span class="ov-k">Prompt</span><p class="ov-v"><q>${esc(meta.title)}</q></p></li>
+      <li><span class="ov-k">Demonstrations</span><p class="ov-v"><b>${cl.length}</b> of ${t.runwayN} Runway clips, generated live</p><p class="ov-s">${esc(join(`${router} budget`, models))}</p></li>`;
+    dl.hidden = true;
+    renderGallery(cl.map((c) => ({ id: `clip ${c.k}`, url: c.url, router, model: c.model, credits: c.credits ?? null, verdict: c.verdict || null })));
   }
   function closeFilm() { ovSeq++; clearGallery(); sheet.hidden = true; sv.pause(); sv.removeAttribute("src"); sv.load(); document.body.classList.remove("is-locked"); }
   $("#sheet-close").addEventListener("click", closeFilm);
@@ -329,9 +371,9 @@
     document.querySelectorAll(`#grid .tile[data-slug="${CUR.slug}"]`).forEach((n) => n.remove());
     const t = tile(hero ? hero.id : "demo");
     if (!fast) attachPreview(t);
-    const T = fast ? 0 : 9000, t0 = performance.now();
+    const T = fast ? 0 : 9000, t0 = performance.now(), myRun = RUN;
     M.t0 = 0; M.seconds = 0; clearInterval(M.timer);
-    const tick = () => { const f = T ? Math.min(1, (performance.now() - t0) / T) : 1; M.seconds = R.seconds * f; paintTime(); if (f < 1 && state.running) requestAnimationFrame(tick); };
+    const tick = () => { if (RUN !== myRun) return; const f = T ? Math.min(1, (performance.now() - t0) / T) : 1; M.seconds = R.seconds * f; paintTime(); if (f < 1 && state.running) requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
     status("Runway generating · recorded run"); t.set("gen"); await wait_(1600);
     status("Physics check · 21 gates in MuJoCo"); t.set("physics"); await wait_(1800);
@@ -339,7 +381,7 @@
     status(`SmolVLA training on ${R.episodes} episodes`); t.set("train");
     await wait_(Math.max(0, T - (performance.now() - t0) - 600));
     if (hero) t.film(`${filmDir}/${hero.film}`, hero.success !== false, lib && !lib.slug.includes("bowl") ? "SmolVLA · success" : null);
-    M.seconds = R.seconds; paintTime(); state.runTimes[R.slug] = R.seconds;
+    if (RUN === myRun) { M.seconds = R.seconds; paintTime(); } state.runTimes[R.slug] = R.seconds;
     t.time(lib ? null : R.seconds);
     status("", true);
     prompts(R.slug, "runs");
@@ -354,6 +396,13 @@
   ready.then(() => { keyRow.hidden = state.backend; });
   const withKey = (opt = {}) => ({ ...opt, headers: { ...(opt.headers || {}), "X-Runway-Key": keyIn.value.trim() } });
   const cpost = (url, data) => getJSON(url, withKey({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }));
+  const norm = (s) => String(s || "").toLowerCase().replace(/\s+/g, " ").trim().replace(/[.!]+$/, "");
+  let libSet = null;
+  const isLibrary = async (text) => {
+    libSet ||= manifest().then((rows) => new Set([...document.querySelectorAll(".chip")].map((c) => c.dataset.text)
+      .concat(rows.map((e) => e && e.prompt), state.recorded ? [state.recorded.task] : []).filter(Boolean).map(norm)));
+    return (await libSet).has(norm(text));
+  };
   const libraryMatch = (text) => /\b(bowl|push|shove|slide|stack|tower|on top)\b/i.test(String(text || ""));
   async function poll(id, onTick) {
     for (let i = 0; i < 200; i++) {
@@ -367,50 +416,111 @@
     }
     throw new Error("Runway is taking too long; try again.");
   }
+  const errOf = (r, fallback) => (r.body && (r.body.error || r.body.detail || r.body.reason)) || fallback;
+
+  // ---------- a new prompt gets ONE tile: Runway progress in its status, finished clips play in it in turn, and the
+  //   MuJoCo preview replaces them once MIN_LOAD_MS has passed and every clip has finished or failed ----------
+  //   runTile(n, keyless, T) -> R: R.clip(i, {frame, video, end}), R.add(i, url, model, credits), R.gate(p), R.stop()
+  function runTile(n, keyless = false, T = tile("run")) {
+    const t0 = performance.now();
+    T.root.dataset.live = "1"; T.runway = []; T.runwayN = n;
+    const C = Array.from({ length: n }, () => ({ frame: 0, video: 0, end: null }));
+    let stopped = false;
+    const R = {
+      T,
+      elapsed: () => (performance.now() - t0) / 1000,
+      ended: (i) => !!(C[i] && C[i].end),
+      clip(i, patch) { if (!C[i] || C[i].end) return; Object.assign(C[i], patch); paint(); },
+      add(i, url, model, credits = null) {
+        if (!C[i] || C[i].end) return;
+        Object.assign(C[i], { frame: 1, video: 1, end: "ok" });
+        T.runway[i] = { url, model, credits, k: i + 1 };
+        T.playlist(); paint();
+      },
+      // resolves with p's value once MIN_LOAD_MS has passed and p has settled
+      gate: (p) => Promise.all([wait(Math.max(0, MIN_LOAD_MS - (performance.now() - t0))), p]).then(([, v]) => v),
+      stop() { stopped = true; clearInterval(timer); },
+    };
+    function paint() {
+      if (stopped) return;
+      const left = Math.max(0, Math.ceil(MIN_LOAD_MS / 1000 - R.elapsed()));
+      const ok = C.filter((c) => c.end === "ok").length, bad = C.filter((c) => c.end === "fail").length;
+      if (keyless) { T.set("gen", `no Runway key · preview in ${left} s`, "Preparing preview"); return; }
+      if (ok + bad < n) {
+        const pct = Math.round((100 * C.reduce((s, c) => s + (c.end ? 1 : 0.25 * Math.min(1, c.frame) + 0.75 * Math.min(1, c.video)), 0)) / n);
+        const framing = C.some((c) => !c.end && c.frame < 1);
+        T.set("gen", `${framing ? "first frames" : "clip videos"} · ${ok}/${n} done · ${pct}%${bad ? ` · ${bad} failed` : ""}`,
+          ok ? `Runway · ${ok}/${n} done · ${pct}%` : "Runway generating");
+      } else {
+        T.set("gen", `${ok}/${n} Runway clips${bad ? ` · ${bad} failed` : ""} · preview in ${left} s`, left ? `MuJoCo preview in ${left} s` : "Building MuJoCo preview");
+      }
+    }
+    const timer = setInterval(paint, 500); paint();
+    return R;
+  }
+  // the gated preview in the run's one tile
+  async function showPreview(text, R, extra = "") {
+    R.stop();
+    const T = R.T; state.pvTile = T;
+    if (!window.UnderstudyPreview) { T.set("queued", "preview unavailable"); return T; }
+    const sim = UnderstudyPreview.mount(text);
+    T.set("pv").preview(sim).time(R.elapsed());
+    if (extra) T.cap(`${PREVIEW_CAP} · ${extra}`);
+    const got = T.runway.filter(Boolean).length;
+    if (got) T.root.title += ` · Click for the ${got} Runway clip${got > 1 ? "s" : ""}`;
+    await Promise.race([sim.ready.catch(() => {}), wait(20000)]);
+    return T;
+  }
+
+  // one Runway clip through the hosted (or local) /api/cloud: first frame (scene variant i) -> budget router video
+  async function cloudClip(text, i, R, dry) {
+    try {
+      const s = await cpost("/api/cloud/start", { prompt: text, budget: Route.budget, variant: i });
+      if (!s.ok) { if (s.status === 401) keyRow.classList.add("need"); throw new Error(errOf(s, "Live generation is unavailable right now.")); }
+      await poll(s.body.image_task, (b) => R.clip(i, { frame: Math.min(0.95, b.progress || 0) }));
+      R.clip(i, { frame: 1 });
+      const v = await cpost("/api/cloud/video", { prompt: s.body.task, image_task: s.body.image_task, budget: Route.budget });
+      if (!v.ok) throw new Error(errOf(v, "The router refused this clip."));
+      const model = v.body.model || dry.model;
+      const url = await poll(v.body.video_task, (b) => R.clip(i, { video: Math.min(0.95, b.progress || 0) }));
+      R.add(i, url, model, v.body.credits ?? null);
+      return { ok: true, url, model };
+    } catch (e) {
+      R.clip(i, { end: "fail" });
+      return { ok: false, error: String(e.message || e) };
+    }
+  }
+
   async function cloud(text) {
-    if (!state.backend && !keyIn.value.trim()) {
-      if (state.pvTile) state.pvTile.set("pv");
+    const instant = !!state.pvTile; // a library sentence already has its preview up: no gate
+    const rt = Route.decide(text, { budget: Route.budget });
+    const dry = state.dry[rt.router] || DRY_FALLBACK[rt.router];
+    const name = Route.NAME[rt.router] || rt.router;
+    const hasKey = state.backend || !!keyIn.value.trim();
+    startRun(text, "", rt.router); CUR.slug = "";
+    if (!hasKey) {
+      const R = runTile(0, true);
+      keyRow.hidden = false; keyRow.classList.add("need");
+      line.classList.add("is-no");
+      line.textContent = `The ${FOOTAGE} Runway demonstration clips need a Runway API key: add yours below. The scripted MuJoCo preview is made in your browser.`;
+      await R.gate(Promise.resolve());
+      await showPreview(text, R, "no Runway footage: add a key");
       timeStop(); status("", true);
-      line.classList.remove("is-no");
-      line.textContent = "Scripted MuJoCo preview, made in your browser. Add a Runway API key below and the Runway video is generated too.";
       return;
     }
-    const s = await cpost("/api/cloud/start", { prompt: text, budget: Route.budget });
-    if (!s.ok) {
-      if (s.status === 401) keyRow.classList.add("need");
-      if (state.pvTile) state.pvTile.set("pv");
-      timeStop(); status("", true);
-      line.classList.add("is-no"); line.textContent = (s.body && s.body.error) || "Live generation is unavailable right now."; return;
-    }
-    const { task, router, reasons, image_task } = s.body;
-    const dry = state.dry[router] || DRY_FALLBACK[router];
-    startRun(task, `Live · ${Route.NAME[router]} · ${dry.model}`, router);
-    CUR.slug = "";
-    const t = tile("live"), t0 = performance.now();
-    t.root.dataset.live = "1"; attachPreview(t);
-    M.t0 = 0; M.seconds = 0; clearInterval(M.timer);
-    const clock = setInterval(() => { M.seconds = (performance.now() - t0) / 1000; paintTime(); }, 500);
-    const pct = (b) => (b.progress != null ? ` · ${Math.round(b.progress * 100)}%` : "");
-    try {
-      status(`Routed to ${Route.NAME[router]}: ${(reasons || []).join(", ")}`);
-      t.set("gen", "first frame · gen4_image");
-      const frame = await poll(image_task, (b) => t.set("gen", `first frame${pct(b)}`));
-      $("video", t.root).poster = frame;
-      const v = await cpost("/api/cloud/video", { prompt: task, image_task, budget: Route.budget });
-      if (!v.ok) throw new Error((v.body && v.body.error) || "The router refused this clip.");
-      const model = v.body.model || dry.model;
-      status(`Runway generating · ${model} · ${v.body.credits ?? dry.credits} credits`);
-      t.set("gen", `${model} video`);
-      const url = await poll(v.body.video_task, (b) => t.set("gen", `${model}${pct(b)}`));
-      t.film(url, true, `Runway · ${model} · live`);
-      t.time((performance.now() - t0) / 1000);
-      M.seconds = (performance.now() - t0) / 1000; paintTime();
-      status("", true); line.classList.remove("is-no");
-      line.textContent = state.backend ? "Live Runway clip, generated just now. The physics gates, retargeting and SmolVLA training cover pick-and-place tasks today, so this task gets its demonstration video." : "Live Runway clip, generated just now. The physics check, retargeting and SmolVLA training run in the full pipeline on a GPU (see the repo).";
-    } catch (e) {
-      if (t.sim) t.set("pv"); else t.set("no", String(e.message || e));
-      status("", true); line.classList.add("is-no"); line.textContent = String(e.message || e);
-    } finally { clearInterval(clock); }
+    const R = runTile(FOOTAGE, false, instant ? state.pvTile : undefined);
+    status(`Runway generating · ${FOOTAGE} clips · ${name} budget`);
+    const all = Promise.all(Array.from({ length: FOOTAGE }, (_, i) => cloudClip(text, i, R, dry)));
+    const res = instant ? await all : await R.gate(all);
+    const ok = res.filter((r) => r.ok);
+    if (instant) { R.stop(); R.T.set("pv"); } else await showPreview(text, R, ok.length ? "" : "no Runway footage");
+    timeStop(); status("", true);
+    const bad = res.filter((r) => !r.ok);
+    line.classList.toggle("is-no", !ok.length);
+    line.textContent = !ok.length ? bad[0].error
+      : `${ok.length} of ${FOOTAGE} live Runway clips, generated just now${bad.length ? ` (${bad.length} failed: ${short(bad[0].error, 60)})` : ""}. ` + (state.backend
+        ? "The physics gates, retargeting and SmolVLA training cover pick-and-place tasks today, so this task gets its demonstration videos."
+        : "The physics check, retargeting and SmolVLA training run in the full pipeline on a GPU (see the repo).");
   }
 
   // ---------- live: the real pipeline ----------
@@ -423,50 +533,83 @@
   const why = (r, fallback) => (r.body && (r.body.reason || r.body.detail)) || fallback;
   const short = (s, n = 42) => (String(s).length > n ? String(s).slice(0, n - 1) + "…" : String(s));
 
-  async function live(text) {
+  async function live(text, lib = false) {
     const rt = state.route || Route.decide(text, { budget: Route.budget });
-    const f = await post("/api/footage", { task: text, router: rt.router });
-    if (!f.ok && f.body && f.body.infeasible) return cloud(text); // outside pick-and-place: a live Runway clip instead
-    if (!f.ok) { timeStop(); status("", true); paintRoute(rt, rt.dry || DRY_FALLBACK[rt.router], why(f, f.status === 409 ? "A stage is still running." : "The server refused this task.")); return; }
-    const { slug, clip_ids: ids = [], existing = [] } = f.body;
+    const dry = rt.dry || state.dry[rt.router] || DRY_FALLBACK[rt.router];
     const name = Route.NAME[rt.router] || rt.router;
-    startRun(text, `Live · ${(rt.dry || {}).model || name}`, rt.router); CUR.slug = slug;
+    // a new sentence asks for FOOTAGE clips; a library sentence keeps the server's default run size
+    const f = await post("/api/footage", lib ? { task: text, router: rt.router } : { task: text, router: rt.router, clips: FOOTAGE });
+    if (!f.ok && f.body && f.body.infeasible) return cloud(text); // outside pick-and-place: live Runway clips instead
+    if (!f.ok) {
+      const msg = why(f, f.status === 409 ? "A stage is still running." : "The server refused this task.");
+      paintRoute(rt, dry, msg);
+      if (!lib) { // no footage was made; the preview still waits out the minimum
+        const R = runTile(FOOTAGE);
+        for (let i = 0; i < FOOTAGE; i++) R.clip(i, { end: "fail" });
+        await R.gate(Promise.resolve()); await showPreview(text, R, "no Runway footage");
+      }
+      timeStop(); status("", true); return;
+    }
+    const { slug, clip_ids: ids = [], existing = [] } = f.body;
+    let model = (f.body.estimate && f.body.estimate.model) || dry.model;
+    startRun(text, `Live · ${model || name}`, rt.router); CUR.slug = slug;
     const base = "/runs";
-    // scenarios this sentence already had keep their films
-    if (existing.length) {
+    // a library sentence: one tile per scenario, and the ones it already had keep their films
+    if (lib && existing.length) {
       const v = await getJSON(`/api/runs/${slug}/vla`);
       for (const c of existing) {
         const film = v.ok && v.body.films[c];
         if (film) tile(c).film(`${base}/${slug}/media/vla/${c}.mp4`, film.success !== false);
       }
     }
-    ids.forEach((c) => tile(c));
-    if (ids.length && !existing.length) attachPreview(tile(ids[0]));
-    status(`Runway generating · ${name}`);
+    // a new sentence: ONE tile for the whole run (runTile); every stage below reports on it
+    const R = lib ? null : runTile(ids.length);
+    const tt = (c) => (lib ? tile(c) : R.T);
+    const idx = new Map(ids.map((c, i) => [c, i]));
+    if (lib) { ids.forEach((c) => tile(c)); if (ids.length && !existing.length) attachPreview(tile(ids[0])); }
+    status(`Runway generating · ${ids.length} clips · ${name} budget`);
     const okFoot = await job(f.body.job, (ev) => {
+      const i = idx.get(ev.clip);
       if (ev.type === "runway" && ev.clip) {
-        tile(ev.clip).set("gen", ev.stage === "frame" ? "first frame" : (ev.model || ""));
-      } else if (ev.type === "clip_ready") tile(ev.clip).set("physics", "queued");
+        if (lib) tile(ev.clip).set("gen", ev.stage === "frame" ? "first frame" : "video");
+        else if (i != null) { const p = ev.progress != null ? Math.min(0.95, ev.progress) : 0.05; R.clip(i, ev.stage === "frame" ? { frame: p } : { frame: 1, video: p }); }
+      } else if (ev.type === "frame_ready" && !lib && i != null) R.clip(i, { frame: 1 });
+      else if (ev.type === "routed" && ev.model) model = ev.model;
+      else if (ev.type === "clip_ready") {
+        if (lib || !ev.file) tile(ev.clip).set("physics", "queued");
+        else if (i != null) R.add(i, `${base}/${slug}/${ev.file}`, model);
+      } else if (ev.type === "budget_stop" && ev.clip) { if (lib) tile(ev.clip).set("fail", short(ev.message || "budget stop", 70)); else if (i != null) R.clip(i, { end: "fail" }); }
       else if (ev.type === "error") status(short(ev.message, 80));
     });
-    if (!okFoot) { timeStop(); status("", true); paintRoute(rt, rt.dry || DRY_FALLBACK[rt.router], "Runway stage failed"); return; }
+    if (!lib) {
+      ids.forEach((c, i) => { if (!R.ended(i)) R.clip(i, { end: "fail" }); });
+      await R.gate(Promise.resolve());
+      await showPreview(text, R, R.T.runway.some(Boolean) ? "" : "no Runway footage");
+    }
+    if (!okFoot) { timeStop(); status("", true); paintRoute(rt, dry, "Runway stage failed"); return; }
 
     const d = await post("/api/data", { slug });
-    if (!d.ok) { timeStop(); status("", true); paintRoute(rt, rt.dry || DRY_FALLBACK[rt.router], why(d, "Physics stage refused")); return; }
+    if (!d.ok) { timeStop(); status("", true); paintRoute(rt, dry, why(d, "Physics stage refused")); return; }
     status("Physics check · 21 gates in MuJoCo");
     const accepted = [];
+    let judged = 0;
     await job(d.body.job, (ev) => {
-      if (ev.type === "clip_stage" && tiles.has(ev.clip)) tile(ev.clip).set("physics", ev.stage || "");
+      if (ev.type === "clip_stage" && lib && tiles.has(`${RUN}:${ev.clip}`)) tile(ev.clip).set("physics", ev.stage || "");
       else if (ev.type === "verdict" && ev.clip) {
+        judged++;
         if (ev.accepted) accepted.push(ev.clip);
-        tile(ev.clip).set(ev.accepted ? "ok" : "no", ev.accepted ? `${ev.gates_passed || 21} of ${ev.gates_total || 21} gates` : short(ev.reason || "rejected"));
+        if (lib) tile(ev.clip).set(ev.accepted ? "ok" : "no", ev.accepted ? `${ev.gates_passed || 21} of ${ev.gates_total || 21} gates` : short(ev.reason || "rejected"));
+        else {
+          const c = R.T.runway[idx.get(ev.clip)]; if (c) c.verdict = ev.accepted ? "Accepted" : "Rejected";
+          R.T.set("physics", "", `Physics · ${accepted.length} of ${judged} accepted`);
+        }
       } else if (ev.type === "episodes") status(`${ev.total} episodes for SmolVLA`);
     });
-    if (!accepted.length) { timeStop(); status("", true); paintRoute(rt, rt.dry || DRY_FALLBACK[rt.router], "No clip passed the physics gates"); return; }
+    if (!accepted.length) { timeStop(); status("", true); paintRoute(rt, dry, "No clip passed the physics gates"); return; }
 
     // SmolVLA on a rented GPU, when the trainer is connected
     const tr = await getJSON("/api/trainer");
-    accepted.forEach((c) => tile(c).set("train"));
+    accepted.forEach((c) => tt(c).set("train"));
     if (tr.ok && tr.body.connected) {
       const t = await post("/api/train", { slug, gpu: state.gpu.id });
       if (t.ok) {
@@ -479,18 +622,22 @@
     timeStop();
     const v = await post("/api/vla", { slug, clips: accepted });
     status(v.ok ? "SmolVLA filming in MuJoCo" : "Waiting for SmolVLA films");
-    accepted.forEach((c) => tile(c).set("film"));
+    accepted.forEach((c) => tt(c).set("film"));
     const shown = new Set();
     for (let i = 0; i < 360 && shown.size < accepted.length; i++) {
       const s = await getJSON(`/api/runs/${slug}/vla`);
       if (s.ok) for (const c of accepted) {
         const film = s.body.films[c];
-        if (film && !shown.has(c)) { shown.add(c); tile(c).film(`${base}/${slug}/media/vla/${c}.mp4?t=${Date.now()}`, film.success !== false); }
+        if (!film || shown.has(c)) continue;
+        shown.add(c);
+        if (!lib && shown.size > 1) continue; // one tile: the first SmolVLA film replaces the preview
+        const t = tt(c); delete t.root.dataset.live; t.root.dataset.vla = "1";
+        t.film(`${base}/${slug}/media/vla/${c}.mp4?t=${Date.now()}`, film.success !== false);
       }
       if (shown.size < accepted.length) await wait(5000);
     }
     const mine = [...document.querySelectorAll(`#grid .tile[data-run="${RUN}"]`)];
-    const first = mine.find((n) => n.classList.contains("is-film") && !n.dataset.preview);
+    const first = mine.find((n) => n.dataset.vla); // the SmolVLA film replaces the Runway footage and the preview
     if (first) mine.forEach((n) => { if (n !== first) n.remove(); });
     if (first && M.seconds != null) tiles.forEach((x) => { if (x.root === first) x.time(M.seconds); });
     status(shown.size ? "" : "Films still rendering", !!shown.size);
@@ -501,11 +648,13 @@
   //   generated in this browser (preview.js: MuJoCo WebAssembly + three.js), for any prompt, key or no key. A Runway
   //   clip or SmolVLA film that arrives later replaces it. Scripted motion, never a learned policy.
   const PREVIEW_CAP = "MuJoCo preview · scripted";
-  function pvStart(text) {
+  function pvStart(text, instant = true) {
     const rt = state.route || Route.decide(text, { budget: Route.budget });
     state.pvRun = null; // a new Train is always a new run, even when the last one ended at its preview
     startRun(text, "", rt.router);
     state.pvRun = RUN; // the flow's own startRun (replay, cloud, live) then joins this run instead of opening another
+    state.pvTile = null;
+    if (!instant) return; // a new prompt: runTile() shows Runway progress first; showPreview() mounts it when the gate passes
     const t = tile("preview");
     state.pvTile = t;
     if (!window.UnderstudyPreview) { t.set("queued", "preview unavailable"); return; }
@@ -528,8 +677,11 @@
     const text = textNow();
     state.running = true; $("#go").disabled = true;
     try {
-      pvStart(text); await ready;
-      await (state.backend ? live(text) : libraryMatch(text) ? replay(text) : cloud(text));
+      await ready;
+      // library examples replay (hosted) or rerun (local) with the instant preview; anything else loads first
+      const lib = state.backend ? await isLibrary(text) : libraryMatch(text);
+      pvStart(text, lib);
+      await (state.backend ? live(text, lib) : lib ? replay(text) : cloud(text));
     }
     finally { state.running = false; $("#go").disabled = false; }
   });
