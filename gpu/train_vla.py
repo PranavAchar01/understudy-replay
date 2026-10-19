@@ -9,13 +9,14 @@ Prints machine-readable lines the Understudy app shows live:
   [eval] 41/50
   [tiles] <dir>
   [cost] total $<x> gpu_seconds=<n>
-The pod is always terminated at the end, even on failure. The RunPod key comes from the Keychain (RUNPOD_API_KEY).
+The pod is always terminated at the end, even on failure. The RunPod key is RUNPOD_API_KEY (environment, .env or the macOS Keychain).
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shlex
 import subprocess
@@ -30,7 +31,7 @@ from runpod import gql  # noqa: E402
 
 HERE = Path(__file__).parent
 REPLAY = Path(__file__).resolve().parents[1]
-KEY = Path.home() / ".ssh/vultr_understudy"
+KEY = Path(os.environ.get("UNDERSTUDY_SSH_KEY", str(Path.home() / ".ssh/id_ed25519"))).expanduser()  # its .pub is registered with RunPod
 GPUS = [
     "NVIDIA GeForce RTX 5090",
     "NVIDIA GeForce RTX 4090",

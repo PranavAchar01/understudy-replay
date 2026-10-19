@@ -1,10 +1,13 @@
-#!/bin/zsh
-# Understudy entry point. Reads the Runway key from the macOS Keychain into the environment for this process only.
-set -e
-ROOT="${0:A:h:h}"
-export RUNWAY_API_KEY="$(security find-generic-password -s RUNWAY_API_KEY -w)"
+#!/usr/bin/env bash
+# Understudy entry point: loads .env (if present) into this process only, then runs the CLI from .venv.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [ -f "$ROOT/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$ROOT/.env"
+  set +a
+fi
 export PYTHONPATH="$ROOT/src"
-# the trained pick SmolVLA films the tiles unless you point this at another checkpoint
-export UNDERSTUDY_VLA_CKPT="${UNDERSTUDY_VLA_CKPT:-$HOME/helloworld/understudy/data/probes/smolvla-aug-20000-5090/pretrained_model}"
 cd "$ROOT"
 exec "$ROOT/.venv/bin/python" -m understudy.cli "$@"

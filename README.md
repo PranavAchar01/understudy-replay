@@ -13,6 +13,76 @@ a LeRobot SO-101 arm.
 
 **Runway imagines the demonstration. Physics decides whether it counts.**
 
+## Quickstart
+
+Understudy turns one sentence into robot training data. Runway makes the video, physics gates throw out the clips a
+robot shouldn't learn from, and the clips that pass train a SmolVLA policy for an SO-101 arm in MuJoCo. It runs on
+your own computer, and you can try it without any API key.
+
+### Prerequisites
+
+- macOS or Linux with about 8 GB of free disk. uv fetches Python 3.12 and 3.11 for you.
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) and `ffmpeg` (`brew install ffmpeg` or `apt install ffmpeg`).
+- The [Claude Code CLI](https://claude.com/claude-code), signed in once. The scene-audit gates call it. Without it
+  they report "unavailable" and no clip is accepted.
+
+### Install
+
+```bash
+git clone https://github.com/PranavAchar01/understudy-replay.git
+cd understudy-replay
+make setup     # .venv, .venv-pose, the MediaPipe models, and a .env copied from .env.example
+make test      # 32 tests, no keys and no network
+```
+
+### Run the demo without a key
+
+The repo ships the clips from a real run of "put the red block in the bowl", so the pipeline can run on those
+instead of calling Runway.
+
+```bash
+make demo      # tracking, 21 gates, retargeting, dataset, a 300-step train, eval on 5 unseen starts
+make serve     # the site at http://127.0.0.1:8765, with the finished tasks
+```
+
+`make demo` takes about 25 minutes on a MacBook Air. It prints a line per clip, like `[gates] v06: ACCEPTED` or
+`[gates] v05: REJECTED (... the video duplicated the object)`, then the dataset, the training loss and a score on
+unseen starts such as `[eval] policy success 1/5`. The result goes to
+`data/runs/put-the-red-block-in-the-bowl/run.json`. Three hundred steps only prove the pipeline works. The
+43/50 in the Results table is a 20,000-step SmolVLA run, in simulation.
+
+### Set your keys
+
+Open `.env` (made by `make setup`) and fill in what you need. Every key is optional.
+
+| Variable | Needed for | Where to get it |
+|---|---|---|
+| `RUNWAY_API_KEY` | new demonstration video: `bin/understudy run`, `generate`, `budget` | [dev.runwayml.com](https://dev.runwayml.com): sign in, create an organization, API Keys, Create key. Credits are prepaid (1 credit = $0.01) and a 5-clip run costs $2 to $10. |
+| `RUNPOD_API_KEY` | renting the GPU that trains SmolVLA: `gpu/train_vla.py`, `scripts/train_vla_task.py` | [runpod.io](https://www.runpod.io): Settings, API Keys. Add the public half of an SSH key under Settings, SSH Public Keys, and set `UNDERSTUDY_SSH_KEY` to the private half. |
+| Claude Code login | the scene audit | Run `claude` once and sign in. It uses your own account, so there is no key to paste. |
+
+`.env.example` lists every variable the code reads and says what each does. On macOS, the two keys are also read from
+the Keychain when `.env` doesn't have them. `.env` is git-ignored.
+
+### Make your own
+
+```bash
+bin/understudy budget                                          # your Runway balance; checks the key works
+bin/understudy run "put the red block in the bowl" --clips 5   # Runway video, gates, dataset, small train, eval
+# SmolVLA on a rented GPU (needs RUNPOD_API_KEY), using the dataset the run above wrote:
+.venv/bin/python gpu/train_vla.py data/runs/put-the-red-block-in-the-bowl/lerobot 20000 --cameras front
+# the scripted-operator tasks need no Runway key:
+PYTHONPATH=src .venv/bin/python scripts/make_task_dataset.py stack --n 30 --out data/probes/stack30
+.venv/bin/python scripts/train_vla_task.py data/probes/stack30 10000 --task stack --cameras front,wrist --eval-seeds 5
+```
+
+Running the same prompt again costs nothing, because Runway outputs are cached by request hash. If you'd rather
+not rent a GPU, `lerobot-train` on any CUDA machine can train on the dataset a run writes to
+`data/runs/<task>/lerobot/`.
+
+PyBullet, used for a second-engine check of the replays, is optional: `uv sync --extra crosscheck`. On macOS 15 build
+its wheel first with `scripts/build_pybullet.sh`.
+
 ## How it works
 
 Everything below runs in simulation. The images come from a real run of "put the red block in the bowl".
@@ -214,18 +284,13 @@ and three.js, no server); it is scripted motion, not a learned policy.
 
 ### Local: the whole pipeline
 
-Requirements: macOS (the keys live in the Keychain), Python 3.12 with [uv](https://docs.astral.sh/uv/), a Runway API key, and a RunPod
-API key for GPU training.
+Follow the Quickstart above, then:
 
 ```bash
-uv sync
-security add-generic-password -s RUNWAY_API_KEY -a "$USER" -w     # macOS Keychain (prompts for the key)
-security add-generic-password -s RUNPOD_API_KEY -a "$USER" -w
 bin/understudy serve                                              # http://127.0.0.1:8765
 ```
 
-`bin/understudy` reads the keys from the Keychain into the process environment only; they are never written to a
-file. The local server serves the same site, with no key box, and runs every stage for real, streaming progress to
+`bin/understudy` loads `.env` into the process only; keys are never written anywhere else. The local server serves the same site, with no key box, and runs every stage for real, streaming progress to
 the page (Server-Sent Events):
 
 1. **Runway:** first frames (gen4_image, then gen4_image_turbo restyles), then 5 s of motion through the budget's router.
@@ -242,7 +307,7 @@ Command line:
 bin/understudy run "put the red block in the bowl" --clips 7     # every stage, cached stage by stage
 bin/understudy budget                                             # live Runway balance
 scripts/train_vla_task.py data/probes/stack30 10000 --task stack --cameras front,wrist --eval-seeds 5
-.venv/bin/python -m pytest                                        # tests
+make test                                                         # tests
 ```
 
 Re-running the same prompt spends nothing: Runway outputs are cached by request hash, and every paid call is a line
@@ -297,3 +362,7 @@ slide-benchmark/  the benchmark slide
 film-demo/        the demo video build
 vendor/so101/     SO-ARM100 MJCF (Apache-2.0)
 ```
+
+## License
+
+MIT, see [LICENSE](LICENSE). `vendor/so101` is the SO-ARM100 model under Apache-2.0.

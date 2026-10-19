@@ -92,12 +92,10 @@ SCENES = {
 
 
 def key() -> str:
-    return subprocess.run(
-        ["security", "find-generic-password", "-s", "RUNWAY_API_KEY", "-w"],
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.strip()
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+    from understudy import secrets
+
+    return secrets.get("RUNWAY_API_KEY")
 
 
 KEY = key()

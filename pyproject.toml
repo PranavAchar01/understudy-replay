@@ -10,20 +10,18 @@ dependencies = [
   "pillow",
   "torch",
   "lerobot[dataset,smolvla]==0.6.1",
-  "pybullet==3.2.7",
   "pytest",
   "fastapi>=0.141.1",
   "uvicorn>=0.53.0",
 ]
 
+[project.optional-dependencies]
+# Second-engine cross-check of the replays (src/understudy/crosscheck.py). Optional: the pipeline runs without it.
+# On macOS 15 PyPI's pybullet sdist does not compile; scripts/build_pybullet.sh builds a patched wheel.
+crosscheck = ["pybullet==3.2.7"]
+
 [tool.uv]
 package = false
-
-# PyPI has no macOS arm64 wheel for pybullet 3.2.7 and its sdist fails to compile with the macOS 15 SDK (zlib's
-# zutil.h defines fdopen as NULL when TARGET_OS_MAC is set). scripts/build_pybullet.sh patches that one define
-# and builds this wheel.
-[tool.uv.sources]
-pybullet = { path = "data/wheels/pybullet-3.2.7-cp312-cp312-macosx_15_0_arm64.whl" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

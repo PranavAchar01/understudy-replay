@@ -1108,10 +1108,8 @@ wheels = [
 [[package]]
 name = "pybullet"
 version = "3.2.7"
-source = { path = "data/wheels/pybullet-3.2.7-cp312-cp312-macosx_15_0_arm64.whl" }
-wheels = [
-    { filename = "pybullet-3.2.7-cp312-cp312-macosx_15_0_arm64.whl", hash = "sha256:b5dcd4550fa0b65da64515401570132aa68a9aeff0f3cf1bd6b2c45a3ab32a5f" },
-]
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/de/95/b9a98cd4ed948d4f25a7d0b13cb0c1f87e58dc6d113be9e18940641eb25f/pybullet-3.2.7.tar.gz", hash = "sha256:042879db8d101ac7590dee475fc6aded508b85fe1273fdbbfde1d88bd200e14f", size = 80508379, upload-time = "2025-01-30T00:34:00.527Z" }
 
 [[package]]
 name = "pydantic"
@@ -1567,10 +1565,14 @@ dependencies = [
     { name = "numpy" },
     { name = "opencv-python-headless" },
     { name = "pillow" },
-    { name = "pybullet" },
     { name = "pytest" },
     { name = "torch" },
     { name = "uvicorn" },
+]
+
+[package.optional-dependencies]
+crosscheck = [
+    { name = "pybullet" },
 ]
 
 [package.metadata]
@@ -1581,11 +1583,12 @@ requires-dist = [
     { name = "numpy" },
     { name = "opencv-python-headless" },
     { name = "pillow" },
-    { name = "pybullet", path = "data/wheels/pybullet-3.2.7-cp312-cp312-macosx_15_0_arm64.whl" },
+    { name = "pybullet", marker = "extra == 'crosscheck'", specifier = "==3.2.7" },
     { name = "pytest" },
     { name = "torch" },
     { name = "uvicorn", specifier = ">=0.53.0" },
 ]
+provides-extras = ["crosscheck"]
 
 [[package]]
 name = "urllib3"

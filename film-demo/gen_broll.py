@@ -1,5 +1,5 @@
 # Generates "Built for students" b-roll with the Runway Model Router (demo-best images, demo-best video).
-# Key is read from Keychain and never printed. Outputs land in work/gen/<name>.{png,mp4} plus <name>.json.
+# The key (RUNWAY_API_KEY: environment, .env or Keychain) is never printed. Outputs land in work/gen/<name>.{png,mp4} plus <name>.json.
 import json
 import subprocess
 import sys
@@ -11,12 +11,10 @@ import requests
 
 OUT = Path(__file__).resolve().parent / "work/gen"
 OUT.mkdir(parents=True, exist_ok=True)
-KEY = subprocess.run(
-    ["security", "find-generic-password", "-s", "RUNWAY_API_KEY", "-w"],
-    capture_output=True,
-    text=True,
-    check=True,
-).stdout.strip()
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from understudy import secrets  # noqa: E402
+
+KEY = secrets.get("RUNWAY_API_KEY")
 API = "https://api.dev.runwayml.com/v1"
 H = {
     "Authorization": f"Bearer {KEY}",

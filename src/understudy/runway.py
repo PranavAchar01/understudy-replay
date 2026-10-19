@@ -1,7 +1,7 @@
 """Minimal Runway API client with a hard credit cap, a cost ledger and a content-addressed cache.
 
-The API key is read from the RUNWAY_API_KEY environment variable only (bin/understudy fills it from the macOS
-Keychain at runtime). It is never written to disk or logged.
+The API key is RUNWAY_API_KEY: the environment, then .env in the repo root, then the macOS Keychain (secrets.py).
+This code never writes it to disk or logs it.
 
 Every paid call:
   1. checks the cache (a request that was already generated is never regenerated),
@@ -22,6 +22,8 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+
+from . import secrets
 
 REPO = Path(__file__).resolve().parents[2]
 BASE = "https://api.dev.runwayml.com/v1"
@@ -50,10 +52,10 @@ class BudgetError(RuntimeError):
 
 
 def _key() -> str:
-    k = os.environ.get("RUNWAY_API_KEY", "")
+    k = secrets.get("RUNWAY_API_KEY")
     if not k:
         raise RuntimeError(
-            "RUNWAY_API_KEY is not set; run through bin/understudy, which reads it from the Keychain"
+            "RUNWAY_API_KEY is not set: copy .env.example to .env and fill it in (see the README Quickstart)"
         )
     return k
 

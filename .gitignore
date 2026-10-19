@@ -39,3 +39,5 @@ gpu/runs/
 film-demo/work/
 film-demo/assets/runway-routers.webp
 data/logs/
+.env.*
+!.env.example
